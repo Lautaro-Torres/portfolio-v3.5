@@ -1,0 +1,321 @@
+/* Local font faces (served from /public/fonts) */
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: url('/fonts/montreal/PPNeueMontreal-Book.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: url('/fonts/montreal/PPNeueMontreal-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: url('/fonts/montreal/PPNeueMontreal-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PPSupplyMono';
+  src: url('/fonts/supply/Supply-Regular.woff2') format('woff2'),
+       url('/fonts/supply/Supply-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'PPSupplyMono';
+  src: url('/fonts/supply/Supply-Medium.woff2') format('woff2'),
+       url('/fonts/supply/Supply-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import performance optimizations */
+@import '../styles/performance.css';
+
+/* Performance optimizations for smooth scrolling */
+* {
+  /* Optimize for smooth scrolling */
+  scroll-behavior: smooth;
+}
+
+/* Reduce repaints during scroll */
+.is-scrolling * { /* avoid mass layer promotion */ }
+
+/* Optimize Three.js canvases during scroll */
+.is-scrolling canvas {
+  /* Reduce quality during scroll for better performance */
+  image-rendering: optimizeSpeed;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: optimize-contrast;
+}
+
+/* Hardware acceleration for smooth animations */
+.three-canvas {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Ocultar scrollbar globalmente */
+html, body {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari and Opera */
+  width: 0 !important;
+}
+
+/* ====== Variables ====== */
+
+/* ====== Configuración de scroll ====== */
+html {
+  overflow-x: hidden; /* Solo prevenir scroll horizontal */
+}
+
+body { 
+  margin: 0;
+  padding: 0;
+  overflow: auto; /* enable normal scrolling since ScrollSmoother was removed */
+}
+
+/* Removed ScrollSmoother wrapper styles since component was removed */
+
+/* ====== Base ====== */
+body {
+  color: var(--foreground);
+  background-color: #0a0a0a;
+  font-family: 'PP Neue Montreal', 'PP Neue Montreal Book', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}/* Media seguras (no empujan layout) */
+img, video, canvas, svg { max-width: 100%; height: auto; display: block; }
+
+* { box-sizing: border-box; padding: 0; margin: 0; }
+*,
+*::before,
+*::after { -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+
+a { color: inherit; text-decoration: none; }
+
+@media (prefers-color-scheme: dark) { html { color-scheme: dark; } }
+
+/* Typography hierarchy (align with Experiments section) */
+@layer base {
+  h1 { @apply font-ppneue font-medium text-white; }
+  h2 { @apply font-ppneue font-medium text-white; }
+  h3 { @apply font-ppneue font-medium text-white; }
+  h4 { @apply font-ppneue font-medium text-white; }
+  h5 { @apply font-ppneue font-medium text-white; }
+  h6 { @apply font-ppneue font-medium text-white; }
+  p, li, a, span, button, input, textarea { @apply font-ppneue text-white/90; }
+  code, pre, kbd, samp { @apply font-ppmono; }
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 53 79% 12%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 10% 3.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+/* ====== Animaciones optimizadas ====== */
+@keyframes gradient-move { 
+  0% { background-position: 0% 50% } 
+  25% { background-position: 100% 50% }
+  50% { background-position: 200% 50% }
+  75% { background-position: 100% 50% }
+  100% { background-position: 0% 50% } 
+}
+
+@keyframes gradient-move-smooth { 
+  0% { background-position: 0% 50% } 
+  50% { background-position: 100% 50% }
+  100% { background-position: 0% 50% } 
+}
+@keyframes marquee-dyn-left { from{transform:translateX(0)} to{transform:translateX(calc(-1 * var(--marquee-distance, 0px)))} }
+@keyframes marquee-dyn-right { from{transform:translateX(calc(-1 * var(--marquee-distance, 0px)))} to{transform:translateX(0)} }
+
+.animate-gradient-move { 
+  background-size: 300% 300%; 
+  animation: gradient-move-smooth 6s ease-in-out infinite; 
+  will-change: background-position; 
+}
+
+.animate-gradient-move-slow { 
+  background-size: 400% 400%; 
+  animation: gradient-move-smooth 8s ease-in-out infinite; 
+  will-change: background-position; 
+}
+.smooth-transform { transform:translateZ(0); will-change:transform; -webkit-backface-visibility:hidden; backface-visibility:hidden; }
+
+@layer utilities {
+  .marquee-dyn-left  { animation: marquee-dyn-left  var(--marquee-speed,22s) linear infinite; }
+  .marquee-dyn-right { animation: marquee-dyn-right var(--marquee-speed,22s) linear infinite; }
+}
+
+/* Opcional: ancho consistente si querés usarlo */
+.site-container { width:min(100%,1200px); margin-inline:auto; }
+
+/* Projects slider scrollbar hiding */
+.scrollbar-hide {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari and Opera */
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* ====== Custom Cursor (global, nítido) ====== */
+@media (pointer: fine) and (hover: hover) {
+  .has-custom-cursor,
+  .has-custom-cursor body,
+  .has-custom-cursor a,
+  .has-custom-cursor button {
+    cursor: none !important;
+  }
+}
+
+.custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 10px;                 /* dot base */
+  height: 10px;
+  border-radius: 9999px;
+  background: rgba(255,255,255,0.95);
+  box-shadow: none;            /* como tu Swiper */
+  pointer-events: none;
+  z-index: 2147483647;         /* Maximum z-index value */
+  transform: translate3d(0,0,0);     /* GPU */
+  will-change: transform, width, height, opacity, box-shadow, background-color, border-radius;
+  opacity: 0;                         /* fade-in al entrar */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.custom-cursor__label {
+  font-weight: 600;
+  font-size: 11px;             /* igual al del Swiper */
+  color: #000;
+  line-height: 1;
+  letter-spacing: .02em;
+  user-select: none;
+  pointer-events: none;
+  white-space: nowrap;
+  opacity: 0;                  /* solo visible con .has-label */
+  transition: opacity .15s ease;
+}
+
+.custom-cursor.has-label .custom-cursor__label { opacity: 1; }
+
+/* opcional: cuando está en modo “drag” podés dar una sombra suave */
+.custom-cursor.mode-drag {
+  box-shadow: 0 10px 25px rgba(0,0,0,.18);
+}
+/* ====== Animación Gradient Loop ====== */
+@keyframes gradient-loop {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gradient-loop {
+  background: linear-gradient(270deg, #10b981, #40ff60, #22d3ee, #818cf8);
+  background-size: 600% 600%;
+  animation: gradient-loop 20s ease infinite;
+}
+
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply text-foreground;
+  }
+}
+
+
+
+
+
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

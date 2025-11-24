@@ -1,0 +1,45 @@
+@font-face {
+    font-family: 'Supply';
+    src: url('Supply-Bold.woff2') format('woff2'),
+        url('Supply-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Supply';
+    src: url('Supply-Light.woff2') format('woff2'),
+        url('Supply-Light.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Supply';
+    src: url('Supply-Regular.woff2') format('woff2'),
+        url('Supply-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Supply';
+    src: url('Supply-Medium.woff2') format('woff2'),
+        url('Supply-Medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Supply';
+    src: url('Supply-UltraLight.woff2') format('woff2'),
+        url('Supply-UltraLight.woff') format('woff');
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+

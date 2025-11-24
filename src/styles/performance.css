@@ -1,0 +1,100 @@
+/* Performance optimizations for Three.js canvas */
+canvas {
+  /* Use hardware acceleration */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000;
+  will-change: transform;
+  /* background-color intentionally not forced; inherit default/background */
+  
+  /* Avoid blur/filters */
+  filter: none;
+  
+  /* Prevent unwanted margin/padding */
+  display: block;
+  margin: 0;
+  padding: 0;
+  
+  /* Ensure proper stacking context */
+  position: relative;
+  z-index: 1;
+}
+
+/* Optimize scrolling container */
+.scroll-container {
+  /* Use hardware acceleration for smooth scrolling */
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  
+  /* Prevent unwanted reflows */
+  contain: content;
+  
+  /* Optimize paint operations */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Optimize video elements */
+video {
+  /* Hardware acceleration for video playback */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+  
+  /* Prevent layout shifts */
+  contain: content;
+  
+  /* Optimize memory usage */
+  object-fit: cover;
+  
+  /* Prevent unwanted margin/padding */
+  margin: 0;
+  padding: 0;
+}
+
+/* Optimize text rendering */
+.three-text {
+  /* Optimize text rendering */
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Optimize transforms */
+.transform-optimize {
+  /* Use GPU acceleration */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000;
+  will-change: transform;
+}
+
+/* Optimize fixed elements */
+.fixed-element {
+  /* Use GPU acceleration */
+  position: fixed;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+  
+  /* Prevent unwanted reflows */
+  contain: layout style paint;
+}
+
+/* Optimize animations */
+@keyframes performance-animation {
+  from {
+    transform: translateZ(0);
+  }
+  to {
+    transform: translateZ(0);
+  }
+}
+
+.animate-gpu {
+  animation: performance-animation 0.01s linear;
+  animation-fill-mode: both;
+}

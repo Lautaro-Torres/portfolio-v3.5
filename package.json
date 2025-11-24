@@ -1,0 +1,48 @@
+{
+  "name": "portfolio-v2",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "analyze": "ANALYZE=true next build",
+    "optimize-models": "node scripts/optimize-models.js",
+    "performance-test": "npm run build && npm run start",
+    "lighthouse": "npx lighthouse http://localhost:3000 --output=html --output-path=./lighthouse-report.html"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.1.2",
+    "@react-three/fiber": "^9.1.2",
+    "@react-three/postprocessing": "^3.0.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "gl-noise": "^1.6.1",
+    "gsap": "^3.13.0",
+    "lucide-react": "^0.544.0",
+    "motion": "^12.23.22",
+    "next": "15.3.3",
+    "ogl": "^1.0.11",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-icons": "^5.5.0",
+    "stats.js": "^0.17.0",
+    "swiper": "^11.2.10",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss-animate": "^1.0.7",
+    "three": "^0.177.0",
+    "three-custom-shader-material": "^6.3.7",
+    "three-stdlib": "^2.36.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@next/bundle-analyzer": "^15.3.3",
+    "autoprefixer": "^10.4.21",
+    "critters": "^0.0.25",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.3",
+    "postcss": "^8.5.4",
+    "tailwindcss": "^3.4.3"
+  }
+}

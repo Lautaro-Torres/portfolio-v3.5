@@ -1,0 +1,13 @@
+/* Estilos específicos para ocultar la barra de scroll en el wrapper del smooth scroll */
+#smooth-wrapper::-webkit-scrollbar,
+#smooth-content::-webkit-scrollbar {
+  width: 0 !important;
+  display: none !important;
+}
+
+#smooth-wrapper,
+#smooth-content {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
