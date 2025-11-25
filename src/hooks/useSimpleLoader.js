@@ -17,8 +17,6 @@ export function useSimpleLoader(options = {}) {
     let progressInterval;
     const startTime = Date.now();
 
-    console.log('🚀 Loader iniciado:', { fastMode, minLoadTime, enablePreloading });
-
     const runLoader = async () => {
       try {
         if (fastMode) {
@@ -46,12 +44,9 @@ export function useSimpleLoader(options = {}) {
         // Tiempo mínimo de visualización
         const elapsed = Date.now() - startTime;
         const remainingTime = Math.max(0, minLoadTime - elapsed);
-        
-        console.log('⏱️ Tiempo transcurrido:', elapsed, 'ms. Esperando:', remainingTime, 'ms');
-        
+
         setTimeout(() => {
           if (mounted) {
-            console.log('✅ Loader completado');
             setIsLoading(false);
           }
         }, remainingTime);
@@ -70,15 +65,12 @@ export function useSimpleLoader(options = {}) {
     const smoothProgress = async (steps) => {
       for (let i = 0; i < steps.length; i++) {
         if (!mounted) {
-          console.log('🛑 Loader cancelado (componente desmontado)');
           return;
         }
 
         const step = steps[i];
         const prevStep = i > 0 ? steps[i - 1] : { progress: 0 };
-        
-        console.log(`📊 Step ${i + 1}/${steps.length}: ${step.progress}% - ${step.task}`);
-        
+
         // Animación fluida del progreso
         await animateProgress(prevStep.progress, step.progress, step.task, step.delay);
       }
@@ -122,7 +114,6 @@ export function useSimpleLoader(options = {}) {
       if (progressInterval) {
         clearInterval(progressInterval);
       }
-      console.log('🧹 Loader cleanup');
     };
   }, [fastMode, minLoadTime, enablePreloading]);
 

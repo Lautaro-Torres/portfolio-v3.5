@@ -6,6 +6,7 @@ import gsap from "gsap";
 const TEXT_RTL =
   "WORDPRESS • REACT • NEXT • THREE.JS • JAVASCRIPT • HTML5 • CSS •";
 
+// GSAP helper based on seamless horizontalLoop pattern
 function horizontalLoop(items, config = {}) {
   items = gsap.utils.toArray(items);
   const tl = gsap.timeline({
@@ -21,8 +22,11 @@ function horizontalLoop(items, config = {}) {
   const widths = [];
   const xPercents = [];
   let curIndex = 0;
-  const pps = (config.speed || 1) * 100;
-  const snap = config.snap === false ? (v) => v : gsap.utils.snap(config.snap || 1);
+  const pixelsPerSecond = (config.speed || 1) * 100;
+  const snap =
+    config.snap === false
+      ? (v) => v
+      : gsap.utils.snap(config.snap || 1);
 
   gsap.set(items, {
     xPercent: (i, el) => {
@@ -40,30 +44,72 @@ function horizontalLoop(items, config = {}) {
     items[length - 1].offsetLeft +
     (xPercents[length - 1] / 100) * widths[length - 1] -
     startX +
-    items[length - 1].offsetWidth * gsap.getProperty(items[length - 1], "scaleX") +
+    items[length - 1].offsetWidth *
+      gsap.getProperty(items[length - 1], "scaleX") +
     (parseFloat(config.paddingRight) || 0);
 
   for (let i = 0; i < length; i++) {
     const item = items[i];
     const curX = (xPercents[i] / 100) * widths[i];
-    const distStart = item.offsetLeft + curX - startX;
-    const distLoop = distStart + widths[i] * gsap.getProperty(item, "scaleX");
+    const distanceToStart = item.offsetLeft + curX - startX;
+    const distanceToLoop =
+      distanceToStart +
+      widths[i] * gsap.getProperty(item, "scaleX");
 
-    tl.to(item, { xPercent: snap(((curX - distLoop) / widths[i]) * 100), duration: distLoop / pps }, 0)
+    tl.to(
+      item,
+      {
+        xPercent: snap(
+          ((curX - distanceToLoop) / widths[i]) * 100
+        ),
+        duration: distanceToLoop / pixelsPerSecond,
+      },
+      0
+    )
       .fromTo(
         item,
-        { xPercent: snap(((curX - distLoop + totalWidth) / widths[i]) * 100) },
+        {
+          xPercent: snap(
+            ((curX - distanceToLoop + totalWidth) / widths[i]) * 100
+          ),
+        },
         {
           xPercent: xPercents[i],
-          duration: (curX - distLoop + totalWidth - curX) / pps,
+          duration:
+            (curX - distanceToLoop + totalWidth - curX) /
+            pixelsPerSecond,
           immediateRender: false,
         },
-        distLoop / pps
+        distanceToLoop / pixelsPerSecond
       )
-      .add("label" + i, distStart / pps);
+      .add("label" + i, distanceToStart / pixelsPerSecond);
 
-    times[i] = distStart / pps;
+    times[i] = distanceToStart / pixelsPerSecond;
   }
+
+  function toIndex(index, vars = {}) {
+    if (Math.abs(index - curIndex) > length / 2) {
+      index += index > curIndex ? -length : length;
+    }
+    const newIndex = gsap.utils.wrap(0, length, index);
+    let time = times[newIndex];
+
+    if (time > tl.time() !== index > curIndex) {
+      vars.modifiers = { time: gsap.utils.wrap(0, tl.duration()) };
+      time += tl.duration() * (index > curIndex ? 1 : -1);
+    }
+
+    curIndex = newIndex;
+    vars.overwrite = true;
+    return tl.tweenTo(time, vars);
+  }
+
+  tl.next = (vars) => toIndex(curIndex + 1, vars);
+  tl.previous = (vars) => toIndex(curIndex - 1, vars);
+  tl.current = () => curIndex;
+  tl.toIndex = (index, vars) => toIndex(index, vars);
+  tl.times = times;
+  tl.progress(1, true).progress(0, true);
 
   if (config.reversed) {
     tl.vars.onReverseComplete();
@@ -75,13 +121,13 @@ function horizontalLoop(items, config = {}) {
 
 function FullBleed({ children }) {
   return (
-    <div className="w-screen overflow-hidden py-2" style={{ backgroundColor: '#0a0a0a' }}>
+    <div className="w-screen overflow-hidden py-2" style={{ backgroundColor: "#0a0a0a" }}>
       {children}
     </div>
   );
 }
 
-function MarqueeTrack({ text, speed = 0.5, repeat = 16 }) {
+function MarqueeTrack({ text, speed = 0.5, repeat = 8 }) {
   const trackRef = useRef(null);
   const tlRef = useRef(null);
 
@@ -95,14 +141,13 @@ function MarqueeTrack({ text, speed = 0.5, repeat = 16 }) {
 
       tlRef.current = horizontalLoop(items, {
         speed,
-        paused: false,
         repeat: -1,
         paddingRight: 0,
-        snap: 1,
+        paddingLeft: 0,
       });
     };
 
-    if ("fonts" in document && document.fonts?.ready) {
+    if (typeof document !== "undefined" && "fonts" in document && document.fonts?.ready) {
       document.fonts.ready.then(init);
     } else {
       init();
@@ -114,13 +159,13 @@ function MarqueeTrack({ text, speed = 0.5, repeat = 16 }) {
       window.removeEventListener("resize", onResize);
       tlRef.current?.kill();
     };
-  }, [text, speed, repeat]);
+  }, [text, speed]);
 
   const items = Array.from({ length: repeat }, (_, i) => (
     <span
       key={i}
-      className="marquee-item text-white text-sm md:text-lg tracking-wide select-none inline-block px-1"
-      style={{ letterSpacing: '0.15em' }}
+      className="marquee-item text-white text-sm md:text-lg tracking-wide select-none inline-block mr-[30px]"
+      style={{ letterSpacing: "0.15em" }}
     >
       {text}
     </span>
@@ -136,7 +181,7 @@ function MarqueeTrack({ text, speed = 0.5, repeat = 16 }) {
 export default function MarqueeSection() {
   return (
     <FullBleed>
-      <MarqueeTrack text={TEXT_RTL} speed={0.6} repeat={8} />
+      <MarqueeTrack text={TEXT_RTL} direction="left" speedSeconds={26} />
     </FullBleed>
   );
 }

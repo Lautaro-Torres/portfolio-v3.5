@@ -59,15 +59,12 @@ export function TransitionProvider({ children }) {
   const exitCurrentView = () => {
     return new Promise((resolve) => {
       const content = document.querySelector('main') || document.body;
-      
-      console.log('Step 1: Starting exit animation');
       gsap.to(content, {
         opacity: 0.3,
         y: -30,
         duration: 0.5,
         ease: "power2.inOut",
         onComplete: () => {
-          console.log('Step 1: Exit animation completed');
           resolve();
         }
       });
@@ -79,8 +76,6 @@ export function TransitionProvider({ children }) {
     return new Promise((resolve) => {
       const startTime = Date.now();
       const minDuration = 700; // Minimum 700ms for loader visibility
-
-      console.log('Step 2: Starting loader animation');
       
       // Set initial states
       gsap.set(overlay, { autoAlpha: 1, yPercent: -100 });
@@ -90,12 +85,9 @@ export function TransitionProvider({ children }) {
         onComplete: () => {
           const elapsed = Date.now() - startTime;
           const remaining = Math.max(0, minDuration - elapsed);
-          
-          console.log(`Step 2: Loader animation completed. Elapsed: ${elapsed}ms, Remaining: ${remaining}ms`);
-          
+
           // Ensure minimum duration
           setTimeout(() => {
-            console.log('Step 2: Minimum duration enforced, loader complete');
             resolve();
           }, remaining);
         }
@@ -124,22 +116,17 @@ export function TransitionProvider({ children }) {
 
   // Step 3: Navigate to new route
   const navigateToRoute = async (targetRoute) => {
-    console.log('Step 3: Navigating to new route');
     router.push(targetRoute);
     
     // Wait for route change to complete
     await new Promise(resolve => setTimeout(resolve, 150));
-    console.log('Step 3: Route navigation completed');
   };
 
   // Step 4: Hide loader and show new content
   const hideLoaderAndEnter = (overlay, loadingBar) => {
     return new Promise((resolve) => {
-      console.log('Step 4: Starting loader exit and content entry');
-      
       const tl = gsap.timeline({
         onComplete: () => {
-          console.log('Step 4: Loader exit and content entry completed');
           resolve();
         }
       });
@@ -177,18 +164,14 @@ export function TransitionProvider({ children }) {
 
   const startTransition = async (targetRoute) => {
     if (isTransitioning) {
-      console.log('Transition already in progress, skipping...');
       return;
     }
     
     // Don't transition if we're already on the target route
     if (currentRoute === targetRoute) {
-      console.log('Already on target route, skipping...');
       return;
     }
 
-    console.log(`🎬 Starting transition from ${currentRoute} to ${targetRoute}`);
-    
     setIsTransitioning(true);
     setTransitionProgress(0);
 
@@ -212,8 +195,6 @@ export function TransitionProvider({ children }) {
       
       // STEP 4: Hide loader and enter new view (wait for completion)
       await hideLoaderAndEnter(overlay, loadingBar);
-
-      console.log('🎉 Transition sequence completed successfully');
 
     } catch (error) {
       console.error('❌ Transition error:', error);

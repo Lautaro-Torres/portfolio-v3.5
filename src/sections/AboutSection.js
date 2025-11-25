@@ -216,23 +216,23 @@ export default function AboutSection() {
   return (
     <section ref={sectionRef} className="relative w-full pt-24 min-h-[60vh] mb-12 md:mb-24">
       {/* Mobile Layout */}
-        <div className="flex md:hidden flex-col">
+      <div className="flex md:hidden flex-col">
         <div className="flex flex-col mb-8">
           <div className="flex items-center mb-2">
             <h1 
               ref={getToMobileRef}
-              className="font-anton text-[clamp(2rem,10vw,3rem)] text-white uppercase leading-[0.9] tracking-[0.04em] font-normal"
+              className="font-anton text-[clamp(2.5rem,7.5vw,6rem)] text-white uppercase leading-[0.9] tracking-[0.04em] font-normal"
               style={{ perspective: "1000px" }}
             >
               GET TO
             </h1>
-            <div className="relative w-[80px] h-[80px] ml-2">
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 ml-2">
               <MateGlass />
             </div>
           </div>
           <h1 
             ref={knowMeMobileRef}
-            className="font-anton text-[clamp(2rem,10vw,3rem)] text-white uppercase leading-[0.9] tracking-[0.04em] font-normal ml-20"
+            className="font-anton text-[clamp(2.5rem,7.5vw,6rem)] text-white uppercase leading-[0.9] tracking-[0.04em] font-normal ml-12 sm:ml-20"
             style={{ perspective: "1000px" }}
           >
             KNOW ME
@@ -254,7 +254,7 @@ export default function AboutSection() {
                 >
                   GET TO
                 </h1>
-                <div className="relative w-[120px] h-[120px] ml-4">
+                <div className="relative w-24 h-24 lg:w-[120px] lg:h-[120px] ml-4">
                   <div className="absolute top-0 right-0 w-full h-full">
                     <MateGlass />
                   </div>
@@ -301,11 +301,11 @@ export default function AboutSection() {
       </div>
 
       {/* Experiences Section */}
-      <div ref={experiencesRef} className="mt-20">
+      <div ref={experiencesRef} className="mt-16 md:mt-20">
         {experiences.map((exp, idx) => (
           <div
             key={exp.company}
-            className={`py-6 border-b border-white/15`}
+            className="py-5 md:py-6 border-b border-white/15"
           >
             <button
               className="w-full flex justify-between items-start text-left focus:outline-none cursor-label-click"
@@ -333,9 +333,11 @@ export default function AboutSection() {
               </div>
             </button>
             <div
-              className={`overflow-hidden transition-all duration-500 ${openIndex === idx ? "max-h-[500px] opacity-100 mt-6" : "max-h-0 opacity-0"}`}
+              className={`overflow-hidden transition-all duration-500 ${
+                openIndex === idx ? "max-h-[500px] opacity-100 mt-6" : "max-h-0 opacity-0"
+              }`}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                 <div>
                   <p className="text-white/90 text-base md:text-lg leading-relaxed">{exp.description}</p>
                 </div>

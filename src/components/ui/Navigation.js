@@ -6,14 +6,17 @@ import { ScrollSmoother } from "gsap/ScrollSmoother";
 import gsap from "gsap";
 import SplitText from "gsap/SplitText";
 import { useRouter } from "next/navigation";
+import { useTransitionRouter } from "../../hooks/useTransitionRouter";
 import GlassPortalPill from "./GlassPortalPill";
+
+const EXPERIMENTS_ENABLED = false;
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const closeTimerRef = useRef(null);
   const router = useRouter();
-  const isTransitioning = false;
+  const { push, isTransitioning } = useTransitionRouter();
   const transformDurationMs = 900;
   const opacityDurationMs = 220;
   const baseItemClass = "transform-gpu";
@@ -118,7 +121,6 @@ export default function Navigation() {
       
       if (!targetElement) {
         // If element doesn't exist, navigate to home with hash
-        console.log(`Section "${sectionId}" not on current page, navigating to home`);
         router.push(`/#${sectionId}`);
         startClose();
         return;
@@ -154,14 +156,10 @@ export default function Navigation() {
       opacity: 1,
       onStart: () => { 
         el.style.pointerEvents = "auto"; 
-        console.log('Menu opening animation started');
       },
-      onComplete: () => {
-        console.log('Menu opened successfully');
-      },
+      onComplete: () => {},
       onReverseComplete: () => { 
         el.style.pointerEvents = "none"; 
-        console.log('Menu closed successfully');
       },
     });
 
@@ -175,14 +173,10 @@ export default function Navigation() {
 
   useEffect(() => {
     if (!overlayTlRef.current) return;
-    
-    console.log('Menu state changed:', { isMenuOpen, isClosing });
-    
+
     if (isMenuOpen) {
-      console.log('Playing menu animation...');
       overlayTlRef.current.timeScale(1).play();
     } else {
-      console.log('Reversing menu animation...');
       overlayTlRef.current.timeScale(1).reverse();
     }
   }, [isMenuOpen]);
@@ -223,11 +217,11 @@ export default function Navigation() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-[10000] mt-[1%]">
       <div className="max-w-[1900px] mx-auto px-[5%]">
-        <div className="relative grid grid-cols-[auto_1fr_auto] items-center">
+        <div className="relative flex items-center justify-between">
           {/* Left: Logo */}
           <div className="flex items-center relative z-[10003]">
             <button
-              onClick={() => router.push('/')}
+              onClick={() => push('/')}
               className={`transition-transform duration-200 ${isTransitioning ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
               disabled={isTransitioning}
             >
@@ -240,25 +234,27 @@ export default function Navigation() {
             </button>
           </div>
 
-          {/* Center: Desktop nav */}
-          <div className="hidden md:inline-block justify-self-center relative">
+          {/* Center: Desktop nav (perfectly centered on desktop) */}
+          <div className="hidden md:block absolute left-1/2 -translate-x-1/2">
             <div className="relative inline-block" ref={pillAnchorRef}>
               <div className="flex flex-row items-center justify-center px-6 py-3 md:px-8 md:py-4">
                 <div className="flex flex-row space-x-6 md:space-x-8">
-                <button 
-                  onClick={() => router.push('/projects')}
-                  className={`text-white font-figtree font-medium text-sm md:text-base transition-colors duration-300 tracking-wide ${isTransitioning ? 'opacity-50 cursor-not-allowed' : 'hover:text-green-300'}`}
-                  disabled={isTransitioning}
-                >
-                  Projects
-                </button>
-                <button 
-                  onClick={() => router.push('/experiments')}
-                  className={`text-white font-figtree font-medium text-sm md:text-base transition-colors duration-300 tracking-wide ${isTransitioning ? 'opacity-50 cursor-not-allowed' : 'hover:text-green-300'}`}
-                  disabled={isTransitioning}
-                >
-                  Experiments
-                </button>
+                  <button 
+                    onClick={() => push('/projects')}
+                    className={`text-white font-figtree font-medium text-sm md:text-base transition-colors duration-300 tracking-wide ${isTransitioning ? 'opacity-50 cursor-not-allowed' : 'hover:text-green-300'}`}
+                    disabled={isTransitioning}
+                  >
+                    Projects
+                  </button>
+                  {EXPERIMENTS_ENABLED && (
+                    <button 
+                      onClick={() => push('/experiments')}
+                      className={`text-white font-figtree font-medium text-sm md:text-base transition-colors duration-300 tracking-wide ${isTransitioning ? 'opacity-50 cursor-not-allowed' : 'hover:text-green-300'}`}
+                      disabled={isTransitioning}
+                    >
+                      Experiments
+                    </button>
+                  )}
                 </div>
               </div>
               {/* Portal glass pill aligned to this anchor */}
@@ -271,11 +267,8 @@ export default function Navigation() {
             type="button"
             aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={isMenuOpen}
-            onClick={() => {
-              console.log('Hamburger clicked, current state:', isMenuOpen);
-              isMenuOpen ? startClose() : setIsMenuOpen(true);
-            }}
-            className="md:hidden col-start-3 justify-self-end inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#0a0a0a]/80 border border-white/10 text-white hover:bg-[#0a0a0a]/70 transition-colors relative z-[10004]"
+            onClick={() => (isMenuOpen ? startClose() : setIsMenuOpen(true))}
+            className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#0a0a0a]/80 border border-white/10 text-white hover:bg-[#0a0a0a]/70 transition-colors relative z-[10004]"
           >
             <div className="relative w-5 h-5">
               <span className={`absolute left-0 right-0 h-[2px] bg-white rounded transition-all duration-300 ease-in-out ${isMenuOpen ? 'top-[9px] rotate-45' : 'top-[5px] rotate-0'}`}></span>
@@ -287,39 +280,77 @@ export default function Navigation() {
       </div>
 
       {/* Mobile slide-down menu */}
-       <div
-         ref={overlayRef}
-         className="md:hidden fixed top-0 left-0 right-0 bottom-0 z-[10001] bg-[#0a0a0a]/95 backdrop-blur-md flex flex-col pointer-events-none"
-         style={{ isolation: 'isolate' }}
-       >
-        <div className="px-[5%] pt-20 flex-grow relative z-[10002]" ref={menuContainerRef}>
+      <div
+        ref={overlayRef}
+        className="md:hidden fixed top-0 left-0 right-0 bottom-0 z-[10001] bg-[#0a0a0a]/95 backdrop-blur-md flex flex-col pointer-events-none"
+        style={{ isolation: "isolate" }}
+      >
+        <div className="px-[5%] pt-16 sm:pt-20 flex-grow relative z-[10002]" ref={menuContainerRef}>
           <ul className="divide-y divide-white/10">
-            <li className={`menu-item ${baseItemClass} ${isMenuOpen ? itemOpenClass : isClosing ? itemClosingClass : itemClosedClass}`} style={getItemStyle(0)}>
+            <li
+              className={`menu-item ${baseItemClass} ${
+                isMenuOpen ? itemOpenClass : isClosing ? itemClosingClass : itemClosedClass
+              }`}
+              style={getItemStyle(0)}
+            >
               <div className="menu-link_container">
-                <button onClick={() => { startClose(); router.push('/projects'); }} className="w-full text-left text-white text-4xl leading-[1.1] py-4 overflow-hidden">
+                <button
+                  onClick={() => {
+                    startClose();
+                    push("/projects");
+                  }}
+                  className="w-full text-left text-white leading-[1.1] py-3 sm:py-4 overflow-hidden"
+                  style={{ fontSize: "clamp(2.2rem, 9vw, 3rem)" }}
+                >
                   <span className="split inline-block">Projects</span>
                 </button>
               </div>
             </li>
-            <li className={`menu-item ${baseItemClass} ${isMenuOpen ? itemOpenClass : isClosing ? itemClosingClass : itemClosedClass}`} style={getItemStyle(1)}>
-              <div className="menu-link_container">
-                <button onClick={() => { startClose(); router.push('/experiments'); }} className="w-full text-left text-white text-4xl leading-[1.1] py-4 overflow-hidden">
-                  <span className="split inline-block">Experiments</span>
-                </button>
-              </div>
-            </li>
+            {EXPERIMENTS_ENABLED && (
+              <li
+                className={`menu-item ${baseItemClass} ${
+                  isMenuOpen ? itemOpenClass : isClosing ? itemClosingClass : itemClosedClass
+                }`}
+                style={getItemStyle(1)}
+              >
+                <div className="menu-link_container">
+                  <button
+                    onClick={() => {
+                      startClose();
+                      push("/experiments");
+                    }}
+                    className="w-full text-left text-white leading-[1.1] py-3 sm:py-4 overflow-hidden"
+                    style={{ fontSize: "clamp(2.2rem, 9vw, 3rem)" }}
+                  >
+                    <span className="split inline-block">Experiments</span>
+                  </button>
+                </div>
+              </li>
+            )}
           </ul>
         </div>
 
         {/* Footer links */}
         <div className="px-[5%] pb-8 text-white/80">
           <div className="space-y-1">
-            <a href="mailto:hola@example.com" className="block text-sm">hola@example.com</a>
-            <span className="block text-sm">+54 11 0000 0000</span>
+            <a
+              href="https://wa.me/543876121599"
+              target="_blank"
+              rel="noreferrer"
+              className="block text-sm"
+            >
+              +54 387 612 1599
+            </a>
           </div>
           <div className="space-y-1 mt-4">
-            <a href="https://www.linkedin.com" target="_blank" rel="noreferrer" className="block text-sm">LinkedIn</a>
-            <a href="https://www.instagram.com" target="_blank" rel="noreferrer" className="block text-sm">Instagram</a>
+            <a
+              href="https://www.linkedin.com/in/lautarotorres/"
+              target="_blank"
+              rel="noreferrer"
+              className="block text-sm"
+            >
+              LinkedIn
+            </a>
           </div>
         </div>
       </div>

@@ -23,6 +23,14 @@ export default function ProjectPage() {
   const project = projectsData.find((p) => p.slug === slug);
   if (!project) notFound();
 
+  const descriptionContent = Array.isArray(project.description)
+    ? project.description
+    : project.description
+    ? [project.description]
+    : project.hoverDescription
+    ? [project.hoverDescription]
+    : [];
+
   // --- GSAP Animations ---
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -133,12 +141,11 @@ export default function ProjectPage() {
         <div className="w-full max-w-[1900px] mx-auto px-[5%] py-12">
 
           {/* HEADER */}
-          <div className="grid grid-cols-12 gap-8 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-16">
             <div className="col-span-12 lg:col-span-7">
               <h1
                 ref={titleRef}
-                className="font-anton leading-[0.9] tracking-[0.04em]
-                text-[clamp(2rem,8vw,6rem)] md:text-[clamp(3rem,7vw,8rem)] normal-case mb-8"
+                className="font-anton leading-[0.9] tracking-[0.04em] text-[clamp(2.5rem,7.5vw,6rem)] normal-case mb-8"
               >
                 {project.title}
               </h1>
@@ -162,7 +169,7 @@ export default function ProjectPage() {
               {project.summary && (
                 <p
                   ref={summaryRef}
-                  className="text-white/90 text-xl md:text-2xl leading-relaxed tracking-wide font-ppneue"
+                  className="text-white/90 text-xl md:text-2xl leading-relaxed tracking-wide font-ppneue max-w-2xl"
                   style={{ lineHeight: "1.55" }}
                 >
                   {project.summary}
@@ -228,13 +235,18 @@ export default function ProjectPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 mb-20">
             {/* LEFT */}
             <div className="space-y-8">
-              {project.hoverDescription && (
-                <p
-                  className="font-figtree text-white text-[0.9rem] sm:text-base md:text-lg leading-relaxed"
-                  style={{ lineHeight: "1.7", letterSpacing: "0.02em", fontWeight: 300 }}
-                >
-                  {project.hoverDescription}
-                </p>
+              {descriptionContent.length > 0 && (
+                <div className="space-y-4">
+                  {descriptionContent.map((paragraph, index) => (
+                    <p
+                      key={index}
+                      className="font-figtree text-white text-[0.9rem] sm:text-base md:text-lg leading-relaxed whitespace-pre-line"
+                      style={{ lineHeight: "1.7", letterSpacing: "0.02em", fontWeight: 300 }}
+                    >
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
               )}
 
               {project.siteLink && (

@@ -13,7 +13,6 @@ export function useAssetPreloader() {
     { url: '/assets/models/dagoberto.glb', name: 'Modelo Dagoberto', type: 'model' },
     { url: '/assets/models/mate.glb', name: 'Modelo Mate', type: 'model' },
     { url: '/assets/models/monitor.glb', name: 'Modelo Monitor', type: 'model' },
-    { url: '/fonts/Anton-Regular.ttf', name: 'Fuente Anton', type: 'font' },
     { url: '/assets/images/projects/prozy-432632.webp', name: 'Imagen Prozy', type: 'image' }
   ];
 
@@ -157,8 +156,6 @@ export function useSmartLoader(options = {}) {
         if (!mounted) return;
         
         const step = steps[i];
-        console.log(`Step ${i + 1}: ${step.progress}% - ${step.task}`); // Debug
-        
         setProgress(step.progress);
         setCurrentTask(step.task);
         

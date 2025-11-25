@@ -110,7 +110,7 @@ export default function Projects() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative w-full pt-24 min-h-[95vh] md:min-h-[60vh] mb-12 md:mb-24">
+    <section ref={sectionRef} className="relative w-full pt-24 min-h-[90vh] md:min-h-[60vh] mb-12 md:mb-24">
       {/* MOBILE TITLE */}
       <div className="flex md:hidden flex-col mb-10">
         <div className="flex items-center mb-2">
@@ -119,7 +119,7 @@ export default function Projects() {
           </div>
           <h1 
             ref={selectedMobileRef}
-            className="font-anton text-[clamp(3rem,10vw,2.8rem)] text-white uppercase leading-[0.9] tracking-[0.04em] font-normal mb-0"
+            className="font-anton text-[clamp(2.5rem,7.5vw,6rem)] text-white uppercase leading-[0.9] tracking-[0.04em] font-normal mb-0"
             style={{ perspective: "1000px" }}
           >
             SELECTED
@@ -127,13 +127,13 @@ export default function Projects() {
         </div>
         <h1 
           ref={projectsMobileRef}
-          className="font-anton text-[clamp(3rem,10vw,2.8rem)] text-white uppercase leading-[0.9] tracking-[0.04em] font-normal mt-0"
+          className="font-anton text-[clamp(2.5rem,7.5vw,6rem)] text-white uppercase leading-[0.9] tracking-[0.04em] font-normal mt-0"
           style={{ perspective: "1000px" }}
         >
           PROJECTS
         </h1>
         <p ref={paragraphMobileRef} className="text-white text-base mt-3 mb-6">
-          A glimpse into the projects I&apos;ve designed and developed blending code, aesthetics, and purpose
+          A glimpse into the projects I&apos;ve designed and developed, blending code, aesthetics, and purpose.
         </p>
         <button
           ref={buttonMobileRef}
@@ -163,7 +163,7 @@ export default function Projects() {
             </div>
             <h1 
               ref={selectedDesktopRef}
-              className="font-anton text-display text-white uppercase leading-[0.9] tracking-[0.04em] font-normal ml-4 mb-0"
+              className="font-anton text-[clamp(2.5rem,7.5vw,6rem)] text-white uppercase leading-[0.9] tracking-[0.04em] font-normal ml-4 mb-0"
               style={{ perspective: "1000px" }}
             >
               SELECTED
@@ -171,7 +171,7 @@ export default function Projects() {
           </div>
           <h1 
             ref={projectsDesktopRef}
-            className="font-anton text-display text-white uppercase leading-[0.9] tracking-[0.04em] font-normal mt-0"
+          className="font-anton text-[clamp(2.5rem,7.5vw,6rem)] text-white uppercase leading-[0.9] tracking-[0.04em] font-normal mt-0"
             style={{ perspective: "1000px" }}
           >
             PROJECTS
@@ -179,7 +179,7 @@ export default function Projects() {
         </div>
         <div className="flex-1 flex flex-col items-start justify-end">
           <p ref={paragraphDesktopRef} className="text-white text-2xl md:text-[1.45rem] leading-relaxed max-w-xl mb-6">
-            A glimpse into the projects I&apos;ve designed and developed blending code, aesthetics, and purpose
+            A glimpse into the projects I&apos;ve designed and developed, blending code, aesthetics, and purpose.
           </p>
           <button
             ref={buttonDesktopRef}
@@ -237,20 +237,20 @@ export default function Projects() {
             }, 100);
           }}
           breakpoints={{
-            0:   { 
+            0: {
               slidesPerView: 1,
-              centeredSlides: true,
-              spaceBetween: 32
+              centeredSlides: false,
+              spaceBetween: 32,
             },
-            640: { 
+            640: {
               slidesPerView: 2,
               centeredSlides: false,
-              spaceBetween: 32
+              spaceBetween: 32,
             },
-            1024: { 
+            1024: {
               slidesPerView: 3,
               centeredSlides: false,
-              spaceBetween: 32
+              spaceBetween: 32,
             },
           }}
           className="relative projects-swiper"

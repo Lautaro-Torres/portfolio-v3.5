@@ -7,7 +7,6 @@ export function usePageTransition() {
 
   const navigateTo = (route) => {
     if (isTransitioning) {
-      console.log('Transition already in progress, skipping...');
       return;
     }
     startTransition(route);

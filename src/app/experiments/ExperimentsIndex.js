@@ -10,6 +10,8 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
+const EXPERIMENTS_ENABLED = false;
+
 export default function ExperimentsIndex() {
   const pageRef = useRef(null);
   const titleRef = useLetterReveal();
@@ -188,6 +190,10 @@ export default function ExperimentsIndex() {
   const desktopRows = createDesktopRows();
   const mobileRows = createMobileRows();
 
+  if (!EXPERIMENTS_ENABLED) {
+    return null;
+  }
+
   return (
     <div
       ref={pageRef}
@@ -198,14 +204,14 @@ export default function ExperimentsIndex() {
       <main className="relative w-full pt-20">
         <div className="w-full max-w-[1900px] mx-auto px-[5%]">
           {/* Page Title */}
-          <div className="py-12 mb-0 flex justify-between items-center">
+          <div className="py-12 mb-0 flex flex-col gap-y-3 sm:flex-row sm:items-center sm:justify-between">
             <h1
               ref={titleRef}
-              className="text-4xl md:text-5xl lg:text-6xl font-montreal text-white uppercase leading-[0.9] tracking-[0.04em] font-normal"
+              className="font-montreal text-white uppercase leading-[0.9] tracking-[0.04em] font-normal text-[clamp(2.5rem,7.5vw,6rem)]"
             >
               Experiments
             </h1>
-            <div ref={countRef} className="text-right">
+            <div ref={countRef} className="text-left sm:text-right">
               <span className="text-lg md:text-xl font-montreal text-white/70 uppercase tracking-[0.08em]">
                 №{experimentsData.length}↘
               </span>
@@ -214,7 +220,7 @@ export default function ExperimentsIndex() {
 
           {/* Description */}
           <div ref={descriptionRef} className="w-full mb-8">
-            <p className="text-white/80 text-lg md:text-xl font-montreal">
+            <p className="text-white/80 text-lg md:text-xl font-montreal max-w-2xl">
               Experimental works merging creativity and technology.
             </p>
           </div>
@@ -223,7 +229,7 @@ export default function ExperimentsIndex() {
           <div ref={desktopGridRef} className="w-full hidden md:block">
             <div className="flex flex-col gap-y-6">
               {desktopRows.map((row, rowIdx) => {
-                const rowHeight = "h-[40vh]";
+                const rowHeight = "min-h-[260px] md:min-h-[40vh]";
 
                 const getGridClass = (cols, isFullWidth) => {
                   if (isFullWidth) return "grid gap-4 grid-cols-1";
@@ -265,7 +271,7 @@ export default function ExperimentsIndex() {
           <div ref={mobileGridRef} className="w-full block md:hidden">
             <div className="flex flex-col gap-y-3 md:gap-y-6">
               {mobileRows.map((row, rowIdx) => {
-                const rowHeight = "h-[24vh]";
+                const rowHeight = "min-h-[220px]";
 
                 const getGridClass = (cols, isFullWidth) => {
                   if (isFullWidth)

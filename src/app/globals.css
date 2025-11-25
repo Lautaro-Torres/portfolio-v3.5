@@ -294,6 +294,25 @@ a { color: inherit; text-decoration: none; }
   animation: gradient-loop 20s ease infinite;
 }
 
+/* ====== Film grain overlay for hero and cinematic sections ====== */
+@keyframes film-grain {
+  0% { transform: translate3d(0,0,0); }
+  25% { transform: translate3d(-1px, 1px, 0); }
+  50% { transform: translate3d(1px, -0.5px, 0); }
+  75% { transform: translate3d(-0.5px, -1px, 0); }
+  100% { transform: translate3d(0,0,0); }
+}
+
+.film-grain-overlay {
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px),
+    radial-gradient(circle, rgba(0,0,0,0.12) 1px, transparent 1px);
+  background-size: 3px 3px, 4px 4px;
+  mix-blend-mode: soft-light;
+  opacity: 0.28;
+  animation: film-grain 1.05s steps(2, end) infinite;
+}
+
 
 
 @layer base {

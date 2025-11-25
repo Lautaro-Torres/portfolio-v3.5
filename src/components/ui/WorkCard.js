@@ -60,12 +60,12 @@ export default function WorkCard({
       {/* ------------------------------ */}
       {/* MOBILE TOP-LEFT */}
       {/* ------------------------------ */}
-      <div className="absolute top-4 left-4 z-30 md:hidden">
+      <div className="absolute top-4 left-4 z-30 md:hidden max-w-[50%]">
         {hasLogo ? (
           <img
             src={logoUrl}
             alt={`${title} logo`}
-            className="h-10 w-auto object-contain brightness-0 invert drop-shadow-lg"
+            className="w-full h-auto object-contain brightness-0 invert drop-shadow-lg"
           />
         ) : (
           <span

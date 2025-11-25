@@ -13,6 +13,7 @@
     "lighthouse": "npx lighthouse http://localhost:3000 --output=html --output-path=./lighthouse-report.html"
   },
   "dependencies": {
+    "@lumaai/luma-web": "^0.2.2",
     "@react-three/drei": "^10.1.2",
     "@react-three/fiber": "^9.1.2",
     "@react-three/postprocessing": "^3.0.4",

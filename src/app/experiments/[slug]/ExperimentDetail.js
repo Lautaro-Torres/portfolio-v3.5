@@ -133,11 +133,11 @@ export default function ExperimentPage() {
         <div className="w-full max-w-[1900px] mx-auto px-[5%] py-12">
 
           {/* HEADER */}
-          <div className="grid grid-cols-12 gap-8 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-16">
             <div className="col-span-12 lg:col-span-7 mb-8 lg:mb-0">
               <h1
                 ref={titleRef}
-                className="text-5xl md:text-7xl lg:text-8xl xl:text-9xl font-ppneue leading-tight"
+                className="font-ppneue leading-tight text-[clamp(2.5rem,7.5vw,6rem)]"
                 style={{
                   wordBreak: "keep-all",
                   overflowWrap: "normal",
@@ -164,7 +164,7 @@ export default function ExperimentPage() {
               {/* SUMMARY BIGGER */}
               <p
                 ref={summaryRef}
-                className="text-white/90 text-xl md:text-2xl leading-relaxed tracking-wide"
+                className="text-white/90 text-xl md:text-2xl leading-relaxed tracking-wide max-w-2xl"
               >
                 {experiment.summary}
               </p>

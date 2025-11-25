@@ -46,7 +46,7 @@ export default function DagobertoBadge() {
       style={{ contain: "layout paint size" }}
     >
       <a
-        href="mailto:"
+        href="mailto:contact@lautor.dev"
         aria-label="Contact via email"
         className="block w-full h-full rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
       >

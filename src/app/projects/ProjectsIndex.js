@@ -196,11 +196,14 @@ export default function ProjectsIndex() {
       <main className="relative w-full pt-20">
         <div className="w-full max-w-[1900px] mx-auto px-[5%]">
         {/* Page Title */}
-        <div className="py-12 mb-0 flex justify-between items-center">
-          <h1 ref={titleRef} className="text-4xl md:text-5xl lg:text-6xl font-montreal text-white uppercase leading-[0.9] tracking-[0.04em] font-normal">
+        <div className="py-12 mb-0 flex flex-col gap-y-3 sm:flex-row sm:items-center sm:justify-between">
+          <h1
+            ref={titleRef}
+            className="font-montreal text-white uppercase leading-[0.9] tracking-[0.04em] font-normal text-[clamp(2.5rem,7.5vw,6rem)]"
+          >
             Projects
           </h1>
-          <div ref={countRef} className="text-right">
+          <div ref={countRef} className="text-left sm:text-right">
             <span className="text-lg md:text-xl font-montreal text-white/70 uppercase tracking-[0.08em]">
               №{projectsData.length}↘
             </span>
@@ -209,7 +212,7 @@ export default function ProjectsIndex() {
 
         {/* Description */}
         <div ref={descriptionRef} className="w-full mb-8">
-          <p className="text-white/80 text-lg md:text-xl font-montreal">
+          <p className="text-white/80 text-lg md:text-xl font-montreal max-w-2xl">
             A showcase of projects developed independently and in collaboration.
           </p>
         </div>
@@ -218,8 +221,8 @@ export default function ProjectsIndex() {
         <div ref={desktopGridRef} className="w-full hidden md:block">
           <div className="flex flex-col gap-y-6">
             {desktopRows.map((row, rowIdx) => {
-              // Altura uniforme para todas las tarjetas de escritorio
-              const rowHeight = 'h-[40vh]';
+              // Altura uniforme para todas las tarjetas de escritorio, con mínimo cómodo en pantallas bajas
+              const rowHeight = "min-h-[260px] md:min-h-[40vh]";
               
               const getGridClass = (cols, isFullWidth) => {
                 if (isFullWidth) return 'grid gap-4 grid-cols-1';
@@ -258,8 +261,8 @@ export default function ProjectsIndex() {
         <div ref={mobileGridRef} className="w-full block md:hidden">
           <div className="flex flex-col gap-y-3 md:gap-y-6">
             {mobileRows.map((row, rowIdx) => {
-              // Altura uniforme y reducida para todas las tarjetas
-              const rowHeight = 'h-[24vh]';
+              // Altura uniforme y reducida para todas las tarjetas, con mínimo en píxeles
+              const rowHeight = "min-h-[220px]";
               
               const getGridClass = (cols, isFullWidth) => {
                 if (isFullWidth) return 'grid gap-2 md:gap-4 grid-cols-1';

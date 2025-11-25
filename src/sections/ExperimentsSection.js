@@ -10,6 +10,8 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
+const EXPERIMENTS_ENABLED = false;
+
 export default function ExperimentsSection() {
   const router = useRouter();
   
@@ -106,14 +108,20 @@ export default function ExperimentsSection() {
 
   const handleClick = (e) => {
     e.preventDefault();
-    console.log('ExperimentsSection clicked: navigating to /experiments');
     router.push('/experiments');
   };
+
+  if (!EXPERIMENTS_ENABLED) {
+    return null;
+  }
+
   return (
-    <section ref={sectionRef} className="relative w-full h-[70vh] bg-black overflow-hidden rounded-lg p-[5%]">
+    <section
+      ref={sectionRef}
+      className="relative w-full h-[60vh] sm:h-[70vh] bg-black overflow-hidden rounded-lg p-[5%]"
+    >
       <style>{`
-        .exp-title { font-size: clamp(16px, 4vw, 52px); }
-        @media (min-width: 768px) { .exp-title { font-size: clamp(22px, 4.5vw, 72px); } }
+        .exp-title { font-size: clamp(2.5rem, 7.5vw, 6rem); }
       `}</style>
       {/* Background video (full viewport). Replace src with your asset under /public/videos. */}
       {/* Future interactive hover effects on the video can be added here (e.g., shaders). */}
@@ -138,7 +146,7 @@ export default function ExperimentsSection() {
         <div className="grid grid-cols-3 grid-rows-2 w-full h-full" />
 
         {/* Big titles (uniform size across all three, matching previous typography) */}
-        <div className="absolute inset-0 grid grid-cols-3 place-items-center">
+        <div className="absolute inset-0 grid grid-cols-1 md:grid-cols-3 place-items-center">
           <div className="w-full flex items-center justify-center">
             <span 
               ref={ideasRef}
@@ -170,13 +178,25 @@ export default function ExperimentsSection() {
 
         {/* Corner labels (Montreal light) */}
         <div className="absolute inset-0 p-4">
-          <div className="absolute top-4 left-4 font-ppneue font-normal text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">Creative Tech</div>
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 font-ppneue font-normal text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">Motion & 3D</div>
-          <div className="absolute top-4 right-4 font-ppneue font-normal text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">New Media</div>
+          <div className="absolute top-3 sm:top-4 left-3 sm:left-4 font-ppneue font-normal text-[10px] sm:text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">
+            Creative Tech
+          </div>
+          <div className="absolute top-3 sm:top-4 left-1/2 -translate-x-1/2 font-ppneue font-normal text-[10px] sm:text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">
+            Motion & 3D
+          </div>
+          <div className="absolute top-3 sm:top-4 right-3 sm:right-4 font-ppneue font-normal text-[10px] sm:text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">
+            New Media
+          </div>
 
-          <div className="absolute bottom-4 left-4 font-ppneue font-normal text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">Sound/Visual</div>
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 font-ppneue font-normal text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">Side Projects</div>
-          <div className="absolute bottom-4 right-4 font-ppneue font-normal text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">Tools & VJing</div>
+          <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 font-ppneue font-normal text-[10px] sm:text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">
+            Sound/Visual
+          </div>
+          <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 font-ppneue font-normal text-[10px] sm:text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">
+            Side Projects
+          </div>
+          <div className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 font-ppneue font-normal text-[10px] sm:text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">
+            Tools & VJing
+          </div>
         </div>
 
         {/* Grid overlay lines */}
