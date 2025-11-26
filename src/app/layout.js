@@ -9,8 +9,55 @@ import { LoadingProvider } from "../contexts/LoadingContext";
 import { TransitionProvider } from "../contexts/TransitionContext";
 
 export const metadata = {
-  title: "Lautaro Torres",
-  description: "Mi portfolio personal",
+  title: {
+    default: "Lautaro Torres — Creative Developer & Designer",
+    template: "%s | Lautaro Torres",
+  },
+  description:
+    "Portfolio de Lautaro Torres, Creative Developer & Designer desde Argentina. Proyectos web distintivos que combinan código, diseño y motion.",
+  keywords: [
+    "Lautaro Torres",
+    "portfolio",
+    "creative developer",
+    "creative developer & designer",
+    "desarrollador creativo",
+    "frontend developer",
+    "web design",
+    "motion",
+    "3D",
+    "Next.js",
+    "React",
+    "WordPress",
+  ],
+  authors: [{ name: "Lautaro Torres", url: "https://www.linkedin.com/in/lautarotorres/" }],
+  openGraph: {
+    title: "Lautaro Torres — Creative Developer & Designer",
+    description:
+      "Portfolio de Lautaro Torres, Creative Developer & Designer desde Argentina. Proyectos web distintivos que combinan código, diseño y motion.",
+    url: "/",
+    siteName: "Lautaro Torres Portfolio",
+    locale: "es_AR",
+    type: "website",
+    images: [
+      {
+        url: "/assets/images/logos/logo-lt-4327568.svg",
+        width: 512,
+        height: 512,
+        alt: "Logo monograma LT",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Lautaro Torres — Creative Developer & Designer",
+    description:
+      "Portfolio de Lautaro Torres, Creative Developer & Designer desde Argentina. Experimentos, proyectos y trabajo comercial.",
+    images: ["/assets/images/logos/logo-lt-4327568.svg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export const viewport = {

@@ -52,22 +52,22 @@ function MateGlassModel({ position = [1, .5, 0], containerRef }) {
 
     const trigger = ScrollTrigger.create({
       trigger: containerRef.current,
-      start: "top 80%",
+      start: "top 75%",
       onEnter: () => {
         // Animate scale and opacity
         gsap.to(ref.current.scale, {
           x: responsiveScale,
           y: responsiveScale,
           z: responsiveScale,
-          duration: 1.5,
-          ease: "back.out(1.7)"
+          duration: 0.9,
+          ease: "back.out(1.4)"
         });
 
         ref.current.traverse((child) => {
           if (child.isMesh && child.material) {
             gsap.to(child.material, {
               opacity: 1,
-              duration: 1.5,
+              duration: 0.9,
               ease: "power2.out"
             });
           }

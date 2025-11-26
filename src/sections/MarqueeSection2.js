@@ -5,7 +5,7 @@ import gsap from "gsap";
 const TEXT_RTL =
   "AFTER EFFECTS • PHOTOSHOP • PREMIERE • ILLUSTRATOR • BLENDER • FIGMA •";
 
-// Same GSAP seamless loop helper, reused for reverse direction
+// GSAP helper based on seamless horizontalLoop pattern
 function horizontalLoop(items, config = {}) {
   items = gsap.utils.toArray(items);
   const tl = gsap.timeline({
@@ -110,11 +110,6 @@ function horizontalLoop(items, config = {}) {
   tl.times = times;
   tl.progress(1, true).progress(0, true);
 
-  if (config.reversed) {
-    tl.vars.onReverseComplete();
-    tl.reverse();
-  }
-
   return tl;
 }
 
@@ -126,7 +121,7 @@ function FullBleed({ children }) {
   );
 }
 
-function MarqueeTrack({ text, speed = 0.5, repeat = 8 }) {
+function MarqueeTrack({ text, speed = 0.5, repeat = 8, direction = "left" }) {
   const trackRef = useRef(null);
   const tlRef = useRef(null);
 
@@ -142,7 +137,7 @@ function MarqueeTrack({ text, speed = 0.5, repeat = 8 }) {
         speed,
         repeat: -1,
         paddingRight: 0,
-        reversed: true,
+        paddingLeft: 0,
       });
     };
 
@@ -164,14 +159,23 @@ function MarqueeTrack({ text, speed = 0.5, repeat = 8 }) {
     <span
       key={i}
       className="marquee-item text-white text-sm md:text-lg tracking-wide select-none inline-block mr-[30px]"
-      style={{ letterSpacing: "0.15em" }}
+      style={{
+        letterSpacing: "0.15em",
+        transform: direction === "right" ? "scaleX(-1)" : "none",
+      }}
     >
       {text}
     </span>
   ));
 
   return (
-    <div ref={trackRef} className="flex whitespace-nowrap will-change-transform">
+    <div
+      ref={trackRef}
+      className="flex whitespace-nowrap will-change-transform"
+      style={{
+        transform: direction === "right" ? "scaleX(-1)" : "none",
+      }}
+    >
       {items}
     </div>
   );

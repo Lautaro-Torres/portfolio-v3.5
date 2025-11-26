@@ -17,15 +17,15 @@ export default function Footer() {
     const ctx = gsap.context(() => {
       // Animate 3D logo container
       if (logoContainerRef.current) {
-        gsap.set(logoContainerRef.current, { opacity: 0, y: 50 });
+        gsap.set(logoContainerRef.current, { opacity: 0, y: 35 });
         gsap.to(logoContainerRef.current, {
           opacity: 1,
           y: 0,
-          duration: 1.2,
+          duration: 0.75,
           ease: "power2.out",
           scrollTrigger: {
             trigger: footerRef.current,
-            start: "top 80%",
+            start: "top 85%",
             toggleActions: "play none none none",
             once: true,
             invalidateOnRefresh: true,
@@ -35,16 +35,16 @@ export default function Footer() {
 
       // Animate footer content
       if (footerContentRef.current) {
-        gsap.set(footerContentRef.current, { opacity: 0, y: 30 });
+        gsap.set(footerContentRef.current, { opacity: 0, y: 20 });
         gsap.to(footerContentRef.current, {
           opacity: 1,
           y: 0,
-          duration: 0.9,
-          delay: 0.3,
+          duration: 0.65,
+          delay: 0.2,
           ease: "power2.out",
           scrollTrigger: {
             trigger: footerRef.current,
-            start: "top 80%",
+            start: "top 85%",
             toggleActions: "play none none none",
             once: true,
             invalidateOnRefresh: true,
@@ -59,7 +59,7 @@ export default function Footer() {
   return (
     <footer
       ref={footerRef}
-      className="relative w-full min-h-[80vh] md:min-h-screen flex flex-col"
+      className="relative w-full min-h-screen flex flex-col"
       style={{ backgroundColor: "#0a0a0a" }}
     >
       {/* Canvas 3D - Centrado en el footer */}

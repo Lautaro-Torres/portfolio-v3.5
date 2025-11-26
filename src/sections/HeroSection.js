@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import AvatarLumaSplat from "../components/AvatarLumaSplat";
 import { useLetterReveal } from "../hooks/useLetterReveal";
@@ -9,12 +9,15 @@ export default function HeroSection() {
   const heroRef = useRef(null);
   const taglineRef = useRef(null);
   const subtitleRef = useRef(null);
+  const [isHeroReady, setIsHeroReady] = useState(false);
   
   // Hero section animates immediately on page load (not on scroll)
-  const titleLeftRef = useLetterReveal({ scrollTrigger: false });
-  const titleRightRef = useLetterReveal({ delay: 0.4, scrollTrigger: false });
+  const titleLeftRef = useLetterReveal({ scrollTrigger: false, playWhen: isHeroReady });
+  const titleRightRef = useLetterReveal({ delay: 0.4, scrollTrigger: false, playWhen: isHeroReady });
 
   useEffect(() => {
+    if (!isHeroReady) return;
+
     const ctx = gsap.context(() => {
       // Initial state - hide tagline and subtitle
       gsap.set([taglineRef.current, subtitleRef.current], {
@@ -52,7 +55,7 @@ export default function HeroSection() {
     }, heroRef);
 
     return () => ctx.revert(); // Cleanup
-  }, []);
+  }, [isHeroReady]);
 
   return (
     <section
@@ -62,16 +65,40 @@ export default function HeroSection() {
     >
       {/* Background avatar - Luma Gaussian Splat viewer */}
       <div className="absolute inset-0 w-full h-full z-10">
-        <AvatarLumaSplat />
+        <AvatarLumaSplat onReady={() => setIsHeroReady(true)} />
       </div>
+
+      {/* Film grain & vignette overlays to better integrate the splat visually */}
+      <div
+        className="pointer-events-none absolute inset-0 z-[12] opacity-[0.08] mix-blend-soft-light"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, rgba(255,255,255,0.10) 1px, transparent 1px), radial-gradient(circle, rgba(10,10,10,0.22) 1px, transparent 1px)",
+          backgroundSize: "80px 80px",
+        }}
+      />
+      <div
+        className="pointer-events-none absolute inset-0 z-[13]"
+        style={{
+          background:
+            "radial-gradient(circle at center, rgba(10,10,10,0) 0%, rgba(10,10,10,0.35) 78%, rgba(10,10,10,0.75) 100%)",
+        }}
+      />
 
       {/* Gradient overlay for better text contrast */}
       <div className="pointer-events-none absolute inset-0 z-[15]">
         {/* Mobile: linear from bottom to transparent */}
-        <div className="block md:hidden w-full h-full bg-[linear-gradient(to_top,rgba(0,0,0,0.9)_0%,rgba(0,0,0,0.45)_40%,rgba(0,0,0,0)_100%)]" />
+        <div className="block md:hidden w-full h-full bg-[linear-gradient(to_top,rgba(10,10,10,0.9)_0%,rgba(10,10,10,0.55)_28%,rgba(10,10,10,0.18)_55%,rgba(10,10,10,0)_100%)]" />
         {/* Desktop: radial around center */}
-        <div className="hidden md:block w-full h-full bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.0)_0%,rgba(0,0,0,0.4)_52%,rgba(0,0,0,0.9)_100%)]" />
+        <div className="hidden md:block w-full h-full bg-[radial-gradient(circle_at_50%_80%,rgba(10,10,10,0.0)_0%,rgba(10,10,10,0.45)_45%,rgba(10,10,10,0.82)_100%)]" />
       </div>
+
+      {/* Hero loader overlay - fades out when the splat has rendered its first frame */}
+      <div
+        className={`pointer-events-none absolute inset-0 z-[18] bg-black/40 backdrop-blur-[6px] transition-opacity duration-500 ${
+          isHeroReady ? "opacity-0" : "opacity-100"
+        }`}
+      />
 
       <div className="relative z-20 w-full h-full pointer-events-none pt-16 md:pt-0">
         <div className="w-full max-w-[1900px] mx-auto px-[5%] h-full flex flex-col justify-end md:justify-center pb-[22%] md:pb-0">

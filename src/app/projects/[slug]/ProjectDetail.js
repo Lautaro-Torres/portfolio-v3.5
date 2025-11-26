@@ -61,15 +61,15 @@ export default function ProjectPage() {
       if (heroRef.current) {
         gsap.fromTo(
           heroRef.current,
-          { scale: 1.06, opacity: 0 },
+          { scale: 1.04, opacity: 0 },
           {
             scale: 1,
             opacity: 1,
-            duration: 1.1,
+            duration: 0.8,
             ease: "power2.out",
             scrollTrigger: {
               trigger: heroRef.current,
-              start: "top 85%",
+              start: "top 80%",
               toggleActions: "play none none none",
               once: true,
             },
@@ -141,11 +141,11 @@ export default function ProjectPage() {
         <div className="w-full max-w-[1900px] mx-auto px-[5%] py-12">
 
           {/* HEADER */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-y-6 md:gap-8 mb-10 md:mb-16">
             <div className="col-span-12 lg:col-span-7">
               <h1
                 ref={titleRef}
-                className="font-anton leading-[0.9] tracking-[0.04em] text-[clamp(2.5rem,7.5vw,6rem)] normal-case mb-8"
+                className="font-anton leading-[0.9] tracking-[0.04em] text-[clamp(2.5rem,7.5vw,6rem)] normal-case mb-4 md:mb-8"
               >
                 {project.title}
               </h1>

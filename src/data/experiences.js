@@ -1,9 +1,9 @@
 export const experiences = [
   {
-    company: "Nexawave",
+    company: "Digital Metrics",
     role: "Lead Web Developer",
     period: "2023 – Present",
-    description: "Founded and led the web development area, managing teams and projects for major brands like Nissan, Fiat, Mitsubishi, and GWM. Developed a workflow methodology implemented company-wide and built Nexawave's visual identity and corporate website.",
+    description: "Founded and led the web development area, managing teams and projects for major brands like Nissan, Fiat, Mitsubishi, and GWM. Developed a workflow methodology implemented company-wide and helped shape Digital Metrics' visual identity and corporate website.",
     highlights: [
       "Managed and delivered 20 web projects of various scales and industries",
       "Coordinated multidisciplinary teams (design, marketing, development)",

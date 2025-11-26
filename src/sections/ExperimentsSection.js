@@ -31,15 +31,15 @@ export default function ExperimentsSection() {
     const ctx = gsap.context(() => {
       // Animate video background with scale effect
       if (videoRef.current) {
-        gsap.set(videoRef.current, { opacity: 0, scale: 1.1 });
+        gsap.set(videoRef.current, { opacity: 0, scale: 1.05 });
         gsap.to(videoRef.current, {
           opacity: 1,
           scale: 1,
-          duration: 1.2,
+          duration: 0.8,
           ease: "power2.out",
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: "top 80%",
+            start: "top 75%",
             toggleActions: "play none none none",
             once: true,
             invalidateOnRefresh: true,
@@ -52,11 +52,11 @@ export default function ExperimentsSection() {
         gsap.set(overlayRef.current, { opacity: 0 });
         gsap.to(overlayRef.current, {
           opacity: 1,
-          duration: 0.8,
+          duration: 0.6,
           ease: "power2.out",
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: "top 80%",
+            start: "top 75%",
             toggleActions: "play none none none",
             once: true,
             invalidateOnRefresh: true,
@@ -70,12 +70,12 @@ export default function ExperimentsSection() {
         gsap.set(lines, { scaleY: 0, transformOrigin: 'top' });
         gsap.to(lines, {
           scaleY: 1,
-          duration: 0.8,
-          stagger: 0.1,
+          duration: 0.7,
+          stagger: 0.08,
           ease: "power2.out",
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: "top 80%",
+            start: "top 75%",
             toggleActions: "play none none none",
             once: true,
             invalidateOnRefresh: true,
@@ -85,16 +85,16 @@ export default function ExperimentsSection() {
 
       // Animate CTA indicator
       if (ctaRef.current) {
-        gsap.set(ctaRef.current, { y: 20, opacity: 0 });
+        gsap.set(ctaRef.current, { y: 16, opacity: 0 });
         gsap.to(ctaRef.current, {
           y: 0,
           opacity: 1,
-          duration: 0.9,
-          delay: 0.6,
+          duration: 0.6,
+          delay: 0.35,
           ease: "power2.out",
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: "top 80%",
+            start: "top 75%",
             toggleActions: "play none none none",
             once: true,
             invalidateOnRefresh: true,

@@ -58,15 +58,15 @@ export default function ExperimentPage() {
       if (heroRef.current) {
         gsap.fromTo(
           heroRef.current,
-          { scale: 1.06, opacity: 0 },
+          { scale: 1.04, opacity: 0 },
           {
             scale: 1,
             opacity: 1,
-            duration: 1.1,
+            duration: 0.8,
             ease: "power2.out",
             scrollTrigger: {
               trigger: heroRef.current,
-              start: "top 85%",
+              start: "top 80%",
               toggleActions: "play none none none",
               once: true,
             },

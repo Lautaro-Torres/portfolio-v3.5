@@ -21,20 +21,21 @@ if (typeof window !== "undefined") {
  */
 export function useLetterReveal(options = {}) {
   const {
-    stagger = 0.05,
-    duration = 0.8,
-    ease = "power3.out",
-    yStart = 100,
-    rotationX = -90,
+    stagger = 0.035,
+    duration = 0.6,
+    ease = "power2.out",
+    yStart = 60,
+    rotationX = -65,
     scrollTrigger = true,
     delay = 0,
+    playWhen = true,
   } = options;
 
   const elementRef = useRef(null);
 
   useEffect(() => {
     const element = elementRef.current;
-    if (!element) return;
+    if (!element || !playWhen) return;
 
     // Split text into individual letters
     const text = element.textContent;
@@ -56,10 +57,11 @@ export function useLetterReveal(options = {}) {
       letters.push(span);
     }
 
-    // Set initial state (no opacity change - only slide-up)
+    // Set initial state: hidden and shifted, so text isn't visible before its animation
     gsap.set(letters, {
       y: yStart,
       rotationX: rotationX,
+      opacity: 0,
     });
 
     // Create animation
@@ -68,14 +70,15 @@ export function useLetterReveal(options = {}) {
       gsap.to(letters, {
         y: 0,
         rotationX: 0,
+        opacity: 1,
         duration: duration,
         stagger: stagger,
         ease: ease,
         delay: delay,
         scrollTrigger: {
           trigger: element,
-          start: "top 90%", // Triggers when top of element reaches 90% down the viewport (more conservative)
-          end: "bottom 20%", // Animation completes before element leaves bottom 20%
+          start: "top 85%", // Triggers when top of element reaches 85% down the viewport (slightly earlier)
+          end: "bottom 15%", // Animation completes before element leaves bottom 15%
           toggleActions: "play none none none", // Only play on enter, no reverse
           once: true, // Only trigger once
           invalidateOnRefresh: true, // Recalculate on refresh to handle dynamic content
@@ -87,6 +90,7 @@ export function useLetterReveal(options = {}) {
       gsap.to(letters, {
         y: 0,
         rotationX: 0,
+        opacity: 1,
         duration: duration,
         stagger: stagger,
         ease: ease,
@@ -102,7 +106,7 @@ export function useLetterReveal(options = {}) {
         }
       });
     };
-  }, [stagger, duration, ease, yStart, rotationX, scrollTrigger, delay]);
+  }, [stagger, duration, ease, yStart, rotationX, scrollTrigger, delay, playWhen]);
 
   return elementRef;
 }

@@ -27,12 +27,12 @@ export default function ProjectsIndex() {
         gsap.to(countRef.current, {
           x: 0,
           opacity: 1,
-          duration: 0.8,
-          delay: 0.2,
+          duration: 0.6,
+          delay: 0.1,
           ease: "power2.out",
           scrollTrigger: {
             trigger: countRef.current,
-            start: "top 90%",
+            start: "top 85%",
             toggleActions: "play none none none",
             once: true,
             invalidateOnRefresh: true,
@@ -46,12 +46,12 @@ export default function ProjectsIndex() {
         gsap.to(descriptionRef.current, {
           y: 0,
           opacity: 1,
-          duration: 0.9,
-          delay: 0.3,
+          duration: 0.65,
+          delay: 0.2,
           ease: "power2.out",
           scrollTrigger: {
             trigger: descriptionRef.current,
-            start: "top 90%",
+            start: "top 85%",
             toggleActions: "play none none none",
             once: true,
             invalidateOnRefresh: true,
@@ -63,16 +63,16 @@ export default function ProjectsIndex() {
       if (desktopGridRef.current) {
         const cards = desktopGridRef.current.querySelectorAll('.work-card-wrapper');
         if (cards.length > 0) {
-          gsap.set(cards, { y: 60, opacity: 0 });
+          gsap.set(cards, { y: 44, opacity: 0 });
           gsap.to(cards, {
             y: 0,
             opacity: 1,
-            duration: 0.8,
-            stagger: 0.1,
+            duration: 0.7,
+            stagger: 0.11,
             ease: "power2.out",
             scrollTrigger: {
               trigger: desktopGridRef.current,
-              start: "top 85%",
+              start: "top 80%",
               toggleActions: "play none none none",
               once: true,
               invalidateOnRefresh: true,
@@ -85,16 +85,16 @@ export default function ProjectsIndex() {
       if (mobileGridRef.current) {
         const cards = mobileGridRef.current.querySelectorAll('.work-card-wrapper');
         if (cards.length > 0) {
-          gsap.set(cards, { y: 60, opacity: 0 });
+          gsap.set(cards, { y: 44, opacity: 0 });
           gsap.to(cards, {
             y: 0,
             opacity: 1,
-            duration: 0.8,
-            stagger: 0.1,
+            duration: 0.7,
+            stagger: 0.11,
             ease: "power2.out",
             scrollTrigger: {
               trigger: mobileGridRef.current,
-              start: "top 85%",
+              start: "top 80%",
               toggleActions: "play none none none",
               once: true,
               invalidateOnRefresh: true,

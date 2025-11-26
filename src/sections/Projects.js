@@ -40,15 +40,15 @@ export default function Projects() {
       // Animate paragraph as a whole (avoids clipping for single-line text)
       const animateParagraph = (element) => {
         if (!element) return;
-        gsap.set(element, { y: 40, opacity: 0, willChange: 'transform' });
+        gsap.set(element, { y: 28, opacity: 0, willChange: 'transform' });
         gsap.to(element, {
           y: 0,
           opacity: 1,
-          duration: 0.9,
+          duration: 0.65,
           ease: 'power2.out',
           scrollTrigger: {
             trigger: element,
-            start: 'top 90%',
+            start: 'top 85%',
             toggleActions: 'play none none none',
             once: true,
             invalidateOnRefresh: true,
@@ -62,16 +62,16 @@ export default function Projects() {
       // Animate buttons with scale-up + fade-in
       [buttonDesktopRef.current, buttonMobileRef.current].forEach(button => {
         if (button) {
-          gsap.set(button, { scale: 0.9, opacity: 0 });
+          gsap.set(button, { scale: 0.94, opacity: 0 });
           
           gsap.to(button, {
             scale: 1,
             opacity: 1,
-            duration: 0.7,
-            ease: "back.out(1.2)",
+            duration: 0.55,
+            ease: "back.out(1.4)",
             scrollTrigger: {
               trigger: button,
-              start: "top 90%",
+              start: "top 85%",
               toggleActions: "play none none none",
               once: true,
               invalidateOnRefresh: true,
@@ -85,17 +85,17 @@ export default function Projects() {
         const slides = sliderRef.current.querySelectorAll('.swiper-slide');
         
         if (slides.length > 0) {
-          gsap.set(slides, { x: -60, opacity: 0 });
+          gsap.set(slides, { x: -40, opacity: 0 });
           
           gsap.to(slides, {
             x: 0,
             opacity: 1,
-            duration: 0.9,
-            stagger: 0.15,
-            ease: "power3.out",
+            duration: 0.7,
+            stagger: 0.12,
+            ease: "power2.out",
             scrollTrigger: {
               trigger: sliderRef.current,
-              start: "top 85%",
+              start: "top 80%",
               toggleActions: "play none none none",
               once: true,
               invalidateOnRefresh: true,

@@ -89,18 +89,18 @@ export default function AboutSection() {
         if (lines.length > 0) {
           // Set initial state - lines start below their position
           gsap.set(lines, {
-            y: 50,
+            y: 32,
           });
 
           // Animate lines up with stagger
           gsap.to(lines, {
             y: 0,
-            duration: 0.9,
-            stagger: 0.12, // 120ms between each line
+            duration: 0.7,
+            stagger: 0.1, // 100ms between each line
             ease: "power2.out",
             scrollTrigger: {
               trigger: paragraphDesktopRef.current,
-              start: "top 90%",
+              start: "top 85%",
               toggleActions: "play none none none",
               once: true,
               invalidateOnRefresh: true,
@@ -116,18 +116,18 @@ export default function AboutSection() {
         if (lines.length > 0) {
           // Set initial state - lines start below their position
           gsap.set(lines, {
-            y: 40,
+            y: 26,
           });
 
           // Animate lines up with stagger
           gsap.to(lines, {
             y: 0,
-            duration: 0.9,
-            stagger: 0.12, // 120ms between each line
+            duration: 0.65,
+            stagger: 0.09, // ~90ms between each line
             ease: "power2.out",
             scrollTrigger: {
               trigger: paragraphMobileRef.current,
-              start: "top 90%",
+              start: "top 85%",
               toggleActions: "play none none none",
               once: true,
               invalidateOnRefresh: true,
@@ -143,19 +143,19 @@ export default function AboutSection() {
         // Set initial state for experiences
         gsap.set(experienceItems, {
           opacity: 0,
-          y: 40,
+          y: 32,
         });
 
         // Animate experiences with stagger
         gsap.to(experienceItems, {
           opacity: 1,
           y: 0,
-          duration: 0.7,
-          stagger: 0.15, // 150ms between each experience item
+          duration: 0.6,
+          stagger: 0.12, // ~120ms between each experience item
           ease: "power2.out",
           scrollTrigger: {
             trigger: experiencesRef.current,
-            start: "top 85%",
+            start: "top 80%",
             toggleActions: "play none none none",
             once: true,
             invalidateOnRefresh: true,
@@ -279,7 +279,7 @@ export default function AboutSection() {
             <p ref={paragraphDesktopRef} className="text-white text-xl md:text-2xl leading-relaxed">
               <span>
                 <i>Lautaro Torres</i>, <b>Creative Developer & Designer</b> from Argentina.<br/>
-                Currently <b>Lead Web Developer</b> at <a href="https://nexawave.pro" target="_blank" rel="noopener noreferrer"><b>Nexawave↗</b></a> — handling project management, creative direction, and digital production.<br/>
+                Currently <b>Lead Web Developer</b> at <a href="https://digitalmetrics.com.ar/" target="_blank" rel="noopener noreferrer"><b>Digital&nbsp;Metrics↗</b></a> — handling project management, creative direction, and digital production.<br/>
                 Open to collaborations with agencies & studios seeking distinctive digital work.
               </span>
             </p>
@@ -293,7 +293,7 @@ export default function AboutSection() {
           <p ref={paragraphMobileRef} className="text-white text-sm leading-relaxed">
             <span>
               <i>Lautaro Torres</i>, <b>Creative Developer & Designer</b> from Argentina.<br/>
-              Currently <b>Lead Web Developer</b> at <a href="https://nexawave.pro" target="_blank" rel="noopener noreferrer"><b>Nexawave↗</b></a> — handling project management, creative direction, and digital production.<br/>
+              Currently <b>Lead Web Developer</b> at <a href="https://digitalmetrics.com.ar/" target="_blank" rel="noopener noreferrer"><b>Digital&nbsp;Metrics↗</b></a> — handling project management, creative direction, and digital production.<br/>
               Open to collaborations with agencies & studios seeking distinctive digital work.
             </span>
           </p>

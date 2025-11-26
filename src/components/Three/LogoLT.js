@@ -194,7 +194,9 @@ export default function LogoLT() {
         alignItems: "center",
         justifyContent: "center",
         zIndex: 10,
-        pointerEvents: "none",
+        // Enable interaction so users can drag/rotate the logo
+        pointerEvents: "auto",
+        touchAction: "none",
         // Hardware acceleration
         transform: "translateZ(0)",
         backfaceVisibility: "hidden",

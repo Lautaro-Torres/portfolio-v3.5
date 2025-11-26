@@ -11,23 +11,48 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-export default function AvatarLumaSplat() {
+export default function AvatarLumaSplat({ onReady = () => {} }) {
   const containerRef = useRef(null);
 
   useEffect(() => {
+    // Bail out gracefully if WebGL is not available in this environment
+    if (typeof window === "undefined" || typeof document === "undefined") return;
+    if (!("WebGLRenderingContext" in window)) {
+      console.warn("[AvatarLumaSplat] WebGL not supported in this environment.");
+      return;
+    }
+
     const container = containerRef.current;
     if (!container) return;
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
 
-    const renderer = new THREE.WebGLRenderer({
-      antialias: false,
-      alpha: true,
-    });
-    // Cap DPR for performance: 1.0 on mobile, max 1.5 on desktop
+    // Wrap renderer creation in try/catch to avoid hard crashes
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        antialias: false,
+        alpha: true,
+        powerPreference: "high-performance",
+      });
+    } catch (error) {
+      console.warn("[AvatarLumaSplat] Failed to create WebGLRenderer:", error);
+      return;
+    }
+
+    // If the browser immediately loses the context, don't keep trying to render
+    const handleContextError = (event) => {
+      console.warn(
+        "[AvatarLumaSplat] WebGL context creation error or context lost; disabling splat renderer.",
+        event?.statusMessage || ""
+      );
+    };
+    renderer.domElement.addEventListener("webglcontextcreationerror", handleContextError);
+    renderer.domElement.addEventListener("webglcontextlost", handleContextError);
+    // Cap DPR tighter for performance: lower on mobile, modest on desktop
     const isMobileDevice = window.innerWidth <= 768;
-    const maxDPR = isMobileDevice ? 1.0 : 1.5;
+    const maxDPR = isMobileDevice ? 0.8 : 1.1;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDPR));
 
     const getSize = () => {
@@ -38,6 +63,7 @@ export default function AvatarLumaSplat() {
     };
 
     const { width, height } = getSize();
+    // Keep renderer size equal to container to avoid any cropping artifacts
     renderer.setSize(width, height);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     container.appendChild(renderer.domElement);
@@ -99,7 +125,7 @@ export default function AvatarLumaSplat() {
     const backdropGeo = new THREE.CylinderGeometry(
       4.5, // radio arriba (más grande)
       7.0, // radio abajo (mucho más grande, forma "huevo" marcada)
-      7, // altura mayor
+      9, // altura mayor para cubrir más verticalmente
       64, // más segmentos → más suave
       1,
       true // openEnded
@@ -123,8 +149,9 @@ export default function AvatarLumaSplat() {
 
     const backdrop = new THREE.Mesh(backdropGeo, backdropMat);
 
-    // Escala no uniforme para reforzar sensación "huevo" y que cubra más
-    backdrop.scale.set(1.3, 1.6, 1.3);
+    // Escala no uniforme para reforzar sensación "huevo" y que cubra más,
+    // con más altura para evitar que se vea el borde del cilindro
+    backdrop.scale.set(1.3, 2.0, 1.3);
 
     // Mucho más cerca de la cámara para competir con el splat en profundidad
     backdrop.position.set(0, 1.8, 0.35);
@@ -143,7 +170,7 @@ export default function AvatarLumaSplat() {
     const handlePointerMove = (event) => {
       const x = event.clientX / window.innerWidth - 0.5;
       const y = event.clientY / window.innerHeight - 0.5;
-      const strength = 0.9; // parallax más fuerte
+      const strength = 0.55; // parallax más moderado para una experiencia más suave
       targetParallax.set(x * strength, -y * strength);
     };
 
@@ -163,6 +190,7 @@ export default function AvatarLumaSplat() {
     // INTRO ANIMATION & RENDER LOOP
     // -----------------------------------------------------------------------
     let startTime = null;
+    let hasSignaledReady = false;
     const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 
     // Wrap animation logic in a function for ScrollTrigger control
@@ -226,6 +254,16 @@ export default function AvatarLumaSplat() {
       camera.lookAt(look);
 
       renderer.render(scene, camera);
+
+      // Consider the splat "ready" after the first successful render
+      if (!hasSignaledReady) {
+        hasSignaledReady = true;
+        try {
+          onReady();
+        } catch (e) {
+          console.warn("[AvatarLumaSplat] onReady callback threw an error:", e);
+        }
+      }
     };
 
     // Animation loop control - will be managed by ScrollTrigger
@@ -282,17 +320,17 @@ export default function AvatarLumaSplat() {
           trigger: heroSection,
           start: "top top",
           end: "bottom top",
-          scrub: true, // Smooth scrubbing with scroll
+          scrub: 0.4, // Slight smoothing with scroll, more responsive than true
           invalidateOnRefresh: true,
         },
       });
 
       // Smooth transition: slide up, fade out, and blur on scroll down
       wipeTimelineInstance.to(heroSection, {
-        y: -80, // Subtle slide up
-        opacity: 0.4, // Fade out
-        filter: "blur(8px)", // Subtle blur effect
-        ease: "power2.inOut",
+        y: -60, // Slightly smaller slide up
+        opacity: 0.55, // Preserve more visibility while fading
+        filter: "blur(4px)", // Softer blur for a lighter feel
+        ease: "none", // Direct mapping with scrub for a snappier response
       });
     }
 
@@ -324,8 +362,12 @@ export default function AvatarLumaSplat() {
       if (renderer.domElement && renderer.domElement.parentNode === container) {
         container.removeChild(renderer.domElement);
       }
+
+      // Remove context error listeners
+      renderer.domElement.removeEventListener("webglcontextcreationerror", handleContextError);
+      renderer.domElement.removeEventListener("webglcontextlost", handleContextError);
     };
-  }, []);
+  }, [onReady]);
 
   return (
     <div ref={containerRef} className="w-full h-full relative overflow-hidden" />

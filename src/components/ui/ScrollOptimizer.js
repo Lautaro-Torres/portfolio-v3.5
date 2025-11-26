@@ -14,9 +14,9 @@ export default function ScrollOptimizer() {
     const smoother = ScrollSmoother.create({
       wrapper: '#smooth-wrapper',
       content: '#smooth-content',
-      smooth: 1.2,
+      smooth: 0.7,
       effects: true,
-      smoothTouch: 0.1,
+      smoothTouch: 0.05,
     });
 
     // Refresh ScrollTriggers multiple times to handle dynamic content loading
