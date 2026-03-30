@@ -1,9 +1,8 @@
 "use client";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useGLTF, MeshTransmissionMaterial, Text, AdaptiveDpr, AdaptiveEvents } from "@react-three/drei";
-import { glassMaterialProps, useDragPauseSpin } from "./common";
+import { Canvas, useThree } from "@react-three/fiber";
+import { useGLTF, Text, AdaptiveEvents, MeshTransmissionMaterial } from "@react-three/drei";
+import { useDragPauseSpin } from "./common";
 import SharedEnvironment from "./SharedEnvironment";
-import * as THREE from "three";
 import { useRef, useEffect, useMemo, useState } from "react";
 
 // Preload del modelo
@@ -24,22 +23,37 @@ function LogoLTModel({ isActive = true }) {
   }, []);
   // const clock = useRef(new THREE.Clock()); // Not used
   
-  // Memoize material properties
-  const materialProps = glassMaterialProps;
-
-  // Use loaded nodes directly to avoid breaking model structure
+  // Stable glass profile so transmission can be adjusted
+  // without breaking the look.
+  const materialProps = useMemo(
+    () => ({
+      thickness: 0.5,
+      roughness: 0,
+      transmission: 1,
+      ior: 0.85,
+      chromaticAberration: 0.025,
+      anisotropicBlur: 0,
+      distortion: 0.02,
+      distortionScale: 1,
+      temporalDistortion: 0.5,
+      backside: false,
+      envMapIntensity: 0.1,
+      resolution: isMobile ? 512 : 1024,
+      samples: isMobile ? 8 : 12,
+      opacity: 1,
+    }),
+    [isMobile]
+  );
 
   // Memoize text properties
   const textProps = useMemo(() => ({
     common: {
       color: "white",
       letterSpacing: 0.04,
-      // Use PP Neue Montreal font file (troika-three-text requires a URL)
-      // Note: Using .woff fallback because .woff2 is not present in /public/fonts/montreal
-      font: "/fonts/montreal/PPNeueMontreal-Medium.woff",
+      font: "/fonts/anton/Anton-Regular.ttf",
     },
     mobile: {
-      fontSize: 1.5,
+      fontSize: 1.9,
       maxWidth: 15,
     },
     desktop: {
@@ -54,57 +68,34 @@ function LogoLTModel({ isActive = true }) {
 
   // Memoize text components to prevent unnecessary rerenders
   const mobileText = useMemo(() => (
-    <>
-      <Text 
-        position={[-2.2, 2, -8]} 
-        anchorX="center" 
-        anchorY="center"
-        textAlign="left"
-        {...textProps.common}
-        {...textProps.mobile}
-      >
-        LET'S
-      </Text>
-      
-      <Text 
-        position={[-2, 0.5, -8]} 
-        anchorX="center" 
-        anchorY="center"
-        textAlign="left"
-        {...textProps.common}
-        {...textProps.mobile}
-      >
-        BUILD
-      </Text>
-      
-      <Text 
-        position={[0, -1, -8]} 
-        anchorX="center" 
-        anchorY="center"
-        textAlign="left"
-        {...textProps.common}
-        {...textProps.mobile}
-      >
-        TOGETHER
-      </Text>
-    </>
+    <Text
+      position={[0, 2.5, -12]}
+      anchorX="center"
+      anchorY="center"
+      textAlign="left"
+      lineHeight={1.08}
+      {...textProps.common}
+      {...textProps.mobile}
+    >
+      {"LET\u2019S\nBUILD\nTOGETHER"}
+    </Text>
   ), [textProps]);
 
   const desktopText = useMemo(() => (
     <>
       <Text 
-        position={[-10, 3, -8]} 
+        position={[-10, 3, -12]} 
         anchorX="left" 
         anchorY="center"
         textAlign="left"
         {...textProps.common}
         {...textProps.desktop}
       >
-        LET'S BUILD
+        LET&apos;S BUILD
       </Text>
       
       <Text 
-        position={[10, 0, -8]} 
+        position={[10, 0, -12]} 
         anchorX="right" 
         anchorY="center"
         textAlign="right"
@@ -116,27 +107,39 @@ function LogoLTModel({ isActive = true }) {
     </>
   ), [textProps]);
 
+  const meshes = useMemo(
+    () => Object.keys(nodes).map((key) => nodes[key]).filter((node) => node?.isMesh),
+    [nodes]
+  );
+
   return (
     <group scale={Math.min(viewport.width / 7, viewport.height / 7)}>
       {isMobile ? mobileText : desktopText}
       
       <group 
         ref={ref} 
-        position={isMobile ? [0, -0.5, 0] : [0, 0, 0]} 
-        scale={isMobile ? 0.9 : 0.7}
+        position={isMobile ? [0, -0.5, 2.8] : [0, 0, 2.8]} 
+        scale={isMobile ? 0.8 : 0.55}
         {...dragHandlers}
       >
-        {Object.keys(nodes).map((key) => {
-          const node = nodes[key];
-          if (node.isMesh) {
-            return (
-              <mesh key={key} geometry={node.geometry} position={node.position} rotation={node.rotation} scale={node.scale}>
-                <MeshTransmissionMaterial {...materialProps} />
-              </mesh>
-            );
-          }
-          return null;
-        })}
+        {meshes.length > 0
+          ? meshes.map((node, idx) => (
+            <mesh
+              key={node.uuid || idx}
+              geometry={node.geometry}
+              position={[node.position.x, node.position.y, node.position.z]}
+              rotation={[node.rotation.x, node.rotation.y, node.rotation.z]}
+              scale={[node.scale.x, node.scale.y, node.scale.z]}
+            >
+              <MeshTransmissionMaterial {...materialProps} />
+            </mesh>
+          ))
+          : (
+            <mesh>
+              <torusKnotGeometry args={[0.8, 0.18, 128, 16]} />
+              <MeshTransmissionMaterial {...materialProps} />
+            </mesh>
+          )}
       </group>
     </group>
   );
@@ -205,11 +208,11 @@ export default function LogoLT() {
     >
       <Canvas 
         camera={cameraSettings}
-        dpr={[0.75, 1.25]} // Lower DPR cap for performance
-        frameloop={isVisible ? "always" : "never"}
+        dpr={[1, 1.8]}
+        frameloop="always"
         performance={{ min: 0.5 }}
         gl={{
-          antialias: !isMobile, // Disable antialiasing on mobile
+          antialias: true,
           powerPreference: "high-performance",
           alpha: true, // Transparent canvas to show page background (same as Monitor)
           stencil: false, // Disable stencil buffer if not needed
@@ -217,13 +220,19 @@ export default function LogoLT() {
         }}
       >
         <>
-          <AdaptiveDpr pixelated />
           <AdaptiveEvents />
+          <ambientLight intensity={0.2} />
           <directionalLight 
-            position={[10, 10, 10]} 
-            intensity={0.4} 
+            position={[10, 10, 10]}
+            intensity={0.58}
             castShadow={false}
           />
+          <directionalLight
+            position={[-8, 5, -6]}
+            intensity={0.28}
+            castShadow={false}
+          />
+          <pointLight position={[0, -2.5, 4]} intensity={0.32} distance={18} />
           {/* Pass visibility down so inner hook can skip updates when hidden */}
           <LogoLTModel isActive={isVisible} />
           <SharedEnvironment />

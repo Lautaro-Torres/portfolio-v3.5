@@ -13,9 +13,9 @@ const MonitorPlaceholder = React.memo(function MonitorPlaceholder() {
   
   // Basic material
   const material = useMemo(() => new THREE.MeshBasicMaterial({
-    color: "#40ff60",
+    color: "#d8dde7",
     transparent: true,
-    opacity: 0.8,
+    opacity: 0.72,
   }), []);
 
   // Very slow rotation

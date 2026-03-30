@@ -1,7 +1,16 @@
+import { notFound } from "next/navigation";
 import { projectsData } from "../../../data/projects";
+import ProjectDetail from "./ProjectDetail";
+
+export function generateStaticParams() {
+  return projectsData.map((project) => ({
+    slug: project.slug,
+  }));
+}
 
 export async function generateMetadata({ params }) {
-  const project = projectsData.find((p) => p.slug === params.slug);
+  const { slug } = await params;
+  const project = projectsData.find((p) => p.slug === slug);
 
   if (!project) {
     return {
@@ -23,9 +32,13 @@ export async function generateMetadata({ params }) {
   return {
     title,
     description,
+    alternates: {
+      canonical: `/projects/${slug}`,
+    },
     openGraph: {
       title,
       description,
+      url: `/projects/${slug}`,
       images: [{ url: ogImage }],
     },
     twitter: {
@@ -37,5 +50,14 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export { default } from "./ProjectDetail";
+export default async function ProjectPage({ params }) {
+  const { slug } = await params;
+  const project = projectsData.find((p) => p.slug === slug);
+
+  if (!project) {
+    notFound();
+  }
+
+  return <ProjectDetail project={project} />;
+}
 

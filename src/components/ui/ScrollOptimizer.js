@@ -1,38 +1,69 @@
 "use client";
-import { useEffect } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ScrollSmoother } from 'gsap/ScrollSmoother';
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ScrollSmoother } from "gsap/ScrollSmoother";
 
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
+function refreshScrollLayout() {
+  ScrollTrigger.refresh();
+  const smoother = ScrollSmoother.get();
+  if (smoother && typeof smoother.refresh === "function") {
+    smoother.refresh();
+  }
 }
 
 export default function ScrollOptimizer() {
+  const pathname = usePathname();
+
   useEffect(() => {
-    // Create ScrollSmoother with the correct wrapper/content structure
+    gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
+
+    const wrapper = document.querySelector("#smooth-wrapper");
+    const content = document.querySelector("#smooth-content");
+    if (!wrapper || !content) return;
+
+    ScrollSmoother.get()?.kill();
+
+    // Keep scrolling physically smooth without extra visual side-effects.
     const smoother = ScrollSmoother.create({
-      wrapper: '#smooth-wrapper',
-      content: '#smooth-content',
-      smooth: 0.7,
-      effects: true,
-      smoothTouch: 0.05,
+      wrapper: "#smooth-wrapper",
+      content: "#smooth-content",
+      smooth: 0.9,
+      smoothTouch: 0.08,
+      normalizeScroll: true,
+      effects: false,
+      ignoreMobileResize: true,
     });
 
-    // Refresh ScrollTriggers multiple times to handle dynamic content loading
-    // This ensures ScrollTriggers work even when sections load asynchronously
-    const refreshIntervals = [100, 300, 600, 1000, 1500];
-    const timers = refreshIntervals.map(delay => 
-      setTimeout(() => {
-        ScrollTrigger.refresh();
-      }, delay)
-    );
+    const refreshTimer = window.setTimeout(() => {
+      refreshScrollLayout();
+    }, 120);
 
     return () => {
-      timers.forEach(timer => clearTimeout(timer));
+      window.clearTimeout(refreshTimer);
       smoother?.kill();
     };
   }, []);
+
+  // Client navigations swap content inside #smooth-content but ScrollSmoother keeps old height.
+  // Refresh after route change (staggered) so mobile layout / hero / video can settle.
+  useEffect(() => {
+    let cancelled = false;
+    const run = () => {
+      if (!cancelled) refreshScrollLayout();
+    };
+    run();
+    const rafId = requestAnimationFrame(run);
+    const t200 = window.setTimeout(run, 200);
+    const t500 = window.setTimeout(run, 500);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(rafId);
+      window.clearTimeout(t200);
+      window.clearTimeout(t500);
+    };
+  }, [pathname]);
 
   return null;
 }

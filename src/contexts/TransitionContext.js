@@ -15,12 +15,85 @@ export function TransitionProvider({ children }) {
   const transitionTlRef = useRef(null);
   const overlayRef = useRef(null);
   const loadingBarRef = useRef(null);
-  const contentRef = useRef(null);
+  const pendingRouteRef = useRef(null);
+  const routeChangeResolverRef = useRef(null);
+  const routeChangeTimeoutRef = useRef(null);
+
+  const clearPendingRoute = () => {
+    pendingRouteRef.current = null;
+    routeChangeResolverRef.current = null;
+    if (routeChangeTimeoutRef.current) {
+      clearTimeout(routeChangeTimeoutRef.current);
+      routeChangeTimeoutRef.current = null;
+    }
+  };
+
+  const getPathnameFromHref = (href) => {
+    if (typeof window === "undefined") return href;
+    try {
+      return new URL(href, window.location.origin).pathname;
+    } catch {
+      return href;
+    }
+  };
+
+  const handleChunkLoadFallback = () => {
+    if (typeof window === "undefined" || !pendingRouteRef.current) return;
+    const targetRoute = pendingRouteRef.current;
+    clearPendingRoute();
+    window.location.assign(targetRoute);
+  };
 
   // Track route changes
   useEffect(() => {
     setCurrentRoute(pathname);
+
+    if (!pendingRouteRef.current || !routeChangeResolverRef.current) return;
+
+    const targetPathname = getPathnameFromHref(pendingRouteRef.current);
+    if (pathname === targetPathname) {
+      const resolve = routeChangeResolverRef.current;
+      clearPendingRoute();
+      resolve(true);
+    }
   }, [pathname]);
+
+  useEffect(() => {
+    const isChunkLoadError = (error) => {
+      const message =
+        error?.message ||
+        error?.reason?.message ||
+        error?.reason?.toString?.() ||
+        "";
+
+      return (
+        message.includes("ChunkLoadError") ||
+        message.includes("Loading chunk") ||
+        message.includes("failed to fetch") ||
+        message.includes("Failed to fetch dynamically imported module")
+      );
+    };
+
+    const handleError = (event) => {
+      if (!isChunkLoadError(event?.error)) return;
+      event.preventDefault?.();
+      handleChunkLoadFallback();
+    };
+
+    const handleRejection = (event) => {
+      if (!isChunkLoadError(event?.reason)) return;
+      event.preventDefault?.();
+      handleChunkLoadFallback();
+    };
+
+    window.addEventListener("error", handleError);
+    window.addEventListener("unhandledrejection", handleRejection);
+
+    return () => {
+      window.removeEventListener("error", handleError);
+      window.removeEventListener("unhandledrejection", handleRejection);
+    };
+  }, []);
 
   // Create transition overlay element
   const createTransitionOverlay = () => {
@@ -42,7 +115,7 @@ export function TransitionProvider({ children }) {
 
     const loadingText = document.createElement('div');
     loadingText.className = 'absolute bottom-20 left-1/2 transform -translate-x-1/2';
-    loadingText.innerHTML = '<p class="text-white/60 text-sm font-montreal tracking-wider uppercase">Loading</p>';
+    loadingText.innerHTML = '<p class="text-white/60 text-sm font-general font-light tracking-[0.14em] uppercase">Loading</p>';
 
     loadingContainer.appendChild(loadingBar);
     overlay.appendChild(loadingContainer);
@@ -116,10 +189,31 @@ export function TransitionProvider({ children }) {
 
   // Step 3: Navigate to new route
   const navigateToRoute = async (targetRoute) => {
-    router.push(targetRoute);
-    
-    // Wait for route change to complete
-    await new Promise(resolve => setTimeout(resolve, 150));
+    const targetPathname = getPathnameFromHref(targetRoute);
+
+    try {
+      router.prefetch?.(targetRoute);
+    } catch {
+      // Prefetch is opportunistic only.
+    }
+
+    const routeChanged = await new Promise((resolve) => {
+      pendingRouteRef.current = targetRoute;
+      routeChangeResolverRef.current = resolve;
+      routeChangeTimeoutRef.current = setTimeout(() => {
+        clearPendingRoute();
+        resolve(false);
+      }, 3500);
+
+      router.push(targetRoute);
+    });
+
+    if (!routeChanged && typeof window !== "undefined" && window.location.pathname !== targetPathname) {
+      window.location.assign(targetRoute);
+      return false;
+    }
+
+    return routeChanged;
   };
 
   // Step 4: Hide loader and show new content
@@ -191,7 +285,11 @@ export function TransitionProvider({ children }) {
       await showLoader(overlay, loadingBar);
       
       // STEP 3: Navigate to new route (wait for completion)
-      await navigateToRoute(targetRoute);
+      const routeChanged = await navigateToRoute(targetRoute);
+
+      if (!routeChanged) {
+        return;
+      }
       
       // STEP 4: Hide loader and enter new view (wait for completion)
       await hideLoaderAndEnter(overlay, loadingBar);

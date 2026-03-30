@@ -115,7 +115,7 @@ function horizontalLoop(items, config = {}) {
 
 function FullBleed({ children }) {
   return (
-    <div className="w-screen overflow-hidden py-2" style={{ backgroundColor: "#0a0a0a" }}>
+    <div className="relative left-1/2 -translate-x-1/2 w-screen overflow-hidden py-1 md:py-1.5" style={{ backgroundColor: "#0a0a0a" }}>
       {children}
     </div>
   );

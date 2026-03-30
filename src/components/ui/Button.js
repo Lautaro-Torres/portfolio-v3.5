@@ -6,7 +6,7 @@ export default function Button({ children, href, onClick, className = "" }) {
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className={`px-6 py-3 rounded-full font-figtree font-bold shadow-lg transition-all duration-300 ease-in-out inline-block ${className}`}
+        className={`group inline-flex items-center gap-2 text-white/85 text-[11px] md:text-xs uppercase tracking-[0.16em] border-b border-white/35 pb-1 hover:text-white transition-colors ${className}`}
       >
         {children}
       </a>
@@ -14,7 +14,7 @@ export default function Button({ children, href, onClick, className = "" }) {
   }
   return (
     <button
-      className={`px-6 py-3 rounded-full font-figtree font-bold shadow-lg transition-all duration-300 ease-in-out ${className}`}
+      className={`group inline-flex items-center gap-2 text-white/85 text-[11px] md:text-xs uppercase tracking-[0.16em] border-b border-white/35 pb-1 hover:text-white transition-colors ${className}`}
       onClick={onClick}
     >
       {children}

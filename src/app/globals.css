@@ -1,42 +1,21 @@
 /* Local font faces (served from /public/fonts) */
 @font-face {
-  font-family: 'PP Neue Montreal';
-  src: url('/fonts/montreal/PPNeueMontreal-Book.woff') format('woff');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'PP Neue Montreal';
-  src: url('/fonts/montreal/PPNeueMontreal-Medium.woff') format('woff');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'PP Neue Montreal';
-  src: url('/fonts/montreal/PPNeueMontreal-Bold.woff') format('woff');
-  font-weight: 700;
+  font-family: 'General Sans';
+  src: url('/fonts/General%20Sans/fonts/GeneralSans-Variable.woff2') format('woff2'),
+       url('/fonts/General%20Sans/fonts/GeneralSans-Variable.woff') format('woff');
+  font-weight: 200 700;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'PPSupplyMono';
-  src: url('/fonts/supply/Supply-Regular.woff2') format('woff2'),
-       url('/fonts/supply/Supply-Regular.woff') format('woff');
+  font-family: 'Anton';
+  src: url('/fonts/anton/Anton-Regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
-@font-face {
-  font-family: 'PPSupplyMono';
-  src: url('/fonts/supply/Supply-Medium.woff2') format('woff2'),
-       url('/fonts/supply/Supply-Medium.woff') format('woff');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
+
 
 @tailwind base;
 @tailwind components;
@@ -44,12 +23,6 @@
 
 /* Import performance optimizations */
 @import '../styles/performance.css';
-
-/* Performance optimizations for smooth scrolling */
-* {
-  /* Optimize for smooth scrolling */
-  scroll-behavior: smooth;
-}
 
 /* Reduce repaints during scroll */
 .is-scrolling * { /* avoid mass layer promotion */ }
@@ -83,16 +56,19 @@ body::-webkit-scrollbar {
 }
 
 /* ====== Variables ====== */
+/* Márgenes unificados: 5% lateral = w-[90%] contenido. Hero px-[5%], About/Projects en contenedor 90%. */
 
 /* ====== Configuración de scroll ====== */
 html {
-  overflow-x: hidden; /* Solo prevenir scroll horizontal */
+  overflow-x: hidden; /* prevent horizontal scroll only */
+  scroll-behavior: auto;
 }
 
 body { 
   margin: 0;
   padding: 0;
-  overflow: auto; /* enable normal scrolling since ScrollSmoother was removed */
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* Removed ScrollSmoother wrapper styles since component was removed */
@@ -101,9 +77,12 @@ body {
 body {
   color: var(--foreground);
   background-color: #0a0a0a;
-  font-family: 'PP Neue Montreal', 'PP Neue Montreal Book', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'General Sans', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  font-style: normal;
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }/* Media seguras (no empujan layout) */
 img, video, canvas, svg { max-width: 100%; height: auto; display: block; }
 
@@ -118,15 +97,75 @@ a { color: inherit; text-decoration: none; }
 
 /* Typography hierarchy (align with Experiments section) */
 @layer base {
-  h1 { @apply font-ppneue font-medium text-white; }
-  h2 { @apply font-ppneue font-medium text-white; }
-  h3 { @apply font-ppneue font-medium text-white; }
-  h4 { @apply font-ppneue font-medium text-white; }
-  h5 { @apply font-ppneue font-medium text-white; }
-  h6 { @apply font-ppneue font-medium text-white; }
-  p, li, a, span, button, input, textarea { @apply font-ppneue text-white/90; }
-  code, pre, kbd, samp { @apply font-ppmono; }
+  h1 { @apply font-anton font-normal uppercase text-white; }
+  h2 { @apply font-anton font-normal uppercase text-white; }
+  h3 { @apply font-anton font-normal uppercase text-white; }
+  h4, h5, h6 {
+    font-family: 'General Sans', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 300;
+    letter-spacing: 0.01em;
+    color: rgb(255 255 255);
+  }
+  p, li {
+    font-family: 'General Sans', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    color: rgb(255 255 255 / 0.88);
+  }
+  a, button {
+    font-family: 'General Sans', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgb(255 255 255 / 0.9);
+  }
+  label, input, textarea, select {
+    font-family: 'General Sans', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    color: rgb(255 255 255 / 0.9);
+  }
+  span {
+    font-family: 'General Sans', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    letter-spacing: 0.01em;
+    color: rgb(255 255 255 / 0.9);
+  }
+  small, figcaption {
+    font-family: 'General Sans', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    color: rgb(255 255 255 / 0.65);
+  }
+  strong, b {
+    font-family: 'General Sans', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 600;
+  }
+  code, pre, kbd, samp { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  em, i { font-style: normal; }
+  .type-body-lg {
+    font-family: 'General Sans', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+  .type-body-sm {
+    font-family: 'General Sans', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+  }
+  .type-deco {
+    font-family: 'General Sans', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .type-tag {
+    font-family: 'General Sans', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
   :root {
+    --content-margin-x: 5%; /* Hero, About, Projects — márgenes unificados */
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
@@ -152,6 +191,7 @@ a { color: inherit; text-decoration: none; }
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    --content-margin-x: 5%; /* Márgenes horizontales unificados en Hero, About, Projects */
   }
   .dark {
     --background: 240 10% 3.9%;
@@ -281,6 +321,17 @@ a { color: inherit; text-decoration: none; }
 .custom-cursor.mode-drag {
   box-shadow: 0 10px 25px rgba(0,0,0,.18);
 }
+
+/* Ensure gallery fullscreen modal is always above persistent UI */
+body.gallery-modal-open [data-main-nav],
+body.gallery-modal-open [data-dagoberto-badge],
+body.gallery-modal-open [data-glass-portal-pill] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+body.gallery-modal-open .custom-cursor {
+  opacity: 0 !important;
+}
 /* ====== Animación Gradient Loop ====== */
 @keyframes gradient-loop {
   0%   { background-position: 0% 50%; }
@@ -289,31 +340,23 @@ a { color: inherit; text-decoration: none; }
 }
 
 .gradient-loop {
-  background: linear-gradient(270deg, #10b981, #40ff60, #22d3ee, #818cf8);
+  background: linear-gradient(270deg, #f4f5f7, #d9dde4, #b8c0cb, #e5e8ee);
   background-size: 600% 600%;
   animation: gradient-loop 20s ease infinite;
 }
 
-/* ====== Film grain overlay for hero and cinematic sections ====== */
-@keyframes film-grain {
-  0% { transform: translate3d(0,0,0); }
-  25% { transform: translate3d(-1px, 1px, 0); }
-  50% { transform: translate3d(1px, -0.5px, 0); }
-  75% { transform: translate3d(-0.5px, -1px, 0); }
-  100% { transform: translate3d(0,0,0); }
+/* Shared transition timing helpers (avoid Tailwind arbitrary easing warnings) */
+.ease-ui-standard {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.film-grain-overlay {
-  background-image:
-    radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px),
-    radial-gradient(circle, rgba(0,0,0,0.12) 1px, transparent 1px);
-  background-size: 3px 3px, 4px 4px;
-  mix-blend-mode: soft-light;
-  opacity: 0.28;
-  animation: film-grain 1.05s steps(2, end) infinite;
+.ease-ui-emphasized {
+  transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
-
+.ease-ui-pop {
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
 
 @layer base {
   * {
@@ -321,20 +364,6 @@ a { color: inherit; text-decoration: none; }
   }
   body {
     @apply text-foreground;
-  }
-}
-
-
-
-
-
-
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
+    background-color: #0a0a0a !important;
   }
 }

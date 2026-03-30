@@ -56,7 +56,7 @@ const Title3D = React.memo(function Title3D() {
         maxWidth={config.maxWidth}
         lineHeight={config.textAlign === "left" ? 1 : 1.0}
         textAlign={config.textAlign}
-        font="/fonts/Anton-Regular.ttf"
+        font="/fonts/anton/Anton-Regular.ttf"
         // Performance optimizations
         castShadow={false}
         receiveShadow={false}

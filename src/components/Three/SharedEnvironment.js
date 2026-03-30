@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useEffect, useState } from "react";
-import { Environment, Sky } from "@react-three/drei";
+import { Environment, Sky, Lightformer } from "@react-three/drei";
 import * as React from "react";
 
 // Optimized environment component with reduced resolution and better performance
@@ -18,9 +18,9 @@ const SharedEnvironment = React.memo(function SharedEnvironment() {
   }, []);
   
   const config = useMemo(() => ({
-    resolution: isMobile ? 32 : 64, // Reduced resolution for better performance
-    intensity: isMobile ? 0.3 : 0.35, // Slightly reduced intensity
-    blur: isMobile ? 0.4 : 0.5, // Reduced blur for better performance
+    resolution: isMobile ? 64 : 128,
+    intensity: isMobile ? 0.42 : 0.5,
+    blur: isMobile ? 0.28 : 0.34,
   }), [isMobile]);
 
   // Memoize the entire environment setup
@@ -45,6 +45,22 @@ const SharedEnvironment = React.memo(function SharedEnvironment() {
         // Performance optimizations
         distance={1000}
         segments={8} // Reduce geometry complexity
+      />
+      {/* Lightformers create crisp highlights useful for premium glass silhouettes */}
+      <Lightformer
+        form="rect"
+        intensity={1.4}
+        position={[5, 4, 3]}
+        scale={[4, 2.2, 1]}
+        color="#f8fbff"
+      />
+      <Lightformer
+        form="rect"
+        intensity={0.9}
+        position={[-4, 1.2, -2]}
+        rotation={[0, Math.PI / 3, 0]}
+        scale={[3, 1.5, 1]}
+        color="#dce3ec"
       />
     </Environment>
   ), [config.resolution, config.blur, config.intensity]);

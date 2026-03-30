@@ -8,7 +8,6 @@ import { useRef, useEffect, useMemo, useState } from "react";
 import * as React from "react";
 import OptimizedCanvas from "../ui/OptimizedCanvas";
 import SharedEnvironment from "./SharedEnvironment";
-import MonitorPlaceholder from "./MonitorPlaceholder";
 
 // Preload del modelo
 useGLTF.preload("/assets/models/monitor.glb");
@@ -137,22 +136,6 @@ function useResponsiveCanvasStyles() {
 
 export default function Monitor() {
   const canvasStyles = useResponsiveCanvasStyles();
-  const [usePlaceholder, setUsePlaceholder] = useState(false);
-
-  // Detect device performance and choose appropriate model
-  useEffect(() => {
-    const checkPerformance = () => {
-      const isLowEndDevice = (navigator.hardwareConcurrency || 8) <= 4; // 4 cores or less
-      const hasLowMemory = (navigator.deviceMemory || 8) <= 2; // very low memory
-      
-      // Only use placeholder on truly low-end devices
-      if (isLowEndDevice && hasLowMemory) {
-        setUsePlaceholder(true);
-      }
-    };
-
-    checkPerformance();
-  }, []);
 
   return (
     <div
@@ -174,7 +157,7 @@ export default function Monitor() {
         {/* Minimal lights + shared environment for glass reflections */}
         <ambientLight intensity={0.35} />
         <SharedEnvironment />
-        {usePlaceholder ? <MonitorPlaceholder /> : <MonitorModel />}
+        <MonitorModel />
       </OptimizedCanvas>
     </div>
   );

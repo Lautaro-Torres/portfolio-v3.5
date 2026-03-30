@@ -150,7 +150,7 @@ export default function ExperimentsSection() {
           <div className="w-full flex items-center justify-center">
             <span 
               ref={ideasRef}
-              className="exp-title font-ppneue text-white/95 uppercase leading-[0.9] tracking-[0.04em] select-none font-normal"
+              className="exp-title font-anton text-white/95 uppercase leading-[0.9] tracking-[0.04em] select-none font-normal"
               style={{ perspective: "1000px" }}
             >
               IDEAS
@@ -159,7 +159,7 @@ export default function ExperimentsSection() {
           <div className="w-full flex items-center justify-center">
             <span 
               ref={experimentsRef}
-              className="exp-title font-ppneue text-white/95 uppercase leading-[0.9] tracking-[0.04em] select-none font-normal text-center"
+              className="exp-title font-anton text-white/95 uppercase leading-[0.9] tracking-[0.04em] select-none font-normal text-center"
               style={{ perspective: "1000px" }}
             >
               EXPERIMENTS
@@ -168,7 +168,7 @@ export default function ExperimentsSection() {
           <div className="w-full flex items-center justify-center">
             <span 
               ref={skillsRef}
-              className="exp-title font-ppneue text-white/95 uppercase leading-[0.9] tracking-[0.04em] select-none font-normal"
+              className="exp-title font-anton text-white/95 uppercase leading-[0.9] tracking-[0.04em] select-none font-normal"
               style={{ perspective: "1000px" }}
             >
               SKILLS
@@ -178,23 +178,23 @@ export default function ExperimentsSection() {
 
         {/* Corner labels (Montreal light) */}
         <div className="absolute inset-0 p-4">
-          <div className="absolute top-3 sm:top-4 left-3 sm:left-4 font-ppneue font-normal text-[10px] sm:text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">
+          <div className="absolute top-3 sm:top-4 left-3 sm:left-4 font-general font-light text-[10px] sm:text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">
             Creative Tech
           </div>
-          <div className="absolute top-3 sm:top-4 left-1/2 -translate-x-1/2 font-ppneue font-normal text-[10px] sm:text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">
+          <div className="absolute top-3 sm:top-4 left-1/2 -translate-x-1/2 font-general font-light text-[10px] sm:text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">
             Motion & 3D
           </div>
-          <div className="absolute top-3 sm:top-4 right-3 sm:right-4 font-ppneue font-normal text-[10px] sm:text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">
+          <div className="absolute top-3 sm:top-4 right-3 sm:right-4 font-general font-light text-[10px] sm:text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">
             New Media
           </div>
 
-          <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 font-ppneue font-normal text-[10px] sm:text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">
+          <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 font-general font-light text-[10px] sm:text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">
             Sound/Visual
           </div>
-          <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 font-ppneue font-normal text-[10px] sm:text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">
+          <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 font-general font-light text-[10px] sm:text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">
             Side Projects
           </div>
-          <div className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 font-ppneue font-normal text-[10px] sm:text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">
+          <div className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 font-general font-light text-[10px] sm:text-[11px] tracking-[0.22em] text-white/85 uppercase select-none">
             Tools & VJing
           </div>
         </div>
@@ -208,7 +208,7 @@ export default function ExperimentsSection() {
 
         {/* CTA indicator */}
         <div ref={ctaRef} className="absolute left-1/2 -translate-x-1/2 bottom-[8%] text-center select-none">
-          <span className="font-ppneue font-normal text-white/95 text-[12px] tracking-[0.3em] uppercase inline-flex items-center gap-2">
+          <span className="font-general font-light text-white/95 text-[12px] tracking-[0.3em] uppercase inline-flex items-center gap-2">
             <span className="relative inline-block w-2 h-2 rounded-full bg-white/90 animate-ping" />
             Click here to enter experiments
             <span className="ml-2 inline-block w-2 h-2 rounded-full bg-white/70 animate-pulse" />

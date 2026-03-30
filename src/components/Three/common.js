@@ -3,21 +3,25 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 
-// Shared lightweight glass material props for all small models
+// Shared transmission glass props: neutral, editorial, controlled
 export const glassMaterialProps = {
-  thickness: 0.055,
-  roughness: 0.02,
-  transmission: 0.96,
-  ior: 1.04,
-  chromaticAberration: 0.006,
+  color: "#f3f5f8",
+  transmission: 1,
+  roughness: 0.08,
+  thickness: 0.36,
+  ior: 1.22,
+  chromaticAberration: 0.0006,
+  anisotropicBlur: 0.06,
+  envMapIntensity: 1.05,
   backside: true,
-  color: "#40ff60",
-  opacity: 0.98,
+  backsideThickness: 0.28,
   transparent: true,
-  attenuationDistance: 9,
-  attenuationColor: "#ffffff",
-  envMapIntensity: 0.5,
-  toneMapped: false,
+  opacity: 0.92,
+  resolution: 256,
+  samples: 6,
+  clearcoat: 0.55,
+  clearcoatRoughness: 0.22,
+  toneMapped: true,
 };
 
 // Unified slow spin + horizontal drag interaction

@@ -1,81 +1,67 @@
 "use client";
 import LogoLT from "../Three/LogoLT";
-import { useEffect, useRef } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
+import { useEffect, useRef, useState } from "react";
 
 export default function Footer() {
-  const footerRef = useRef(null);
-  const logoContainerRef = useRef(null);
-  const footerContentRef = useRef(null);
+  const logoHostRef = useRef(null);
+  const [shouldMountLogo3D, setShouldMountLogo3D] = useState(false);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Animate 3D logo container
-      if (logoContainerRef.current) {
-        gsap.set(logoContainerRef.current, { opacity: 0, y: 35 });
-        gsap.to(logoContainerRef.current, {
-          opacity: 1,
-          y: 0,
-          duration: 0.75,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: footerRef.current,
-            start: "top 85%",
-            toggleActions: "play none none none",
-            once: true,
-            invalidateOnRefresh: true,
-          },
-        });
-      }
+    const host = logoHostRef.current;
+    if (!host) return;
+    if (typeof window === "undefined") {
+      setShouldMountLogo3D(true);
+      return;
+    }
 
-      // Animate footer content
-      if (footerContentRef.current) {
-        gsap.set(footerContentRef.current, { opacity: 0, y: 20 });
-        gsap.to(footerContentRef.current, {
-          opacity: 1,
-          y: 0,
-          duration: 0.65,
-          delay: 0.2,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: footerRef.current,
-            start: "top 85%",
-            toggleActions: "play none none none",
-            once: true,
-            invalidateOnRefresh: true,
-          },
-        });
-      }
-    }, footerRef);
+    const preloadAheadPx = 1200;
+    const top = host.getBoundingClientRect().top;
+    if (top <= window.innerHeight + preloadAheadPx) {
+      setShouldMountLogo3D(true);
+      return;
+    }
 
-    return () => ctx.revert();
+    if (!("IntersectionObserver" in window)) {
+      setShouldMountLogo3D(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        setShouldMountLogo3D(true);
+        observer.disconnect();
+      },
+      {
+        root: null,
+        rootMargin: `${preloadAheadPx}px 0px`,
+        threshold: 0.01,
+      }
+    );
+
+    observer.observe(host);
+    return () => observer.disconnect();
   }, []);
 
   return (
     <footer
-      ref={footerRef}
       className="relative w-full min-h-screen flex flex-col"
       style={{ backgroundColor: "#0a0a0a" }}
     >
       {/* Canvas 3D - Centrado en el footer */}
-      <div ref={logoContainerRef} className="relative flex-1 flex items-center justify-center">
-        <LogoLT />
+      <div ref={logoHostRef} className="relative flex-1 flex items-center justify-center">
+        {shouldMountLogo3D ? <LogoLT /> : null}
       </div>
 
       {/* Footer inferior */}
-      <div ref={footerContentRef} className="relative z-10 w-full border-t border-white/20 px-[5%] py-6">
+      <div className="relative z-10 w-full border-t border-white/20 px-[5%] py-6">
         {/* Mobile Layout */}
-        <div className="flex md:hidden flex-col text-white text-sm">
+        <div className="flex md:hidden flex-col text-white text-sm font-general">
           {/* Email */}
           <div className="mb-6">
             <a 
               href="mailto:contact@lautor.dev" 
-              className="hover:underline flex items-center transition-all duration-300"
+              className="hover:underline flex items-center font-normal uppercase tracking-[0.08em] transition-all duration-300"
             >
               contact@lautor.dev
               <span className="ml-2">
@@ -87,29 +73,24 @@ export default function Footer() {
           </div>
           
           {/* Social Links */}
-          <div className="mb-6 flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             <a 
               href="https://www.linkedin.com/in/lautarotorres/" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="hover:underline transition-all duration-300"
+              className="hover:underline font-normal uppercase tracking-[0.1em] transition-all duration-300"
             >
               LINKEDIN
             </a>
           </div>
-          
-          {/* Developed by VESSEL en la parte inferior */}
-          <div>
-            Developed by VESSEL
-          </div>
         </div>
 
         {/* Desktop Layout */}
-        <div className="hidden md:flex max-w-[1600px] mx-auto justify-between items-center text-white text-sm">
+        <div className="hidden md:flex max-w-[1600px] mx-auto justify-between items-center text-white text-sm font-general">
           <div className="flex items-center">
             <a 
               href="mailto:contact@lautor.dev" 
-              className="hover:underline flex items-center transition-all duration-300"
+              className="hover:underline flex items-center font-normal uppercase tracking-[0.08em] transition-all duration-300"
             >
               contact@lautor.dev
               <span className="ml-2">
@@ -121,15 +102,11 @@ export default function Footer() {
           </div>
           
           <div>
-            Developed by VESSEL
-          </div>
-          
-          <div>
             <a 
               href="https://www.linkedin.com/in/lautarotorres/" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="hover:underline transition-all duration-300"
+              className="hover:underline font-normal uppercase tracking-[0.08em] transition-all duration-300"
             >
               LinkedIn
             </a>

@@ -38,10 +38,13 @@ function TinyDagoberto() {
 export default function DagobertoBadge() {
   return (
     <div
+      data-dagoberto-badge
       className={`
         fixed z-[2147483647] w-28 h-28
         right-3 bottom-3
-        md:right-[2.5%] md:bottom-auto md:top-3
+        md:right-3 md:bottom-auto md:top-3
+        origin-top-right transform-gpu transition-transform duration-300 ease-out
+        md:hover:scale-[1.1] md:focus-within:scale-[1.1]
       `}
       style={{ contain: "layout paint size" }}
     >
@@ -52,11 +55,11 @@ export default function DagobertoBadge() {
       >
         <GlassSurface className="w-full h-full rounded-full" borderRadius="50%" contentFill>
           <OptimizedCanvas
-          camera={{ position: [0, 0, 4], fov: 45 }}
-          dpr={[0.75, 1.25]}
-          frameloop="always"
-          performance={{ min: 0.6 }}
-          gl={{ antialias: false, alpha: true }}
+            camera={{ position: [0, 0, 4], fov: 45 }}
+            dpr={[0.75, 1.25]}
+            frameloop="always"
+            performance={{ min: 0.6 }}
+            gl={{ antialias: false, alpha: true }}
           >
             <AdaptiveDpr pixelated />
             <AdaptiveEvents />
@@ -64,28 +67,33 @@ export default function DagobertoBadge() {
             <SharedEnvironment />
             <TinyDagoberto />
           </OptimizedCanvas>
-        <div
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ zIndex: 2 }}
-        >
-          <svg
-            className="w-full h-full"
-            viewBox="0 0 100 100"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <defs>
-              <path id="circlePath" d="M 50, 50 m -34, 0 a 34,34 0 1,1 68,0 a 34,34 0 1,1 -68,0" pathLength="220" />
-            </defs>
-            <g>
-              <text fill="white" fontSize="9" style={{ letterSpacing: "0.4em" }}>
-                <textPath href="#circlePath" startOffset="50%" textAnchor="middle" method="align" spacing="auto">
-                  OPEN TO WORK - 2025.ARG -
-                </textPath>
-              </text>
-              <animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0 50 50" to="360 50 50" dur="12s" repeatCount="indefinite" />
-            </g>
-          </svg>
-        </div>
+          <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 2 }}>
+            <svg
+              className="w-full h-full"
+              viewBox="0 0 100 100"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <path id="circlePath" d="M 50, 50 m -34, 0 a 34,34 0 1,1 68,0 a 34,34 0 1,1 -68,0" pathLength="220" />
+              </defs>
+              <g>
+                <text
+                  fill="white"
+                  fontSize="9"
+                  style={{
+                    letterSpacing: "0.34em",
+                    fontFamily: "'General Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                    fontWeight: 300,
+                  }}
+                >
+                  <textPath href="#circlePath" startOffset="50%" textAnchor="middle" method="align" spacing="auto">
+                    OPEN TO WORK - 2026.ARG -
+                  </textPath>
+                </text>
+                <animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0 50 50" to="360 50 50" dur="12s" repeatCount="indefinite" />
+              </g>
+            </svg>
+          </div>
         </GlassSurface>
       </a>
     </div>

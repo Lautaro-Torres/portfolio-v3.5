@@ -3,9 +3,6 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['@react-three/fiber', '@react-three/drei', 'three'],
   },
-  eslint: {
-    ignoreDuringBuilds: true, // Temporarily ignore ESLint errors to test performance optimizations
-  },
   images: {
     remotePatterns: [
       {

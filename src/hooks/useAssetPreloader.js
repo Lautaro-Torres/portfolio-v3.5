@@ -1,23 +1,35 @@
 "use client";
 import { useEffect, useState, useCallback } from 'react';
 
+const PER_ASSET_TIMEOUT_MS = 4000;
+const TOTAL_PRELOAD_TIMEOUT_MS = 10000;
+const ASSETS = [
+  { url: '/assets/models/logo-lt.glb', name: 'Logo LT', type: 'model' },
+  { url: '/assets/models/dagoberto.glb', name: 'Modelo Dagoberto', type: 'model' },
+  { url: '/assets/models/mate.glb', name: 'Modelo Mate', type: 'model' },
+  { url: '/assets/models/monitor.glb', name: 'Modelo Monitor', type: 'model' },
+  { url: '/assets/images/projects/prozy-432632.webp', name: 'Imagen Prozy', type: 'image' }
+];
+
+function withTimeout(promise, timeoutMs, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      const id = setTimeout(() => {
+        clearTimeout(id);
+        reject(new Error(`Timeout loading ${label} (${timeoutMs}ms)`));
+      }, timeoutMs);
+    }),
+  ]);
+}
+
 export function useAssetPreloader() {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [currentAsset, setCurrentAsset] = useState('');
 
-  // Lista de assets a precargar basada en tu proyecto
-  const assets = [
-    { url: '/assets/models/chocolatt.glb', name: 'Modelo Chocolatt', type: 'model' },
-    { url: '/assets/models/logo-lt.glb', name: 'Logo LT', type: 'model' },
-    { url: '/assets/models/dagoberto.glb', name: 'Modelo Dagoberto', type: 'model' },
-    { url: '/assets/models/mate.glb', name: 'Modelo Mate', type: 'model' },
-    { url: '/assets/models/monitor.glb', name: 'Modelo Monitor', type: 'model' },
-    { url: '/assets/images/projects/prozy-432632.webp', name: 'Imagen Prozy', type: 'image' }
-  ];
-
   const preloadAsset = useCallback((asset) => {
-    return new Promise((resolve, reject) => {
+    const job = new Promise((resolve, reject) => {
       if (asset.type === 'model') {
         // Para modelos 3D
         fetch(asset.url)
@@ -51,38 +63,47 @@ export function useAssetPreloader() {
           .catch(reject);
       }
     });
+    return withTimeout(job, PER_ASSET_TIMEOUT_MS, asset.name);
   }, []);
 
   const startPreloading = useCallback(async () => {
     setIsComplete(false);
     setLoadingProgress(0);
 
-    for (let i = 0; i < assets.length; i++) {
-      const asset = assets[i];
-      setCurrentAsset(asset.name);
+    await withTimeout(
+      (async () => {
+        for (let i = 0; i < ASSETS.length; i++) {
+          const asset = ASSETS[i];
+          setCurrentAsset(asset.name);
 
-      try {
-        await preloadAsset(asset);
-      } catch (error) {
-        console.warn(`Failed to preload ${asset.name}:`, error);
-        // Continuar con el siguiente asset aunque falle uno
-      }
+          try {
+            await preloadAsset(asset);
+          } catch (error) {
+            console.warn(`Failed to preload ${asset.name}:`, error);
+            // Continuar con el siguiente asset aunque falle uno
+          }
 
-      // Actualizar progreso
-      const progress = ((i + 1) / assets.length) * 100;
-      setLoadingProgress(progress);
-    }
+          // Actualizar progreso
+          const progress = ((i + 1) / ASSETS.length) * 100;
+          setLoadingProgress(progress);
+        }
+      })(),
+      TOTAL_PRELOAD_TIMEOUT_MS,
+      "preload batch"
+    ).catch((error) => {
+      console.warn("Preload batch timeout/failure, continuing app startup:", error);
+    });
 
     setCurrentAsset('Completado');
     setIsComplete(true);
-  }, [assets, preloadAsset]);
+  }, [preloadAsset]);
 
   return {
     loadingProgress,
     isComplete,
     currentAsset,
     startPreloading,
-    totalAssets: assets.length
+    totalAssets: ASSETS.length
   };
 }
 

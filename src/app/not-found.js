@@ -1,24 +1,23 @@
-import Link from "next/link";
+import TextCtaLink from "../components/ui/TextCtaLink";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
-      <div className="text-center space-y-6">
-        <h1 className="text-4xl md:text-6xl font-anton text-white leading-none">
-          Project not found
-        </h1>
-        <p className="text-white/70 text-lg max-w-md mx-auto">
-          The project you're looking for doesn't exist or has been moved.
+    <div className="min-h-[100dvh] bg-[#0a0a0a] text-white flex flex-col items-center justify-center px-[5%] py-16">
+      <div className="text-center w-full max-w-[min(100%,520px)]">
+        <p className="font-general font-light text-[10px] md:text-[11px] uppercase tracking-[0.22em] text-white/40 mb-5 md:mb-6">
+          Not found
         </p>
-        <Link 
-          href="/#projects"
-          className="inline-block px-8 py-4 rounded-full font-figtree font-bold bg-white/15 backdrop-blur-md border border-white/30 hover:bg-white/25 hover:border-white/50 hover:scale-105 transition-all duration-300"
-        >
-          Back to Projects
-        </Link>
+        <h1 className="font-anton font-normal uppercase text-white leading-[0.88] tracking-[0.02em] text-[clamp(5rem,28vw,14rem)] select-none">
+          404
+        </h1>
+        <p className="mt-8 md:mt-10 font-general font-normal text-white/62 text-[15px] md:text-lg leading-relaxed max-w-md mx-auto">
+          The page you&apos;re looking for doesn&apos;t exist or has been moved.
+        </p>
+        <div className="mt-10 md:mt-12 flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-12">
+          <TextCtaLink href="/" text="Back home" ariaLabel="Go to homepage" />
+          <TextCtaLink href="/projects" text="Projects" ariaLabel="View projects" />
+        </div>
       </div>
     </div>
   );
 }
-
-

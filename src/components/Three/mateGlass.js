@@ -1,6 +1,6 @@
 "use client";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useGLTF, MeshTransmissionMaterial, AdaptiveDpr, AdaptiveEvents } from "@react-three/drei";
+import { useGLTF, AdaptiveDpr, AdaptiveEvents, MeshTransmissionMaterial } from "@react-three/drei";
 import { glassMaterialProps, useSlowSpin } from "./common";
 import SharedEnvironment from "./SharedEnvironment";
 import OptimizedCanvas from "../ui/OptimizedCanvas";
@@ -104,7 +104,13 @@ function MateGlassModel({ position = [1, .5, 0], containerRef }) {
         const node = nodes[key];
         if (node.isMesh) {
           return (
-            <mesh key={key} {...node}>
+            <mesh
+              key={key}
+              geometry={node.geometry}
+              position={[node.position.x, node.position.y, node.position.z]}
+              rotation={[node.rotation.x, node.rotation.y, node.rotation.z]}
+              scale={[node.scale.x, node.scale.y, node.scale.z]}
+            >
               <MeshTransmissionMaterial {...materialProps} />
             </mesh>
           );

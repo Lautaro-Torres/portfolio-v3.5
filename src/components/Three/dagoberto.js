@@ -1,6 +1,6 @@
 "use client";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useGLTF, MeshTransmissionMaterial, Text, AdaptiveDpr, AdaptiveEvents } from "@react-three/drei";
+import { useGLTF, Text, AdaptiveDpr, AdaptiveEvents, MeshTransmissionMaterial } from "@react-three/drei";
 import { glassMaterialProps, useSlowSpin } from "./common";
 import SharedEnvironment from "./SharedEnvironment";
 import OptimizedCanvas from "../ui/OptimizedCanvas";
@@ -69,7 +69,7 @@ function DagobertoModel() {
         maxWidth={isMobile ? 15 : 20}
         lineHeight={isMobile ? 1 : 1.0}
         textAlign={isMobile ? "left" : "center"}
-        font="/fonts/Anton-Regular.ttf"
+        font="/fonts/anton/Anton-Regular.ttf"
       >
         {responsiveConfig.textContent}
       </Text>

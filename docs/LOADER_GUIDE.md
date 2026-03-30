@@ -90,7 +90,6 @@ const { isLoading } = useLoaderFinal({
 ## 🔧 Assets que se precargan
 
 En **producción** (`enablePreloading: true`):
-- `/assets/models/chocolatt.glb` - Modelo Chocolatt
 - `/assets/models/logo-lt.glb` - Logo LT
 - `/assets/models/dagoberto.glb` - Modelo Dagoberto  
 - `/assets/models/mate.glb` - Modelo Mate

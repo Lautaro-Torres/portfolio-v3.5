@@ -1,37 +1,23 @@
 "use client";
-import dynamic from "next/dynamic";
 import HeroSection from "../sections/HeroSection";
-const AboutSection = dynamic(() => import("../sections/AboutSection"), { ssr: false });
-const Projects = dynamic(() => import("../sections/Projects"), { ssr: false });
-const MarqueeSection = dynamic(() => import("../sections/MarqueeSection"), { ssr: false });
-const MarqueeSection2 = dynamic(() => import("../sections/MarqueeSection2"), { ssr: false });
+import AboutSection from "../sections/AboutSection";
+import Projects from "../sections/Projects";
 // TEMP: Experiments feature disabled
 // const ExperimentsSection = dynamic(() => import("../sections/ExperimentsSection"), { ssr: false });
 
 export default function Home() {
   return (
-    <>
-      <main className="relative w-full">
-        <HeroSection />
-        <div className="w-full max-w-[1900px] mx-auto px-[5%]">
-          <div id="about" className="mb-12 md:mb-24 lg:mb-32">
-            <AboutSection />
-          </div>
+    <main className="relative w-full">
+      <HeroSection />
+      <div className="w-[90%] mx-auto">
+        <div id="about" className="mt-0 pt-0 mb-3 md:mb-4 lg:mb-6">
+          <AboutSection />
         </div>
-        <MarqueeSection />
-        <MarqueeSection2 />
-        <div className="w-full max-w-[1900px] mx-auto px-[5%]">
-          <div className="my-8 md:my-20 lg:my-28" />
-          <div id="projects" className="mb-12 md:mb-24 lg:mb-32">
-            <Projects />
-          </div>
-          {/* TEMP: Experiments section disabled */}
-          {/* <div id="experiments" className="mb-12 md:mb-24 lg:mb-32">
-            <ExperimentsSection />
-          </div> */}
+        <div className="my-2 md:my-4 lg:my-6" />
+        <div id="projects" className="mb-6 md:mb-10 lg:mb-12">
+          <Projects />
         </div>
-      </main>
-    </>
+      </div>
+    </main>
   );
 }
-

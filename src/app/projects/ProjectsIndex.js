@@ -1,10 +1,11 @@
 "use client";
 import { projectsData } from "../../data/projects";
+import { getProjectCardVideoUrl } from "../../utils/projectUtils";
 import WorkCard from "../../components/ui/WorkCard.js";
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useLetterReveal } from "../../hooks/useLetterReveal";
+import { useClippedTitleReveal } from "../../hooks/useClippedTitleReveal";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -12,53 +13,12 @@ if (typeof window !== "undefined") {
 
 export default function ProjectsIndex() {
   const pageRef = useRef(null);
-  const titleRef = useLetterReveal();
-  const countRef = useRef(null);
-  const descriptionRef = useRef(null);
+  const titleRef = useClippedTitleReveal();
   const desktopGridRef = useRef(null);
   const mobileGridRef = useRef(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-
-      // Animate count
-      if (countRef.current) {
-        gsap.set(countRef.current, { x: 20, opacity: 0 });
-        gsap.to(countRef.current, {
-          x: 0,
-          opacity: 1,
-          duration: 0.6,
-          delay: 0.1,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: countRef.current,
-            start: "top 85%",
-            toggleActions: "play none none none",
-            once: true,
-            invalidateOnRefresh: true,
-          },
-        });
-      }
-
-      // Animate description
-      if (descriptionRef.current) {
-        gsap.set(descriptionRef.current, { y: 30, opacity: 0 });
-        gsap.to(descriptionRef.current, {
-          y: 0,
-          opacity: 1,
-          duration: 0.65,
-          delay: 0.2,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: descriptionRef.current,
-            start: "top 85%",
-            toggleActions: "play none none none",
-            once: true,
-            invalidateOnRefresh: true,
-          },
-        });
-      }
-
       // Animate desktop grid cards
       if (desktopGridRef.current) {
         const cards = desktopGridRef.current.querySelectorAll('.work-card-wrapper');
@@ -193,28 +153,16 @@ export default function ProjectsIndex() {
   return (
     <div ref={pageRef} className="min-h-screen text-white" style={{ backgroundColor: "#0a0a0a" }}>
       {/* Main Content */}
-      <main className="relative w-full pt-20">
+      <main className="relative w-full pt-20 md:pt-24">
         <div className="w-full max-w-[1900px] mx-auto px-[5%]">
         {/* Page Title */}
-        <div className="py-12 mb-0 flex flex-col gap-y-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative z-10 pb-8 md:pb-10">
           <h1
             ref={titleRef}
-            className="font-montreal text-white uppercase leading-[0.9] tracking-[0.04em] font-normal text-[clamp(2.5rem,7.5vw,6rem)]"
+            className="font-anton text-white uppercase leading-[0.84] tracking-[0.01em] font-normal text-[clamp(3.8rem,17vw,17rem)]"
           >
             Projects
           </h1>
-          <div ref={countRef} className="text-left sm:text-right">
-            <span className="text-lg md:text-xl font-montreal text-white/70 uppercase tracking-[0.08em]">
-              №{projectsData.length}↘
-            </span>
-          </div>
-        </div>
-
-        {/* Description */}
-        <div ref={descriptionRef} className="w-full mb-8">
-          <p className="text-white/80 text-lg md:text-xl font-montreal max-w-2xl">
-            A showcase of projects developed independently and in collaboration.
-          </p>
         </div>
 
         {/* Desktop Grid */}
@@ -222,7 +170,7 @@ export default function ProjectsIndex() {
           <div className="flex flex-col gap-y-6">
             {desktopRows.map((row, rowIdx) => {
               // Altura uniforme para todas las tarjetas de escritorio, con mínimo cómodo en pantallas bajas
-              const rowHeight = "min-h-[260px] md:min-h-[40vh]";
+              const rowHeight = "h-[60vh] min-h-[320px]";
               
               const getGridClass = (cols, isFullWidth) => {
                 if (isFullWidth) return 'grid gap-4 grid-cols-1';
@@ -242,11 +190,13 @@ export default function ProjectsIndex() {
                     <div key={project.id} className="work-card-wrapper">
                       <WorkCard
                         title={project.title}
-                        imageUrl={project.imageUrl}
+                        videoUrl={getProjectCardVideoUrl(project)}
+                        posterUrl={project.imageUrl}
                         logoUrl={project.logoUrl}
                         tags={project.tags}
                         href={`/projects/${project.slug}`}
                         containerClassName={rowHeight}
+                        isFullWidthCard={row.isFullWidth}
                         ariaLabel={`View details for ${project.title}`}
                       />
                     </div>
@@ -262,7 +212,7 @@ export default function ProjectsIndex() {
           <div className="flex flex-col gap-y-3 md:gap-y-6">
             {mobileRows.map((row, rowIdx) => {
               // Altura uniforme y reducida para todas las tarjetas, con mínimo en píxeles
-              const rowHeight = "min-h-[220px]";
+              const rowHeight = "h-[40vh] min-h-[220px]";
               
               const getGridClass = (cols, isFullWidth) => {
                 if (isFullWidth) return 'grid gap-2 md:gap-4 grid-cols-1';
@@ -278,11 +228,13 @@ export default function ProjectsIndex() {
                     <div key={project.id} className="work-card-wrapper">
                       <WorkCard
                         title={project.title}
-                        imageUrl={project.imageUrl}
+                        videoUrl={getProjectCardVideoUrl(project)}
+                        posterUrl={project.imageUrl}
                         logoUrl={project.logoUrl}
                         tags={project.tags}
                         href={`/projects/${project.slug}`}
                         containerClassName={rowHeight}
+                        isFullWidthCard={row.isFullWidth}
                         ariaLabel={`View details for ${project.title}`}
                       />
                     </div>

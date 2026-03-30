@@ -4,7 +4,7 @@ import WorkCard from "../../components/ui/WorkCard";
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useLetterReveal } from "../../hooks/useLetterReveal";
+import { useClippedTitleReveal } from "../../hooks/useClippedTitleReveal";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -14,7 +14,7 @@ const EXPERIMENTS_ENABLED = false;
 
 export default function ExperimentsIndex() {
   const pageRef = useRef(null);
-  const titleRef = useLetterReveal();
+  const titleRef = useClippedTitleReveal();
   const countRef = useRef(null);
   const descriptionRef = useRef(null);
   const desktopGridRef = useRef(null);
@@ -207,12 +207,12 @@ export default function ExperimentsIndex() {
           <div className="py-12 mb-0 flex flex-col gap-y-3 sm:flex-row sm:items-center sm:justify-between">
             <h1
               ref={titleRef}
-              className="font-montreal text-white uppercase leading-[0.9] tracking-[0.04em] font-normal text-[clamp(2.5rem,7.5vw,6rem)]"
+              className="font-anton text-white uppercase leading-[0.9] tracking-[0.04em] font-normal text-[clamp(2.5rem,7.5vw,6rem)]"
             >
               Experiments
             </h1>
             <div ref={countRef} className="text-left sm:text-right">
-              <span className="text-lg md:text-xl font-montreal text-white/70 uppercase tracking-[0.08em]">
+              <span className="text-lg md:text-xl font-general font-light text-white/70 uppercase tracking-[0.12em]">
                 №{experimentsData.length}↘
               </span>
             </div>
@@ -220,7 +220,7 @@ export default function ExperimentsIndex() {
 
           {/* Description */}
           <div ref={descriptionRef} className="w-full mb-8">
-            <p className="text-white/80 text-lg md:text-xl font-montreal max-w-2xl">
+            <p className="text-white/80 text-lg md:text-xl font-general font-medium tracking-[0.01em] max-w-2xl">
               Experimental works merging creativity and technology.
             </p>
           </div>

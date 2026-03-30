@@ -24,6 +24,13 @@
 .DS_Store
 *.pem
 
+# Cursor IDE
+.cursor/
+
+# Windows
+Thumbs.db
+desktop.ini
+
 # debug
 npm-debug.log*
 yarn-debug.log*

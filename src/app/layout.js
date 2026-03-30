@@ -2,13 +2,14 @@ import "./globals.css";
 import CustomCursor from "../components/ui/CustomCursor";
 import Navigation from "../components/ui/Navigation";
 import Footer from "../components/ui/Footer";
-import ScrollOptimizer from "../components/ui/ScrollOptimizer";
 import DagobertoBadge from "../components/ui/DagobertoBadge";
-import LoadingScreen from "../components/ui/LoadingScreen";
+import ScrollOptimizer from "../components/ui/ScrollOptimizer";
+import PageReveal from "../components/ui/PageReveal";
 import { LoadingProvider } from "../contexts/LoadingContext";
 import { TransitionProvider } from "../contexts/TransitionContext";
 
 export const metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://www.lautor.dev"),
   title: {
     default: "Lautaro Torres — Creative Developer & Designer",
     template: "%s | Lautaro Torres",
@@ -54,6 +55,9 @@ export const metadata = {
       "Portfolio de Lautaro Torres, Creative Developer & Designer desde Argentina. Experimentos, proyectos y trabajo comercial.",
     images: ["/assets/images/logos/logo-lt-4327568.svg"],
   },
+  alternates: {
+    canonical: "/",
+  },
   robots: {
     index: true,
     follow: true,
@@ -70,16 +74,11 @@ export const viewport = {
 function LayoutContent({ children }) {
   return (
     <>
-      {/* Fixed elements - OUTSIDE smooth wrapper to avoid transform interference */}
       <Navigation />
       <DagobertoBadge />
       <CustomCursor />
-      {/* Global performance helpers */}
-      <ScrollOptimizer />
-      
-      {/* ScrollSmoother required structure */}
-      <div id="smooth-wrapper">
-        <div id="smooth-content">
+      <div id="smooth-wrapper" className="relative w-full">
+        <div id="smooth-content" className="relative w-full">
           {children}
           <div id="contact">
             <Footer />
@@ -92,20 +91,22 @@ function LayoutContent({ children }) {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="es">
+    <html lang="es" className="dark">
       <head>
         <link rel="icon" type="image/svg+xml" href="/assets/images/logos/logo-lt-4327568.svg" />
         {/* Preload critical 3D models */}
-        <link rel="preload" href="/assets/models/logo-lt.glb" as="fetch" crossOrigin="anonymous" />
-        <link rel="preload" href="/assets/models/dagoberto.glb" as="fetch" crossOrigin="anonymous" />
+        {/* Preload solo assets críticos above-the-fold (mate = hero, fuente Anton) */}
+        <link rel="preload" href="/fonts/General%20Sans/fonts/GeneralSans-Variable.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/anton/Anton-Regular.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="preload" href="/assets/models/mate.glb" as="fetch" crossOrigin="anonymous" />
-        <link rel="preload" href="/assets/models/monitor.glb" as="fetch" crossOrigin="anonymous" />
       </head>
       <body>
         <LoadingProvider>
           <TransitionProvider>
-            <LoadingScreen />
-            <LayoutContent>{children}</LayoutContent>
+            <ScrollOptimizer />
+            <PageReveal>
+              <LayoutContent>{children}</LayoutContent>
+            </PageReveal>
           </TransitionProvider>
         </LoadingProvider>
       </body>

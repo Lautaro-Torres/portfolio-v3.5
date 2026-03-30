@@ -4,10 +4,6 @@ import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
-
 /**
  * Custom hook for letter-by-letter reveal animation
  * @param {Object} options - Animation options
@@ -32,8 +28,14 @@ export function useLetterReveal(options = {}) {
   } = options;
 
   const elementRef = useRef(null);
+  const pluginReadyRef = useRef(false);
 
   useEffect(() => {
+    if (!pluginReadyRef.current) {
+      gsap.registerPlugin(ScrollTrigger);
+      pluginReadyRef.current = true;
+    }
+
     const element = elementRef.current;
     if (!element || !playWhen) return;
 
@@ -47,6 +49,8 @@ export function useLetterReveal(options = {}) {
       const span = document.createElement("span");
       span.textContent = char;
       span.style.display = "inline-block";
+      span.style.fontFamily = "inherit";
+      span.style.color = "inherit";
       
       // Preserve spaces
       if (char === " ") {

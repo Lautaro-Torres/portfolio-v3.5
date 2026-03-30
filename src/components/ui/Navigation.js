@@ -5,17 +5,51 @@ import Image from "next/image";
 import { ScrollSmoother } from "gsap/ScrollSmoother";
 import gsap from "gsap";
 import SplitText from "gsap/SplitText";
-import { useRouter } from "next/navigation";
 import { useTransitionRouter } from "../../hooks/useTransitionRouter";
 import GlassPortalPill from "./GlassPortalPill";
 
 const EXPERIMENTS_ENABLED = false;
+const DESKTOP_NAV_ITEMS = [
+  { label: "Projects", href: "/projects" },
+  { label: "Archives", href: "/archives" },
+  { label: "Experience", href: "/experience" },
+];
+
+function DesktopNavAnimatedLabel({ label }) {
+  const chars = label.split("");
+
+  return (
+    <span className="relative inline-flex h-[1em] items-center overflow-hidden leading-none" aria-hidden="true">
+      <span className="inline-flex items-center">
+        {chars.map((char, index) => (
+          <span
+            key={`base-${char}-${index}`}
+            className="inline-block will-change-transform transition-transform duration-500 ease-ui-emphasized group-hover:-translate-y-full"
+            style={{ transitionDelay: `${index * 18}ms` }}
+          >
+            {char}
+          </span>
+        ))}
+      </span>
+      <span className="absolute inset-0 inline-flex items-center">
+        {chars.map((char, index) => (
+          <span
+            key={`hover-${char}-${index}`}
+            className="inline-block translate-y-full will-change-transform transition-transform duration-500 ease-ui-emphasized group-hover:translate-y-0"
+            style={{ transitionDelay: `${index * 18}ms` }}
+          >
+            {char}
+          </span>
+        ))}
+      </span>
+    </span>
+  );
+}
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const closeTimerRef = useRef(null);
-  const router = useRouter();
   const { push, isTransitioning } = useTransitionRouter();
   const transformDurationMs = 900;
   const opacityDurationMs = 220;
@@ -98,44 +132,6 @@ export default function Navigation() {
     closeTimerRef.current = setTimeout(() => setIsClosing(false), transformDurationMs + 50);
   };
 
-  const scrollToSection = (sectionId) => {
-    const smoother = ScrollSmoother.get();
-    
-    if (sectionId === "hero") {
-      // If not on home page, navigate to home first
-      if (window.location.pathname !== '/') {
-        router.push('/');
-        startClose();
-        return;
-      }
-      
-      // Scroll to top
-      if (smoother) {
-        smoother.scrollTo(0, true, "power2.inOut");
-      } else {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-    } else {
-      // Check if element exists before scrolling
-      const targetElement = document.getElementById(sectionId);
-      
-      if (!targetElement) {
-        // If element doesn't exist, navigate to home with hash
-        router.push(`/#${sectionId}`);
-        startClose();
-        return;
-      }
-      
-      if (smoother) {
-        smoother.scrollTo(targetElement, true, "power2.inOut");
-      } else {
-        targetElement.scrollIntoView({ behavior: "smooth" });
-      }
-    }
-    
-    startClose();
-  };
-
    // Overlay GSAP timeline
   useLayoutEffect(() => {
     const el = overlayRef.current;
@@ -215,7 +211,7 @@ export default function Navigation() {
   const pillAnchorRef = useRef(null);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[10000] mt-[1%]">
+    <nav data-main-nav className="fixed top-0 left-0 right-0 z-[10000] mt-3 md:mt-[1%]">
       <div className="max-w-[1900px] mx-auto px-[5%]">
         <div className="relative flex items-center justify-between">
           {/* Left: Logo */}
@@ -228,8 +224,8 @@ export default function Navigation() {
               <Image
                 src="/assets/images/logos/logo-lt-4327568.svg"
                 alt="LT Logo"
-                width={36}
-                height={36}
+                width={32}
+                height={32}
               />
             </button>
           </div>
@@ -237,22 +233,29 @@ export default function Navigation() {
           {/* Center: Desktop nav (perfectly centered on desktop) */}
           <div className="hidden md:block absolute left-1/2 -translate-x-1/2">
             <div className="relative inline-block" ref={pillAnchorRef}>
-              <div className="flex flex-row items-center justify-center px-6 py-3 md:px-8 md:py-4">
-                <div className="flex flex-row space-x-6 md:space-x-8">
-                  <button 
-                    onClick={() => push('/projects')}
-                    className={`text-white font-figtree font-medium text-sm md:text-base transition-colors duration-300 tracking-wide ${isTransitioning ? 'opacity-50 cursor-not-allowed' : 'hover:text-green-300'}`}
-                    disabled={isTransitioning}
-                  >
-                    Projects
-                  </button>
-                  {EXPERIMENTS_ENABLED && (
-                    <button 
-                      onClick={() => push('/experiments')}
-                      className={`text-white font-figtree font-medium text-sm md:text-base transition-colors duration-300 tracking-wide ${isTransitioning ? 'opacity-50 cursor-not-allowed' : 'hover:text-green-300'}`}
+              <div className="flex h-[42px] md:h-[46px] flex-row items-center justify-center px-5 md:px-6">
+                <div className="flex flex-row items-center gap-5 md:gap-6">
+                  {DESKTOP_NAV_ITEMS.map((item) => (
+                    <button
+                      key={item.href}
+                      onClick={() => push(item.href)}
+                      aria-label={item.label}
+                      className={`group relative inline-flex items-center overflow-hidden text-white font-general font-normal text-xs md:text-sm leading-none tracking-[0.1em] uppercase transition-colors duration-300 ${isTransitioning ? "opacity-50 cursor-not-allowed" : "hover:text-white/80"}`}
                       disabled={isTransitioning}
                     >
-                      Experiments
+                      <DesktopNavAnimatedLabel label={item.label} />
+                      <span className="sr-only">{item.label}</span>
+                    </button>
+                  ))}
+                  {EXPERIMENTS_ENABLED && (
+                    <button
+                      onClick={() => push("/experiments")}
+                      aria-label="Experiments"
+                      className={`group relative inline-flex items-center overflow-hidden text-white font-general font-normal text-xs md:text-sm leading-none tracking-[0.1em] uppercase transition-colors duration-300 ${isTransitioning ? "opacity-50 cursor-not-allowed" : "hover:text-white/80"}`}
+                      disabled={isTransitioning}
+                    >
+                      <DesktopNavAnimatedLabel label="Experiments" />
+                      <span className="sr-only">Experiments</span>
                     </button>
                   )}
                 </div>
@@ -299,10 +302,48 @@ export default function Navigation() {
                     startClose();
                     push("/projects");
                   }}
-                  className="w-full text-left text-white leading-[1.1] py-3 sm:py-4 overflow-hidden"
+                  className="w-full text-left text-white font-general font-normal uppercase tracking-[0.1em] leading-[1.2] py-3 sm:py-4 overflow-hidden"
                   style={{ fontSize: "clamp(2.2rem, 9vw, 3rem)" }}
                 >
                   <span className="split inline-block">Projects</span>
+                </button>
+              </div>
+            </li>
+            <li
+              className={`menu-item ${baseItemClass} ${
+                isMenuOpen ? itemOpenClass : isClosing ? itemClosingClass : itemClosedClass
+              }`}
+              style={getItemStyle(1)}
+            >
+              <div className="menu-link_container">
+                <button
+                  onClick={() => {
+                    startClose();
+                    push("/archives");
+                  }}
+                  className="w-full text-left text-white font-general font-normal uppercase tracking-[0.1em] leading-[1.2] py-3 sm:py-4 overflow-hidden"
+                  style={{ fontSize: "clamp(2.2rem, 9vw, 3rem)" }}
+                >
+                  <span className="split inline-block">Archives</span>
+                </button>
+              </div>
+            </li>
+            <li
+              className={`menu-item ${baseItemClass} ${
+                isMenuOpen ? itemOpenClass : isClosing ? itemClosingClass : itemClosedClass
+              }`}
+              style={getItemStyle(2)}
+            >
+              <div className="menu-link_container">
+                <button
+                  onClick={() => {
+                    startClose();
+                    push("/experience");
+                  }}
+                  className="w-full text-left text-white font-general font-normal uppercase tracking-[0.1em] leading-[1.2] py-3 sm:py-4 overflow-hidden"
+                  style={{ fontSize: "clamp(2.2rem, 9vw, 3rem)" }}
+                >
+                  <span className="split inline-block">Experience</span>
                 </button>
               </div>
             </li>
@@ -311,7 +352,7 @@ export default function Navigation() {
                 className={`menu-item ${baseItemClass} ${
                   isMenuOpen ? itemOpenClass : isClosing ? itemClosingClass : itemClosedClass
                 }`}
-                style={getItemStyle(1)}
+                style={getItemStyle(3)}
               >
                 <div className="menu-link_container">
                   <button
@@ -319,7 +360,7 @@ export default function Navigation() {
                       startClose();
                       push("/experiments");
                     }}
-                    className="w-full text-left text-white leading-[1.1] py-3 sm:py-4 overflow-hidden"
+                    className="w-full text-left text-white font-general font-normal uppercase tracking-[0.1em] leading-[1.2] py-3 sm:py-4 overflow-hidden"
                     style={{ fontSize: "clamp(2.2rem, 9vw, 3rem)" }}
                   >
                     <span className="split inline-block">Experiments</span>
@@ -337,7 +378,7 @@ export default function Navigation() {
               href="https://wa.me/543876121599"
               target="_blank"
               rel="noreferrer"
-              className="block text-sm"
+              className="block font-general font-normal uppercase text-sm leading-[1.2] tracking-[0.08em]"
             >
               +54 387 612 1599
             </a>
@@ -347,7 +388,7 @@ export default function Navigation() {
               href="https://www.linkedin.com/in/lautarotorres/"
               target="_blank"
               rel="noreferrer"
-              className="block text-sm"
+              className="block font-general font-normal uppercase text-sm leading-[1.2] tracking-[0.08em]"
             >
               LinkedIn
             </a>

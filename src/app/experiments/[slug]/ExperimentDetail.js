@@ -4,16 +4,17 @@ import { experimentsData } from "../../../data/experiments";
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useLetterReveal } from "../../../hooks/useLetterReveal";
+import { useClippedTitleReveal } from "../../../hooks/useClippedTitleReveal";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Keyboard } from "swiper/modules";
+import TextCtaLink from "../../../components/ui/TextCtaLink";
 import "swiper/css";
 
 if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
 
 export default function ExperimentPage() {
   const pageRef = useRef(null);
-  const titleRef = useLetterReveal({ scrollTrigger: false, delay: 0.2 });
+  const titleRef = useClippedTitleReveal({ scrollTrigger: false, delay: 0.2 });
   const tagsRef = useRef(null);
   const summaryRef = useRef(null);
   const heroRef = useRef(null);
@@ -132,42 +133,40 @@ export default function ExperimentPage() {
       <main className="relative w-full pt-20">
         <div className="w-full max-w-[1900px] mx-auto px-[5%] py-12">
 
-          {/* HEADER */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-16">
-            <div className="col-span-12 lg:col-span-7 mb-8 lg:mb-0">
+          {/* HEADER — Same layout as ProjectDetail: left = title, right = summary + pills (experiments have no facts) */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-y-8 md:gap-x-12 lg:gap-x-16 md:gap-y-8 mb-10 md:mb-16 items-start">
+            <div className="col-span-12 lg:col-span-6">
               <h1
                 ref={titleRef}
-                className="font-ppneue leading-tight text-[clamp(2.5rem,7.5vw,6rem)]"
-                style={{
-                  wordBreak: "keep-all",
-                  overflowWrap: "normal",
-                  whiteSpace: "normal",
-                  hyphens: "none",
-                }}
+                className="font-anton leading-[0.92] tracking-[0.02em] uppercase text-[clamp(2.2rem,12vw,2.75rem)] md:text-[clamp(2.9rem,11vw,7rem)] text-white w-full whitespace-nowrap md:whitespace-normal"
               >
                 {experiment.title}
               </h1>
             </div>
 
-            <div className="col-span-12 lg:col-span-5">
-              <div ref={tagsRef} className="flex flex-wrap gap-3 mb-8">
-                {experiment.tags?.map((tag, i) => (
-                  <span
-                    key={i}
-                    className="px-4 py-2 text-sm font-ppneue border border-white rounded-full bg-transparent"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
+            <div className="col-span-12 lg:col-span-6 lg:flex lg:flex-col lg:items-end lg:text-right">
+              {experiment.summary && (
+                <p
+                  ref={summaryRef}
+                  className="text-white text-lg md:text-xl leading-relaxed tracking-[0.01em] font-general font-medium max-w-2xl mb-6 md:mb-8"
+                  style={{ lineHeight: "1.6" }}
+                >
+                  {experiment.summary}
+                </p>
+              )}
 
-              {/* SUMMARY BIGGER */}
-              <p
-                ref={summaryRef}
-                className="text-white/90 text-xl md:text-2xl leading-relaxed tracking-wide max-w-2xl"
-              >
-                {experiment.summary}
-              </p>
+              {!!experiment.tags?.length && (
+                <div ref={tagsRef} className="flex flex-wrap gap-3 lg:justify-end">
+                  {experiment.tags.map((tag, i) => (
+                    <span
+                      key={i}
+                      className="px-3 py-1.5 text-xs sm:text-[11px] border border-white/20 rounded-full tracking-[0.12em] uppercase text-white/70 sm:text-white/60 font-light font-general"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -227,50 +226,43 @@ export default function ExperimentPage() {
           {/* DESCRIPTION + KEY FEATURES */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 mb-20">
             <div className="space-y-8">
-              <p className="text-white/90 text-lg leading-relaxed tracking-wide">
+              <p className="text-white/90 text-lg leading-relaxed tracking-wide font-general font-medium">
                 {experiment.description ||
                   experiment.hoverDescription ||
                   "This experiment explores creative technology, interaction, and visual design blending art and code."}
               </p>
 
               {experiment.ctaLink && experiment.ctaText && (
-                <a
-                  href={experiment.ctaLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-ppneue font-medium text-white bg-gray-800/50 hover:bg-gray-700/50 transition-all border border-white/20 hover:border-white/40"
-                >
-                  {experiment.ctaText}
-                </a>
+                <TextCtaLink text={experiment.ctaText} href={experiment.ctaLink} external />
               )}
             </div>
 
             <div className="space-y-6">
-              <h3 className="text-xl font-ppneue font-semibold text-white">
+              <h3 className="text-xl font-general font-light uppercase tracking-[0.12em] text-white">
                 Key Features
               </h3>
 
               <div className="space-y-0">
                 {experiment.tags?.map((tag, index) => (
                   <div key={index} className="border-b border-white/20 py-5">
-                    <p className="text-white/70 text-base leading-loose">
+                    <p className="text-white/70 text-base leading-loose font-general font-normal">
                       {tag}
                     </p>
                   </div>
                 ))}
 
                 <div className="border-b border-white/20 py-5">
-                  <p className="text-white/70 text-base leading-loose">
+                  <p className="text-white/70 text-base leading-loose font-general font-normal">
                     Interactive Experience
                   </p>
                 </div>
                 <div className="border-b border-white/20 py-5">
-                  <p className="text-white/70 text-base leading-loose">
+                  <p className="text-white/70 text-base leading-loose font-general font-normal">
                     Creative Technology
                   </p>
                 </div>
                 <div className="border-b border-white/20 py-5">
-                  <p className="text-white/70 text-base leading-loose">
+                  <p className="text-white/70 text-base leading-loose font-general font-normal">
                     Modern Web Standards
                   </p>
                 </div>
