@@ -1,17 +1,20 @@
 export const metadata = {
-  title: "Experience",
-  description: "Trayectoria, roles y contribuciones en desarrollo web y dirección creativa.",
+  title: "Experiencia",
+  description:
+    "Trayectoria entre diseño digital, desarrollo front-end y dirección creativa: roles, equipos y proyectos que marcan el rumbo.",
   alternates: {
     canonical: "/experience",
   },
   openGraph: {
-    title: "Experience",
-    description: "Trayectoria, roles y contribuciones en desarrollo web y dirección creativa.",
+    title: "Experiencia | Lautaro Torres",
+    description:
+      "Trayectoria entre diseño digital, desarrollo front-end y dirección creativa: roles, equipos y proyectos que marcan el rumbo.",
     url: "/experience",
   },
   twitter: {
-    title: "Experience",
-    description: "Trayectoria, roles y contribuciones en desarrollo web y dirección creativa.",
+    title: "Experiencia | Lautaro Torres",
+    description:
+      "Trayectoria entre diseño digital, desarrollo front-end y dirección creativa: roles, equipos y proyectos que marcan el rumbo.",
     card: "summary_large_image",
   },
 };

@@ -1,17 +1,20 @@
 export const metadata = {
-  title: "Archives",
-  description: "Archivo de proyectos generales, exploraciones y trabajos complementarios.",
+  title: "Archivo",
+  description:
+    "Exploraciones, piezas complementarias y trabajo alrededor del diseño, el código y la dirección: material que completa la mirada del portfolio.",
   alternates: {
     canonical: "/archives",
   },
   openGraph: {
-    title: "Archives",
-    description: "Archivo de proyectos generales, exploraciones y trabajos complementarios.",
+    title: "Archivo | Lautaro Torres",
+    description:
+      "Exploraciones, piezas complementarias y trabajo alrededor del diseño, el código y la dirección: material que completa la mirada del portfolio.",
     url: "/archives",
   },
   twitter: {
-    title: "Archives",
-    description: "Archivo de proyectos generales, exploraciones y trabajos complementarios.",
+    title: "Archivo | Lautaro Torres",
+    description:
+      "Exploraciones, piezas complementarias y trabajo alrededor del diseño, el código y la dirección: material que completa la mirada del portfolio.",
     card: "summary_large_image",
   },
 };

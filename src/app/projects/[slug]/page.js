@@ -15,16 +15,18 @@ export async function generateMetadata({ params }) {
   if (!project) {
     return {
       title: "Proyecto no encontrado",
-      description: "El proyecto que estás buscando no existe en el portfolio de Lautaro Torres.",
+      description:
+        "El proyecto que buscás no está en este portfolio. Diseño digital, desarrollo y dirección creativa en lautor.dev.",
     };
   }
 
-  const title = `${project.title} · Proyecto | Lautaro Torres`;
+  const title = `${project.title} · Proyecto`;
+  const titleSocial = `${title} | Lautaro Torres`;
   const description =
     project.summary ||
     (Array.isArray(project.description) ? project.description[0] : project.description) ||
     project.hoverDescription ||
-    "Detalle de proyecto en el portfolio de Lautaro Torres, Creative Developer & Designer.";
+    "Proyecto en el portfolio de Lautaro Torres: diseño digital, desarrollo y dirección creativa.";
 
   const ogImage =
     project.imageUrl || project.logoUrl || "/assets/images/logos/logo-lt-4327568.svg";
@@ -36,13 +38,13 @@ export async function generateMetadata({ params }) {
       canonical: `/projects/${slug}`,
     },
     openGraph: {
-      title,
+      title: titleSocial,
       description,
       url: `/projects/${slug}`,
       images: [{ url: ogImage }],
     },
     twitter: {
-      title,
+      title: titleSocial,
       description,
       images: [ogImage],
       card: "summary_large_image",

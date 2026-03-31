@@ -8,20 +8,26 @@ import PageReveal from "../components/ui/PageReveal";
 import LoadingScreen from "../components/ui/LoadingScreen";
 import { LoadingProvider } from "../contexts/LoadingContext";
 import { TransitionProvider } from "../contexts/TransitionContext";
+import {
+  DEFAULT_OG_IMAGE,
+  SHARE_DESCRIPTION,
+  SHARE_TITLE,
+  SITE_URL,
+} from "../config/site";
 
 export const metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://www.lautor.dev"),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Lautaro Torres — Creative Developer & Designer",
+    default: SHARE_TITLE,
     template: "%s | Lautaro Torres",
   },
-  description:
-    "Portfolio de Lautaro Torres, Creative Developer & Designer desde Argentina. Proyectos web distintivos que combinan código, diseño y motion.",
+  description: SHARE_DESCRIPTION,
   keywords: [
     "Lautaro Torres",
     "portfolio",
+    "digital designer",
+    "creative director",
     "creative developer",
-    "creative developer & designer",
     "desarrollador creativo",
     "frontend developer",
     "web design",
@@ -31,30 +37,21 @@ export const metadata = {
     "React",
     "WordPress",
   ],
-  authors: [{ name: "Lautaro Torres", url: "https://www.linkedin.com/in/lautarotorres/" }],
+  authors: [{ name: "Lautaro Torres", url: SITE_URL }],
   openGraph: {
-    title: "Lautaro Torres — Creative Developer & Designer",
-    description:
-      "Portfolio de Lautaro Torres, Creative Developer & Designer desde Argentina. Proyectos web distintivos que combinan código, diseño y motion.",
+    title: SHARE_TITLE,
+    description: SHARE_DESCRIPTION,
     url: "/",
-    siteName: "Lautaro Torres Portfolio",
-    locale: "es_AR",
+    siteName: "Lautaro Torres",
+    locale: "en_US",
     type: "website",
-    images: [
-      {
-        url: "/assets/images/logos/logo-lt-4327568.svg",
-        width: 512,
-        height: 512,
-        alt: "Logo monograma LT",
-      },
-    ],
+    images: [DEFAULT_OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Lautaro Torres — Creative Developer & Designer",
-    description:
-      "Portfolio de Lautaro Torres, Creative Developer & Designer desde Argentina. Experimentos, proyectos y trabajo comercial.",
-    images: ["/assets/images/logos/logo-lt-4327568.svg"],
+    title: SHARE_TITLE,
+    description: SHARE_DESCRIPTION,
+    images: [{ url: DEFAULT_OG_IMAGE.url, alt: DEFAULT_OG_IMAGE.alt }],
   },
   alternates: {
     canonical: "/",

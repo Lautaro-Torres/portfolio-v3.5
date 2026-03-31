@@ -1,20 +1,20 @@
 export const metadata = {
-  title: "Proyectos seleccionados",
+  title: "Proyectos",
   description:
-    "Selección de proyectos desarrollados por Lautaro Torres: experiencias web, branding digital y sitios hechos a medida.",
+    "Casos y piezas digitales donde convergen dirección creativa, diseño y desarrollo: experiencias web con identidad propia.",
   alternates: {
     canonical: "/projects",
   },
   openGraph: {
-    title: "Proyectos seleccionados",
+    title: "Proyectos | Lautaro Torres",
     description:
-      "Selección de proyectos desarrollados por Lautaro Torres: experiencias web, branding digital y sitios hechos a medida.",
+      "Casos y piezas digitales donde convergen dirección creativa, diseño y desarrollo: experiencias web con identidad propia.",
     url: "/projects",
   },
   twitter: {
-    title: "Proyectos seleccionados",
+    title: "Proyectos | Lautaro Torres",
     description:
-      "Selección de proyectos desarrollados por Lautaro Torres: experiencias web, branding digital y sitios hechos a medida.",
+      "Casos y piezas digitales donde convergen dirección creativa, diseño y desarrollo: experiencias web con identidad propia.",
     card: "summary_large_image",
   },
 };
