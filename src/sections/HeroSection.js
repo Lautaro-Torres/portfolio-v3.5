@@ -1,13 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import WordRotator from "../components/WordRotator";
 import MateHero from "../components/MateHero";
 import { useLoading } from "../contexts/LoadingContext";
-import { HOME_MOTION } from "../utils/homeMotion";
-
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
@@ -18,6 +17,7 @@ export default function HeroSection() {
   const heroContentRef = useRef(null);
   const heroMainTitlesRef = useRef(null);
   const heroSubtitleWrapRef = useRef(null);
+  const heroDesktopTaglineRef = useRef(null);
   const heroTopTagRef = useRef(null);
   const heroFooterRef = useRef(null);
   const taglineRef = useRef(null);
@@ -25,6 +25,8 @@ export default function HeroSection() {
   const orbRef = useRef(null);
   const introTlRef = useRef(null);
   const [argentinaTime, setArgentinaTime] = useState("");
+  /** Latched after intro timeline completes — unlocks CSS that hides layers pre-intro. */
+  const [introComplete, setIntroComplete] = useState(false);
   const { isInitialLoading, isRevealComplete } = useLoading();
   const isHeroReady = !isInitialLoading && isRevealComplete;
 
@@ -33,132 +35,133 @@ export default function HeroSection() {
   }, []);
 
   useLayoutEffect(() => {
+    document.body.classList.add("home-hero-intro-pending");
+    return () => {
+      document.body.classList.remove("home-hero-intro-pending");
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    const navEl = document.querySelector("[data-main-nav]");
+    const badgeEl = document.querySelector("[data-dagoberto-badge]");
+    const glassPillEl = document.querySelector("[data-glass-portal-pill]");
+    const persistentUiEls = [navEl, badgeEl, glassPillEl].filter(Boolean);
+
+    const supportEls = [
+      heroDesktopTaglineRef.current,
+      taglineRef.current,
+      heroSubtitleWrapRef.current,
+      heroFooterRef.current,
+    ].filter(Boolean);
+
+    const allIntroEls = [
+      heroOrbWrapRef.current,
+      heroMainTitlesRef.current,
+      ...supportEls,
+      navEl,
+      badgeEl,
+      glassPillEl,
+    ].filter(Boolean);
+
     if (!isHeroReady) {
-      const navEl = document.querySelector("[data-main-nav]");
-      const badgeEl = document.querySelector("[data-dagoberto-badge]");
-      gsap.set(
-        [
-          heroOrbWrapRef.current,
-          heroMainTitlesRef.current,
-          subtitleRef.current,
-          taglineRef.current,
-          heroFooterRef.current,
-          navEl,
-          badgeEl,
-        ].filter(Boolean),
-        { opacity: 1, y: 0, scale: 1, clearProps: "opacity,transform" }
-      );
-      return undefined;
+      introTlRef.current?.kill();
+      introTlRef.current = null;
+      setIntroComplete(false);
+      gsap.set(heroRef.current, { backgroundColor: "#000000" });
+      gsap.set(allIntroEls, { autoAlpha: 0 });
+      if (heroMainTitlesRef.current) {
+        gsap.set(heroMainTitlesRef.current, { y: 52, force3D: true });
+      }
+      return () => {
+        introTlRef.current?.kill();
+        introTlRef.current = null;
+        // Prevent nav/badge/pill from staying hidden after SPA navigation.
+        gsap.set(persistentUiEls, { clearProps: "opacity,visibility" });
+      };
     }
 
     const ctx = gsap.context(() => {
-      const navEl = document.querySelector("[data-main-nav]");
-      const badgeEl = document.querySelector("[data-dagoberto-badge]");
-
-      const introTargets = [
-        heroMainTitlesRef.current,
-        subtitleRef.current,
-        taglineRef.current,
-        heroFooterRef.current,
-        navEl,
-        badgeEl,
-      ].filter(Boolean);
-
-      // Keep visible by default; intro uses fromTo so it never gets stuck hidden.
-      gsap.set([heroOrbWrapRef.current, ...introTargets].filter(Boolean), {
-        clearProps: "opacity,transform",
-      });
+      /* Deterministic prep: same frame as first paint with isHeroReady (set + to, no from() surprises). */
+      gsap.set(heroRef.current, { backgroundColor: "#000000" });
+      if (heroOrbWrapRef.current) gsap.set(heroOrbWrapRef.current, { autoAlpha: 0 });
+      if (heroMainTitlesRef.current) {
+        gsap.set(heroMainTitlesRef.current, { y: 52, autoAlpha: 0, force3D: true });
+      }
+      gsap.set(supportEls, { autoAlpha: 0 });
+      gsap.set([navEl, badgeEl, glassPillEl].filter(Boolean), { autoAlpha: 0 });
 
       const tl = gsap.timeline({
-        defaults: { ease: HOME_MOTION.fadeEase },
         onComplete: () => {
+          document.body.classList.remove("home-hero-intro-pending");
+          /* Commit .hero-home-intro-complete before clearProps so CSS prep rules never flash back. */
+          flushSync(() => setIntroComplete(true));
+          gsap.set(allIntroEls, { clearProps: "opacity,visibility" });
+          gsap.set(heroRef.current, { clearProps: "backgroundColor" });
           ScrollTrigger.refresh();
         },
       });
 
-      if (navEl || badgeEl) {
-        tl.fromTo(
-          [navEl, badgeEl].filter(Boolean),
-          { opacity: 0.12 },
-          {
-            opacity: 1,
-            duration: HOME_MOTION.fadeDuration,
-            clearProps: "opacity",
-            immediateRender: false,
-          },
-          0.1
-        );
-      }
-
       if (heroOrbWrapRef.current) {
-        tl.fromTo(
+        tl.to(
           heroOrbWrapRef.current,
-          { opacity: 0.18 },
-          {
-            opacity: 1,
-            duration: HOME_MOTION.fadeDuration,
-            clearProps: "opacity",
-            immediateRender: false,
-          },
-          0
+          { autoAlpha: 1, duration: 0.64, ease: "power2.out" },
+          0.05
         );
       }
 
       if (heroMainTitlesRef.current) {
-        tl.fromTo(
+        tl.to(
           heroMainTitlesRef.current,
-          { opacity: 0.08 },
           {
-            opacity: 1,
-            duration: HOME_MOTION.fadeDuration,
-            clearProps: "opacity",
-            immediateRender: false,
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.76,
+            ease: "power3.out",
           },
-          0.34
+          ">+=0.18"
         );
       }
 
-      if (subtitleRef.current) {
-        tl.fromTo(
-          subtitleRef.current,
-          { opacity: 0.08 },
+      if (supportEls.length) {
+        tl.to(
+          supportEls,
           {
-            opacity: 1,
-            duration: HOME_MOTION.fadeDuration,
-            clearProps: "opacity",
-            immediateRender: false,
+            autoAlpha: 1,
+            duration: 0.46,
+            stagger: 0.065,
+            ease: "power2.out",
           },
-          0.58
+          ">+=0.14"
         );
       }
 
-      if (taglineRef.current) {
-        tl.fromTo(
-          taglineRef.current,
-          { opacity: 0.08 },
-          {
-            opacity: 1,
-            duration: HOME_MOTION.fadeDuration,
-            clearProps: "opacity",
-            immediateRender: false,
-          },
-          0.46
+      /* Nav + portaled glass pill same beat (pill is not inside [data-main-nav]). */
+      const navAndGlass = [navEl, glassPillEl].filter(Boolean);
+      if (navAndGlass.length) {
+        tl.to(
+          navAndGlass,
+          { autoAlpha: 1, duration: 0.46, ease: "power2.out" },
+          ">+=0.08"
         );
       }
 
-      if (heroFooterRef.current) {
-        tl.fromTo(
-          heroFooterRef.current,
-          { opacity: 0.08 },
-          {
-            opacity: 1,
-            duration: HOME_MOTION.fadeDuration,
-            clearProps: "opacity",
-            immediateRender: false,
-          },
-          0.72
+      if (badgeEl) {
+        tl.to(
+          badgeEl,
+          { autoAlpha: 1, duration: 0.46, ease: "power2.out" },
+          "<0.05"
         );
       }
+
+      tl.to(
+        heroRef.current,
+        {
+          backgroundColor: "#0a0a0a",
+          duration: 0.52,
+          ease: "power2.inOut",
+        },
+        "<0.06"
+      );
 
       introTlRef.current = tl;
     }, heroRef);
@@ -167,6 +170,8 @@ export default function HeroSection() {
       introTlRef.current?.kill();
       introTlRef.current = null;
       ctx.revert();
+      // Ensure persistent UI is restored even if intro unmounts mid-timeline.
+      gsap.set(persistentUiEls, { clearProps: "opacity,visibility" });
     };
   }, [isHeroReady]);
 
@@ -313,11 +318,15 @@ export default function HeroSection() {
   return (
     <section
       ref={heroRef}
-      className="relative w-full min-h-[100dvh] h-[100dvh] flex items-center justify-center mb-0 overflow-hidden"
-      style={{ backgroundColor: "#0a0a0a" }}
+      className={`hero-home relative w-full min-h-[100dvh] h-[100dvh] flex items-center justify-center mb-0 overflow-hidden ${
+        introComplete ? "hero-home-intro-complete bg-[#0a0a0a]" : "bg-black"
+      }`}
     >
       {/* 3D hero band — canvas ocupa todo el hero; posición final se controla desde HeroOrb3D (offsets / amplitudes). */}
-      <div ref={heroOrbWrapRef} className="absolute inset-0 z-[50] pointer-events-none">
+      <div
+        ref={heroOrbWrapRef}
+        className="hero-home-layer-orb absolute inset-0 z-[50] pointer-events-none"
+      >
         <MateHero ref={orbRef} />
       </div>
 
@@ -326,7 +335,7 @@ export default function HeroSection() {
           heroTopTagRef.current = node;
           taglineRef.current = node;
         }}
-        className="absolute top-20 left-[5%] z-40 md:hidden pointer-events-none"
+        className="hero-home-layer-support absolute top-20 left-[5%] z-40 md:hidden pointer-events-none"
       >
         <p className="text-white text-sm font-general font-light uppercase tracking-[0.18em]">
           LAUTARO TORRES
@@ -342,7 +351,7 @@ export default function HeroSection() {
       {/* Section number — matches 90% container margins */}
       <div
         ref={heroFooterRef}
-        className="absolute bottom-[clamp(1.5rem,4vh,2.5rem)] left-[5%] right-[5%] z-40 flex items-center justify-between pointer-events-none"
+        className="hero-home-layer-support absolute bottom-[clamp(1.5rem,4vh,2.5rem)] left-[5%] right-[5%] z-40 flex items-center justify-between pointer-events-none"
       >
         <span className="text-white/25 text-[10px] uppercase tracking-[0.24em]">01</span>
         <span className="hidden md:inline text-white/35 text-[9px] uppercase tracking-[0.2em]">
@@ -356,7 +365,10 @@ export default function HeroSection() {
       >
         <div className="w-full px-[5%] h-full flex flex-col justify-end md:justify-center pb-[16%] md:pb-0">
           {/* Tagline row — same height */}
-          <div className="hidden md:flex md:items-center md:justify-between mb-8 lg:mb-12">
+          <div
+            ref={heroDesktopTaglineRef}
+            className="hero-home-layer-support hidden md:flex md:items-center md:justify-between mb-8 lg:mb-12"
+          >
             <p className="text-white text-sm md:text-base lg:text-lg font-general font-light uppercase tracking-[0.14em]">
               LAUTARO TORRES
             </p>
@@ -373,7 +385,7 @@ export default function HeroSection() {
           {/* Main Titles - letter-by-letter staggered reveal */}
           <div
             ref={heroMainTitlesRef}
-            className="w-full flex flex-col md:flex-row items-start md:items-center justify-start md:justify-between gap-0 md:gap-4 lg:gap-6 mb-8 lg:mb-12 mt-[-9vh] md:mt-0"
+            className="hero-home-layer-titles w-full flex flex-col md:flex-row items-start md:items-center justify-start md:justify-between gap-0 md:gap-4 lg:gap-6 mb-8 lg:mb-12 mt-[-9vh] md:mt-0"
           >
             <div className="w-full md:w-auto md:shrink-0 text-left overflow-hidden py-[8px] md:py-[48px] flex items-center justify-start">
               <span 
@@ -395,7 +407,7 @@ export default function HeroSection() {
           {/* Subtitle - clean fade-in */}
           <div
             ref={heroSubtitleWrapRef}
-            className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-0"
+            className="hero-home-layer-support flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-0"
           >
             <span ref={subtitleRef} className="text-white text-sm md:text-xl font-general font-medium tracking-[0.01em]">
               Building distinctive digital projects

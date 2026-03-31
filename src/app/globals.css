@@ -89,24 +89,56 @@ html.smooth-scroll-active body {
 }
 
 /* Honest indeterminate bar (route transition — not a fake %) */
-@keyframes route-loader-shuttle {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(320%); }
-}
 .route-loader-track {
   position: relative;
   overflow: hidden;
 }
-.route-loader-indeterminate {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 36%;
-  border-radius: 9999px;
-  background: #fff;
-  transform: translateX(-100%);
-  animation: route-loader-shuttle 1.2s ease-in-out infinite;
+.route-loader-progress {
+  transform-origin: left center;
+  will-change: transform;
+}
+.route-loader-percent {
+  font-size: clamp(5rem, 24vw, 18rem);
+  line-height: 0.78;
+  text-wrap: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pantalla inicial de carga: % lo más grande que permita el viewport (Anton) */
+.initial-loader-percent {
+  font-variant-numeric: tabular-nums;
+  text-wrap: nowrap;
+  line-height: 0.82;
+  font-size: clamp(3.5rem, min(42vw, 52vh), 24rem);
+  letter-spacing: 0.02em;
+}
+
+.initial-loader-bar-track {
+  width: 100vw;
+  margin-left: 0;
+  margin-right: 0;
+  max-width: none;
+}
+
+/*
+ * Home hero: first paint + pre-hydration must not show final layout before GSAP.
+ * Layers stay hidden until .hero-home-intro-complete (added when intro timeline finishes).
+ * GSAP inline styles override these rules during the tween (no !important).
+ */
+section.hero-home:not(.hero-home-intro-complete) {
+  background-color: #000000;
+}
+section.hero-home:not(.hero-home-intro-complete) .hero-home-layer-orb,
+section.hero-home:not(.hero-home-intro-complete) .hero-home-layer-titles,
+section.hero-home:not(.hero-home-intro-complete) .hero-home-layer-support {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Desktop glass pill is portaled to body — hide until home hero intro finishes (see HeroSection). */
+body.home-hero-intro-pending [data-glass-portal-pill] {
+  opacity: 0;
+  visibility: hidden;
 }
 
 /* ====== Base ====== */

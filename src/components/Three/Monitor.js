@@ -42,8 +42,8 @@ const MonitorModel = React.memo(function MonitorModel() {
     [isMobile]
   );
 
-  const responsiveScale = useMemo(() => 
-    isMobile ? 5.5 : 5.5, // Bigger to compensate for model base size
+  const responsiveScale = useMemo(
+    () => (isMobile ? 6.35 : 5.5),
     [isMobile]
   );
 

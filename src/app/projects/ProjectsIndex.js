@@ -4,7 +4,8 @@ import { getProjectCardVideoUrl } from "../../utils/projectUtils";
 import WorkCard from "../../components/ui/WorkCard.js";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { markRouteReady, normalizeRoutePath } from "../../utils/routeReadyGate";
+import { normalizeRoutePath } from "../../utils/routeReadyGate";
+import { useSimpleRouteReady } from "../../hooks/useSimpleRouteReady";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollSmoother } from "gsap/ScrollSmoother";
@@ -30,54 +31,24 @@ function refreshSmootherLayout() {
 
 export default function ProjectsIndex() {
   const pathname = usePathname();
-  const pageRef = useRef(null);
+  useSimpleRouteReady();
   const titleRef = useClippedTitleReveal();
   const desktopGridRef = useRef(null);
   const mobileGridRef = useRef(null);
 
+  // Mismo criterio que archives/experiments: el overlay de transición no debe esperar vídeos lazy
+  // (WorkCard deja src vacío hasta viewport → loadeddata nunca llega y la ruta parecía “colgada”).
   useEffect(() => {
     if (normalizeRoutePath(pathname) !== "/projects") return;
-    const root = pageRef.current;
-    if (!root) return;
-    let done = false;
-    const fire = () => {
-      if (done) return;
-      done = true;
-      markRouteReady("/projects");
-      // Una vez que consideramos la ruta lista, refrescamos el layout del smoother/ScrollTrigger
-      // sólo una vez para evitar recalcular alturas en cada pequeño cambio de las cards.
+    let cancelled = false;
+    requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        refreshSmootherLayout();
+        if (!cancelled) refreshSmootherLayout();
       });
+    });
+    return () => {
+      cancelled = true;
     };
-    const imgs = Array.from(root.querySelectorAll("img"));
-    const videos = Array.from(root.querySelectorAll("video"));
-    const pending = [];
-    imgs.forEach((img) => {
-      if (img.complete && img.naturalWidth > 0) return;
-      pending.push(
-        new Promise((resolve) => {
-          img.addEventListener("load", resolve, { once: true });
-          img.addEventListener("error", resolve, { once: true });
-        })
-      );
-    });
-    videos.forEach((v) => {
-      if (v.readyState >= 2) return;
-      pending.push(
-        new Promise((resolve) => {
-          v.addEventListener("loadeddata", resolve, { once: true });
-          v.addEventListener("error", resolve, { once: true });
-        })
-      );
-    });
-    if (pending.length === 0) {
-      requestAnimationFrame(() => requestAnimationFrame(fire));
-    } else {
-      Promise.all(pending).finally(() => requestAnimationFrame(fire));
-    }
-    const t = setTimeout(fire, 16000);
-    return () => clearTimeout(t);
   }, [pathname]);
 
   useEffect(() => {
@@ -225,7 +196,7 @@ export default function ProjectsIndex() {
   const mobileRows = createMobileRows();
 
   return (
-    <div ref={pageRef} className="min-h-screen text-white" style={{ backgroundColor: "#0a0a0a" }}>
+    <div className="min-h-screen text-white" style={{ backgroundColor: "#0a0a0a" }}>
       {/* Main Content */}
       <main className="relative w-full pt-20 md:pt-24">
         <div className="w-full max-w-[1900px] mx-auto px-[5%]">
@@ -243,8 +214,8 @@ export default function ProjectsIndex() {
         <div ref={desktopGridRef} className="w-full hidden md:block">
           <div className="flex flex-col gap-y-6">
             {desktopRows.map((row, rowIdx) => {
-              // Altura uniforme para todas las tarjetas de escritorio (un poco más altas), con mínimo cómodo en pantallas bajas
-              const rowHeight = "h-[70vh] min-h-[320px]";
+              // Tarjetas más bajas que 70vh; tope en px para monitores muy altos
+              const rowHeight = "h-[min(50vh,520px)] min-h-[248px]";
               
               const getGridClass = (cols, isFullWidth) => {
                 if (isFullWidth) return 'grid gap-4 grid-cols-1';
@@ -285,8 +256,7 @@ export default function ProjectsIndex() {
         <div ref={mobileGridRef} className="w-full block md:hidden -mt-1">
           <div className="flex flex-col gap-y-3 md:gap-y-6">
             {mobileRows.map((row, rowIdx) => {
-              // Altura uniforme en mobile: suficiente para ver título + primera card en el mismo viewport.
-              const rowHeight = "h-[44vh] min-h-[240px]";
+              const rowHeight = "h-[min(36vh,380px)] min-h-[200px]";
               
               const getGridClass = (cols, isFullWidth) => {
                 if (isFullWidth) return 'grid gap-2 md:gap-4 grid-cols-1';

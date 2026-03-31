@@ -48,8 +48,10 @@ export default function Footer() {
       className="relative w-full min-h-screen flex flex-col"
       style={{ backgroundColor: "#0a0a0a" }}
     >
-      {/* Canvas 3D - Centrado en el footer */}
-      <div ref={logoHostRef} className="relative flex-1 flex items-center justify-center">
+      <div
+        ref={logoHostRef}
+        className="relative flex flex-1 min-h-0 items-center justify-center overflow-visible"
+      >
         {shouldMountLogo3D ? <LogoLT /> : null}
       </div>
 
@@ -88,8 +90,8 @@ export default function Footer() {
         {/* Desktop Layout */}
         <div className="hidden md:flex max-w-[1600px] mx-auto justify-between items-center text-white text-sm font-general">
           <div className="flex items-center">
-            <a 
-              href="mailto:contact@lautor.dev" 
+            <a
+              href="mailto:contact@lautor.dev"
               className="hover:underline flex items-center font-normal uppercase tracking-[0.08em] transition-all duration-300"
             >
               contact@lautor.dev
@@ -100,12 +102,11 @@ export default function Footer() {
               </span>
             </a>
           </div>
-          
           <div>
-            <a 
-              href="https://www.linkedin.com/in/lautarotorres/" 
-              target="_blank" 
-              rel="noopener noreferrer" 
+            <a
+              href="https://www.linkedin.com/in/lautarotorres/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="hover:underline font-normal uppercase tracking-[0.08em] transition-all duration-300"
             >
               LinkedIn

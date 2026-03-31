@@ -66,6 +66,9 @@ export default function ProjectPage({ project }) {
   const sideMedia = rawGallery[1];
   const trailingMedia = rawGallery.slice(2) || [];
   const headerContentRefs = useMemo(() => [factsRef, rightColumnRef], []);
+  const handleOverlaySettled = useCallback(() => {
+    setHasHeroSettled(true);
+  }, []);
 
   // --- Page intro animation (hero takeover → settle → title → content) ---
   useProjectIntroAnimation({
@@ -74,7 +77,8 @@ export default function ProjectPage({ project }) {
     titleRef,
     headerContentRefs,
     bodyContentRef,
-    onOverlaySettled: () => setHasHeroSettled(true),
+    resetKey: project?.slug,
+    onOverlaySettled: handleOverlaySettled,
   });
 
   useEffect(() => {
@@ -682,20 +686,6 @@ export default function ProjectPage({ project }) {
                 </div>
               )}
 
-              {project.videoUrl && (
-                <div className="absolute inset-0 hidden md:flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="bg-black/40 rounded-full p-4">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="white"
-                      viewBox="0 0 24 24"
-                      className="w-12 h-12"
-                    >
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>

@@ -15,6 +15,7 @@ export function useProjectIntroAnimation(refs) {
     titleRef,
     headerContentRefs = [],
     bodyContentRef,
+    resetKey,
     onOverlaySettled,
     onComplete,
   } = refs;
@@ -22,6 +23,12 @@ export function useProjectIntroAnimation(refs) {
   const timelineRef = useRef(null);
   const isCompleteRef = useRef(false);
   const hasStartedRef = useRef(false);
+
+  useEffect(() => {
+    // Re-run intro when route/item changes.
+    hasStartedRef.current = false;
+    isCompleteRef.current = false;
+  }, [resetKey]);
 
   const cleanup = useCallback(() => {
     if (timelineRef.current) {
@@ -79,6 +86,9 @@ export function useProjectIntroAnimation(refs) {
       borderRadius: 0,
       zIndex: 100,
       overflow: "hidden",
+      opacity: 1,
+      visibility: "visible",
+      pointerEvents: "none",
     });
 
     const runIntro = () => {
@@ -185,7 +195,17 @@ export function useProjectIntroAnimation(refs) {
       restoreTitle();
       cleanup();
     };
-  }, [overlayRef, heroTargetRef, titleRef, headerContentRefs, bodyContentRef, cleanup, onOverlaySettled, onComplete]);
+  }, [
+    overlayRef,
+    heroTargetRef,
+    titleRef,
+    headerContentRefs,
+    bodyContentRef,
+    cleanup,
+    onOverlaySettled,
+    onComplete,
+    resetKey,
+  ]);
 
   return { cleanup };
 }

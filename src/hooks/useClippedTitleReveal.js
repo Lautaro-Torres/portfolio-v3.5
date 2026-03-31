@@ -16,10 +16,13 @@ export function useClippedTitleReveal(options = {}) {
     yPercent = 100,
     playWhen = true,
     fontFamily = "Anton, sans-serif",
+    onComplete,
   } = options;
 
   const elementRef = useRef(null);
   const pluginReadyRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   useEffect(() => {
     if (!pluginReadyRef.current) {
@@ -52,6 +55,9 @@ export function useClippedTitleReveal(options = {}) {
           once: true,
           invalidateOnRefresh: true,
         },
+        onComplete: () => {
+          onCompleteRef.current?.();
+        },
       });
     } else {
       animation = gsap.to(chars, {
@@ -60,6 +66,9 @@ export function useClippedTitleReveal(options = {}) {
         stagger,
         ease,
         delay,
+        onComplete: () => {
+          onCompleteRef.current?.();
+        },
       });
     }
 

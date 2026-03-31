@@ -66,7 +66,9 @@ const MATE_LOCAL_SCALE = 1.0;
 const BASE_POSITION_Y = 0.1;
 const BASE_ROTATION_X = -0.2;
 const BASE_ROTATION_Y = 0;
-const BASE_ROTATION_Z = 0.11;
+// Roll negativo = inclinación hacia la izquierda (escritorio más pronunciado).
+const BASE_ROTATION_Z_MOBILE = -0.22;
+const BASE_ROTATION_Z_DESKTOP = -0.36;
 
 // Vertical idle bob. Slightly stronger to give more travel before scrolling.
 const IDLE_BOB_AMPLITUDE = 0.15;
@@ -87,6 +89,41 @@ const MOBILE_IDLE_BOB_MULTIPLIER = 1.55;
 // Slightly lower on mobile so it crosses CREATIVE without hiding it.
 const MOBILE_MODEL_Y_OFFSET = 0.5;
 
+// Desktop / tablet landscape: mate scales with viewport width (like headline clamp vw) so it reaches the words;
+// clamped so ultrawide and very short heights do not blow up the composition.
+const DESKTOP_MODEL_SCALE_MIN_MULT = 1.2;
+const DESKTOP_MODEL_SCALE_MAX_MULT = 1.5;
+const DESKTOP_MODEL_WIDTH_LERP_START = 768;
+const DESKTOP_MODEL_WIDTH_LERP_END = 1400;
+
+function getMobileModelScaleMultiplier(viewportHeight) {
+  const vh = viewportHeight || 800;
+  let mult = MOBILE_MODEL_SCALE_MULTIPLIER_BASE;
+  const t = THREE.MathUtils.clamp((vh - 640) / (900 - 640), 0, 1);
+  mult *= THREE.MathUtils.lerp(0.95, 1.06, t);
+  return mult;
+}
+
+function getDesktopModelScaleMultiplier(width, height) {
+  const w = width;
+  const h = height || 800;
+  const span = Math.max(DESKTOP_MODEL_WIDTH_LERP_END - DESKTOP_MODEL_WIDTH_LERP_START, 1);
+  const t = THREE.MathUtils.clamp((w - DESKTOP_MODEL_WIDTH_LERP_START) / span, 0, 1);
+  let mult = THREE.MathUtils.lerp(DESKTOP_MODEL_SCALE_MIN_MULT, DESKTOP_MODEL_SCALE_MAX_MULT, t);
+  const shortT = THREE.MathUtils.clamp((h - 640) / (900 - 640), 0, 1);
+  mult *= THREE.MathUtils.lerp(0.92, 1, shortT);
+  return mult;
+}
+
+/** Uses host/client dimensions so resize stays in sync with the hero canvas. */
+function getModelScaleMultiplier(clientWidth, clientHeight) {
+  const w = clientWidth || (typeof window !== "undefined" ? window.innerWidth : 1024);
+  const h = clientHeight || (typeof window !== "undefined" ? window.innerHeight : 800);
+  if (w <= 768) return getMobileModelScaleMultiplier(h);
+  return getDesktopModelScaleMultiplier(w, h);
+}
+
+// Escritorio: el mate “sigue” al puntero con rotación suave (sin mover posición).
 const CURSOR_MAX_ROTATION = 0.12;
 const CURSOR_DAMPING = 0.09;
 
@@ -272,7 +309,7 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
     basePositionY: BASE_POSITION_Y,
     baseRotationX: BASE_ROTATION_X,
     baseRotationY: BASE_ROTATION_Y,
-    baseRotationZ: BASE_ROTATION_Z,
+    baseRotationZ: BASE_ROTATION_Z_MOBILE,
     cursorTargetX: 0,
     cursorTargetZ: 0,
     cursorCurrentX: 0,
@@ -790,19 +827,21 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
     const modelGroup = new THREE.Group();
     modelGroup.position.set(0, BASE_POSITION_Y, 0);
 
-    // Escala responsiva en mobile: partimos de 1.2 y la ajustamos suave según el alto del viewport
-    // para que el mate no se coma demasiado espacio en pantallas muy bajas ni quede diminuto en
-    // viewports muy altos.
-    let mobileScaleMultiplier = MOBILE_MODEL_SCALE_MULTIPLIER_BASE;
-    if (isMobile && typeof window !== "undefined") {
-      const vh = window.innerHeight || 800;
-      // 0.95x en viewports muy bajos (~640px), 1.0x alrededor de 812–844px, 1.06x en pantallas altas.
-      const t = THREE.MathUtils.clamp((vh - 640) / (900 - 640), 0, 1);
-      mobileScaleMultiplier *= THREE.MathUtils.lerp(0.95, 1.06, t);
-    }
-
-    modelGroup.scale.setScalar(BASE_MODEL_SCALE * (isMobile ? mobileScaleMultiplier : 1));
-    modelGroup.rotation.set(BASE_ROTATION_X, BASE_ROTATION_Y, BASE_ROTATION_Z);
+    // Escala responsiva; tilt Z según breakpoint; escritorio: rotación extra suave hacia el puntero.
+    const applyModelGroupLayout = () => {
+      const w = host.clientWidth || window.innerWidth || 1024;
+      const h = host.clientHeight || window.innerHeight || 800;
+      const mult = getModelScaleMultiplier(w, h);
+      modelGroup.scale.setScalar(BASE_MODEL_SCALE * mult);
+      motionStateRef.current.baseRotationZ =
+        w <= 768 ? BASE_ROTATION_Z_MOBILE : BASE_ROTATION_Z_DESKTOP;
+    };
+    applyModelGroupLayout();
+    modelGroup.rotation.set(
+      BASE_ROTATION_X,
+      BASE_ROTATION_Y,
+      motionStateRef.current.baseRotationZ
+    );
     modelRef.current = modelGroup;
     scene.add(modelGroup);
 
@@ -885,6 +924,7 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
+      applyModelGroupLayout();
     };
     setSize();
 
@@ -911,7 +951,7 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
     io.observe(host);
     intersectionObserverRef.current = io;
 
-    const updateCursorTargets = (clientX, clientY) => {
+    const updateCursorRotationTargets = (clientX, clientY) => {
       const bounds = host.getBoundingClientRect();
       if (!bounds.width || !bounds.height) return;
 
@@ -935,7 +975,7 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
       pointerRafRef.current = null;
       if (disposed || isMobile || !pointerSampleRef.current.dirty) return;
       pointerSampleRef.current.dirty = false;
-      updateCursorTargets(pointerSampleRef.current.x, pointerSampleRef.current.y);
+      updateCursorRotationTargets(pointerSampleRef.current.x, pointerSampleRef.current.y);
     };
 
     const onPointerMove = (event) => {
@@ -948,15 +988,15 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
       }
     };
 
-    const resetCursorTargets = () => {
+    const resetCursorRotationTargets = () => {
       const motion = motionStateRef.current;
       motion.cursorTargetX = 0;
       motion.cursorTargetZ = 0;
     };
 
     window.addEventListener("pointermove", onPointerMove, { passive: true });
-    window.addEventListener("pointerleave", resetCursorTargets);
-    window.addEventListener("blur", resetCursorTargets);
+    window.addEventListener("pointerleave", resetCursorRotationTargets);
+    window.addEventListener("blur", resetCursorRotationTargets);
 
     // Render loop
     const start = performance.now();
@@ -977,21 +1017,33 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
         const idleRotY = Math.sin(elapsed * IDLE_ROT_Y_FREQUENCY) * IDLE_ROT_Y_AMPLITUDE;
         const idleRotZ = Math.sin(elapsed * IDLE_ROT_Z_FREQUENCY) * IDLE_ROT_Z_AMPLITUDE;
 
-        motion.cursorCurrentX += (motion.cursorTargetX - motion.cursorCurrentX) * CURSOR_DAMPING;
-        motion.cursorCurrentZ += (motion.cursorTargetZ - motion.cursorCurrentZ) * CURSOR_DAMPING;
         const spinBlend = 1 - Math.exp(-SPIN_VELOCITY_DAMPING * deltaSec);
         motion.spinVelocityY +=
           (motion.spinTargetVelocityY - motion.spinVelocityY) * spinBlend;
         motion.spinAngleY += motion.spinVelocityY * deltaSec;
 
+        if (!isMobile) {
+          motion.cursorCurrentX +=
+            (motion.cursorTargetX - motion.cursorCurrentX) * CURSOR_DAMPING;
+          motion.cursorCurrentZ +=
+            (motion.cursorTargetZ - motion.cursorCurrentZ) * CURSOR_DAMPING;
+        } else {
+          motion.cursorCurrentX = 0;
+          motion.cursorCurrentZ = 0;
+        }
+
+        model.position.x = 0;
         model.position.y = motion.basePositionY + idlePosY;
-        model.rotation.x = motion.baseRotationX + idleRotX + motion.cursorCurrentX;
+        model.position.z = 0;
+        model.rotation.x =
+          motion.baseRotationX + idleRotX + (isMobile ? 0 : motion.cursorCurrentX);
         model.rotation.y =
           motion.baseRotationY +
           idleRotY +
           motion.spinAngleY +
           motion.spinTransitionY;
-        model.rotation.z = motion.baseRotationZ + idleRotZ + motion.cursorCurrentZ;
+        model.rotation.z =
+          motion.baseRotationZ + idleRotZ + (isMobile ? 0 : motion.cursorCurrentZ);
       }
       renderer.render(scene, camera);
       frameRef.current = visibilityRef.current ? requestAnimationFrame(animate) : null;
@@ -1007,8 +1059,8 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
       intersectionObserverRef.current?.disconnect();
       spinTweenRef.current?.kill();
       window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerleave", resetCursorTargets);
-      window.removeEventListener("blur", resetCursorTargets);
+      window.removeEventListener("pointerleave", resetCursorRotationTargets);
+      window.removeEventListener("blur", resetCursorRotationTargets);
 
       // Dispose geometries
       if (modelRef.current) {

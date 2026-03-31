@@ -1,6 +1,6 @@
 // LoadingContext.js
 "use client";
-import { createContext, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
 
 const LoadingContext = createContext();
 
@@ -9,24 +9,29 @@ export function LoadingProvider({ children }) {
   const [hasLoadedBefore, setHasLoadedBefore] = useState(false);
   const [isRevealComplete, setIsRevealComplete] = useState(false);
 
-  const completeLoading = () => {
+  const completeLoading = useCallback(() => {
     setIsInitialLoading(false);
     setHasLoadedBefore(true);
     setIsRevealComplete(false);
-  };
+  }, []);
 
-  const completeReveal = () => {
+  const completeReveal = useCallback(() => {
     setIsRevealComplete(true);
-  };
+  }, []);
 
-  return (
-    <LoadingContext.Provider value={{
+  const value = useMemo(
+    () => ({
       isInitialLoading,
       hasLoadedBefore,
       isRevealComplete,
       completeLoading,
       completeReveal,
-    }}>
+    }),
+    [isInitialLoading, hasLoadedBefore, isRevealComplete, completeLoading, completeReveal]
+  );
+
+  return (
+    <LoadingContext.Provider value={value}>
       {children}
     </LoadingContext.Provider>
   );

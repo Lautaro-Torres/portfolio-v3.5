@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import AboutPortalCard from "../components/AboutPortalCard";
@@ -8,6 +8,9 @@ import InlineLottieGlobe from "../components/InlineLottieGlobe";
 import TextCtaLink from "../components/ui/TextCtaLink";
 import { HOME_MOTION } from "../utils/homeMotion";
 import { useClippedTitleReveal } from "../hooks/useClippedTitleReveal";
+
+const ABOUT_TITLE_LINE1 = "BRIDGING REALITY";
+const ABOUT_TITLE_LINE2 = "INTO THE DIGITAL";
 
 export default function AboutSection() {
   const aboutRenderVideo = "/assets/videos/opt-lautor-loop-card-2.mp4";
@@ -18,6 +21,28 @@ export default function AboutSection() {
   const textParallaxRef = useRef(null);
   const titleWrapRef = useRef(null);
   const titleRevealStart = isMobileTitle ? "top 86%" : "top 72%";
+  const lowerTextRevealStartedRef = useRef(false);
+  const lowerTextBlockRef = useRef(null);
+
+  const onTitleLine2CharsComplete = useCallback(() => {
+    if (lowerTextRevealStartedRef.current) return;
+    const el = lowerTextBlockRef.current;
+    if (!el) return;
+    lowerTextRevealStartedRef.current = true;
+    gsap.fromTo(
+      el,
+      { y: HOME_MOTION.revealY, opacity: 0 },
+      {
+        y: 0,
+        opacity: 1,
+        duration: HOME_MOTION.sectionItemDuration,
+        ease: HOME_MOTION.fadeEase,
+        delay: 0.08,
+        immediateRender: false,
+      }
+    );
+  }, []);
+
   const titleLine1Ref = useClippedTitleReveal({
     start: titleRevealStart,
     delay: 0.08,
@@ -32,11 +57,14 @@ export default function AboutSection() {
     duration: HOME_MOTION.titleCharDuration,
     stagger: HOME_MOTION.titleCharStagger,
     ease: HOME_MOTION.titleCharEase,
+    onComplete: onTitleLine2CharsComplete,
   });
   const lottieWrapRef = useRef(null);
-  const bodyCopyRef = useRef(null);
-  const ctaWrapRef = useRef(null);
   const sectionNumberRef = useRef(null);
+
+  useEffect(() => {
+    lowerTextRevealStartedRef.current = false;
+  }, [isMobileTitle, titleRevealStart]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -51,8 +79,8 @@ export default function AboutSection() {
     gsap.registerPlugin(ScrollTrigger);
 
     const ctx = gsap.context(() => {
-      // Hide title, body and CTA until their scroll trigger fires (card shows first)
-      gsap.set([titleWrapRef.current, bodyCopyRef.current, ctaWrapRef.current], { opacity: 0 });
+      // Hide title + lower block until scroll (card shows first); body+CTA fade after title chars finish
+      gsap.set([titleWrapRef.current, lowerTextBlockRef.current], { opacity: 0 });
 
       // 1) Card enters first — when section top hits 92% of viewport
       if (cardRef.current) {
@@ -102,51 +130,13 @@ export default function AboutSection() {
         }
       }
 
-      // 3) Body copy — when section top hits 70%
-      if (bodyCopyRef.current) {
-        gsap.fromTo(
-          bodyCopyRef.current,
-          { y: HOME_MOTION.revealY, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: HOME_MOTION.sectionItemDuration,
-            ease: HOME_MOTION.fadeEase,
-            scrollTrigger: {
-              trigger: sectionRef.current,
-              start: "top 68%",
-              once: true,
-              invalidateOnRefresh: true,
-            },
-          }
-        );
-      }
-
-      // 4) CTA last — when section top hits 65%
-      if (ctaWrapRef.current) {
-        gsap.fromTo(
-          ctaWrapRef.current,
-          { y: HOME_MOTION.revealY - 8, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: HOME_MOTION.sectionItemDuration,
-            ease: HOME_MOTION.fadeEase,
-            scrollTrigger: {
-              trigger: sectionRef.current,
-              start: "top 64%",
-              once: true,
-              invalidateOnRefresh: true,
-            },
-          }
-        );
-      }
+      // 3) Paragraph + CTA: fade runs from useClippedTitleReveal line-2 onComplete (not ScrollTrigger+delay)
     }, sectionRef);
 
     return () => {
       ctx.revert();
     };
-  }, []);
+  }, [isMobileTitle, titleRevealStart]);
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -261,34 +251,34 @@ export default function AboutSection() {
             <div className="grid grid-cols-12 gap-x-4 w-full min-h-0 pl-6 pr-4 md:pl-0 md:pr-0">
               <h2
                 ref={titleWrapRef}
-                className="col-span-12 font-anton uppercase text-white leading-[0.96] tracking-[0.01em] font-normal text-[clamp(2.1rem,7.2vw,5.6rem)] md:text-[clamp(2.6rem,5.4vw,5.4rem)] shrink-0"
+                className="col-span-12 grid grid-cols-12 gap-x-4 gap-y-1 m-0 p-0 shrink-0 font-normal"
               >
-                <span className="block">
-                  <span ref={titleLine1Ref} className="block md:-ml-[0.06em] lg:-ml-[0.08em]">
-                    BRIDGING REALITY
-                  </span>
+                <span
+                  ref={titleLine1Ref}
+                  className="col-span-12 block font-anton uppercase text-white leading-[0.96] tracking-[0.01em] text-[clamp(2.1rem,7.2vw,5.6rem)] md:text-[clamp(2.6rem,5.4vw,5.4rem)] md:-ml-[0.06em] lg:-ml-[0.08em]"
+                >
+                  {ABOUT_TITLE_LINE1}
                 </span>
-                <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 md:inline-flex md:gap-x-[0.12em] md:whitespace-nowrap">
+                <span className="col-span-12 md:col-start-3 md:col-span-10 mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 md:inline-flex md:gap-x-[0.12em] md:whitespace-nowrap font-anton uppercase text-white leading-[0.96] tracking-[0.01em] text-[clamp(2.1rem,7.2vw,5.6rem)] md:text-[clamp(2.6rem,5.4vw,5.4rem)]">
                   <span ref={lottieWrapRef} className="inline-flex shrink-0 items-center self-start pt-[0.06em]">
                     <InlineLottieGlobe className="w-[0.78em] h-[0.78em] translate-y-[0.03em] rounded-full overflow-hidden bg-[#0a0a0a]" />
                   </span>
-                  <span ref={titleLine2TextRef} className="font-anton min-w-0">
-                    INTO THE DIGITAL
+                  <span ref={titleLine2TextRef} className="min-w-0">
+                    {ABOUT_TITLE_LINE2}
                   </span>
                 </span>
               </h2>
-              <p
-                ref={bodyCopyRef}
-                className="col-span-9 col-start-4 md:col-start-1 md:col-span-7 mt-3 md:mt-7 text-white/82 text-[clamp(0.92rem,1.7vw,1.05rem)] md:text-[clamp(1.1rem,1.2vw,1.4rem)] leading-[1.22] max-w-[760px]"
-              >
-                From strategy to execution, I build websites and digital experiences that translate
-                real-world brands into systems people can feel, navigate and remember.
-              </p>
               <div
-                ref={ctaWrapRef}
-                className="col-span-9 col-start-4 md:col-start-1 md:col-span-7 mt-3 md:mt-7 shrink-0"
+                ref={lowerTextBlockRef}
+                className="col-span-9 col-start-4 md:col-start-3 md:col-span-5 mt-3 md:mt-7 flex flex-col gap-3 md:gap-7"
               >
-                <TextCtaLink text="See Experience" href="/experience" />
+                <p className="text-white/82 text-[clamp(0.92rem,1.7vw,1.05rem)] md:text-[clamp(1.1rem,1.2vw,1.4rem)] leading-[1.22] md:max-w-none">
+                  From strategy to execution, I build websites and digital experiences that translate
+                  real-world brands into systems people can feel, navigate and remember.
+                </p>
+                <div className="shrink-0">
+                  <TextCtaLink text="See Experience" href="/experience" />
+                </div>
               </div>
             </div>
           </div>

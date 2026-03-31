@@ -53,12 +53,12 @@ function LogoLTModel({ isActive = true }) {
       font: "/fonts/anton/Anton-Regular.ttf",
     },
     mobile: {
-      fontSize: 1.9,
-      maxWidth: 15,
+      fontSize: 2.75,
+      maxWidth: 18,
     },
     desktop: {
-      fontSize: 3.0,
-      maxWidth: 20,
+      fontSize: 4.15,
+      maxWidth: 26,
     }
   }), []);
 
@@ -69,11 +69,11 @@ function LogoLTModel({ isActive = true }) {
   // Memoize text components to prevent unnecessary rerenders
   const mobileText = useMemo(() => (
     <Text
-      position={[0, 2.5, -12]}
+      position={[0, 3.05, -12]}
       anchorX="center"
       anchorY="center"
       textAlign="left"
-      lineHeight={1.08}
+      lineHeight={1.06}
       {...textProps.common}
       {...textProps.mobile}
     >
@@ -84,7 +84,7 @@ function LogoLTModel({ isActive = true }) {
   const desktopText = useMemo(() => (
     <>
       <Text 
-        position={[-10, 3, -12]} 
+        position={[-11.2, 3.35, -12]} 
         anchorX="left" 
         anchorY="center"
         textAlign="left"
@@ -95,7 +95,7 @@ function LogoLTModel({ isActive = true }) {
       </Text>
       
       <Text 
-        position={[10, 0, -12]} 
+        position={[11.2, 0.15, -12]} 
         anchorX="right" 
         anchorY="center"
         textAlign="right"
@@ -112,8 +112,11 @@ function LogoLTModel({ isActive = true }) {
     [nodes]
   );
 
+  // Slightly smaller scale + camera pulled back so rotated mesh stays inside frustum (no top/bottom clip).
+  const sceneScale = Math.min(viewport.width / 7.75, viewport.height / 7.75);
+
   return (
-    <group scale={Math.min(viewport.width / 7, viewport.height / 7)}>
+    <group scale={sceneScale}>
       {isMobile ? mobileText : desktopText}
       
       <group 
@@ -179,10 +182,10 @@ export default function LogoLT() {
   
   // Memoize camera settings
   const cameraSettings = useMemo(() => ({
-    position: [0, 0, 12],
+    position: [0, 0, 15],
     fov: 45,
     near: 0.1,
-    far: 1000
+    far: 1000,
   }), []);
 
   return (
@@ -197,10 +200,10 @@ export default function LogoLT() {
         alignItems: "center",
         justifyContent: "center",
         zIndex: 10,
+        overflow: "visible",
         pointerEvents: isMobile ? "none" : "auto",
         touchAction: isMobile ? "pan-y" : "none",
         transform: "translateZ(0)",
-        backfaceVisibility: "hidden",
         perspective: "1000px",
       }}
     >
@@ -215,17 +218,25 @@ export default function LogoLT() {
                 height: "min(52vh, 380px)",
                 maxWidth: "100%",
                 maxHeight: "100%",
+                overflow: "visible",
               }
             : {
                 width: "100%",
                 height: "100%",
+                overflow: "visible",
                 pointerEvents: "auto",
                 touchAction: "none",
               }
         }
       >
         <Canvas
-          style={{ width: "100%", height: "100%", display: "block" }}
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "block",
+            backfaceVisibility: "visible",
+            WebkitBackfaceVisibility: "visible",
+          }}
           camera={cameraSettings}
           dpr={[1, 1.8]}
           frameloop="always"

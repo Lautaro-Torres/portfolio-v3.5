@@ -18,9 +18,51 @@ export function TransitionProvider({ children }) {
   const transitionTlRef = useRef(null);
   const overlayRef = useRef(null);
   const loadingBarRef = useRef(null);
+  const loadingBarFillRef = useRef(null);
+  const loadingPercentRef = useRef(null);
+  const progressTweenRef = useRef(null);
   const pendingRouteRef = useRef(null);
   const routeChangeResolverRef = useRef(null);
   const routeChangeTimeoutRef = useRef(null);
+
+  const setLoaderProgress = (value, options = {}) => {
+    const nextValue = Math.max(0, Math.min(100, value));
+    const duration = options.immediate ? 0 : options.duration ?? 0.38;
+    const ease = options.ease ?? "power2.out";
+    const state = { value: Number(loadingPercentRef.current?.dataset.progress || 0) };
+
+    if (progressTweenRef.current) {
+      progressTweenRef.current.kill();
+      progressTweenRef.current = null;
+    }
+
+    const render = (progressValue) => {
+      const rounded = Math.round(progressValue);
+      if (loadingPercentRef.current) {
+        loadingPercentRef.current.textContent = `${rounded}%`;
+        loadingPercentRef.current.dataset.progress = String(rounded);
+      }
+      if (loadingBarFillRef.current) {
+        loadingBarFillRef.current.style.transform = `scaleX(${progressValue / 100})`;
+      }
+    };
+
+    if (duration === 0) {
+      render(nextValue);
+      return;
+    }
+
+    progressTweenRef.current = gsap.to(state, {
+      value: nextValue,
+      duration,
+      ease,
+      onUpdate: () => render(state.value),
+      onComplete: () => {
+        render(nextValue);
+        progressTweenRef.current = null;
+      },
+    });
+  };
 
   const clearPendingRoute = () => {
     pendingRouteRef.current = null;
@@ -103,30 +145,45 @@ export function TransitionProvider({ children }) {
     if (overlayRef.current) return overlayRef.current;
 
     const overlay = document.createElement('div');
-    overlay.className = 'fixed inset-0 z-[25000] bg-[#0a0a0a] flex items-center justify-center pointer-events-none';
+    overlay.className = 'fixed inset-0 z-[25000] bg-[#0a0a0a] pointer-events-none';
     overlay.style.opacity = '0';
     overlay.style.transform = 'translateY(-100%)';
     overlay.style.isolation = 'isolate';
 
+    const content = document.createElement("div");
+    content.className =
+      "absolute inset-0 flex flex-col items-center justify-center px-[5vw]";
+
+    const percent = document.createElement("div");
+    percent.className =
+      "route-loader-percent font-anton font-normal uppercase text-white leading-[0.8] tracking-[0.02em] text-center select-none";
+    percent.textContent = "0%";
+    percent.dataset.progress = "0";
+
     const loadingTrack = document.createElement("div");
     loadingTrack.className =
-      "relative w-64 h-1 bg-white/10 rounded-full route-loader-track";
+      "route-loader-track absolute left-0 right-0 bottom-0 h-[4px] bg-white/10 overflow-hidden";
 
-    const shuttle = document.createElement("div");
-    shuttle.className = "route-loader-indeterminate";
+    const progressFill = document.createElement("div");
+    progressFill.className = "route-loader-progress h-full w-full bg-white origin-left";
+    progressFill.style.transform = "scaleX(0)";
 
-    const loadingText = document.createElement("div");
-    loadingText.className = "absolute bottom-20 left-1/2 transform -translate-x-1/2";
-    loadingText.innerHTML =
-      '<p class="text-white/60 text-sm font-general font-light tracking-[0.14em] uppercase">Cargando vista…</p>';
-
-    loadingTrack.appendChild(shuttle);
+    loadingTrack.appendChild(progressFill);
+    content.appendChild(percent);
+    const subtitle = document.createElement("p");
+    subtitle.className =
+      "mt-4 text-white/60 text-sm font-general font-light tracking-[0.14em] uppercase";
+    subtitle.textContent = "Cargando vista…";
+    content.appendChild(subtitle);
+    overlay.appendChild(content);
     overlay.appendChild(loadingTrack);
-    overlay.appendChild(loadingText);
     document.body.appendChild(overlay);
 
     overlayRef.current = overlay;
     loadingBarRef.current = loadingTrack;
+    loadingBarFillRef.current = progressFill;
+    loadingPercentRef.current = percent;
+    setLoaderProgress(0, { immediate: true });
 
     return overlay;
   };
@@ -279,30 +336,40 @@ export function TransitionProvider({ children }) {
 
     try {
       await exitCurrentView();
+      setLoaderProgress(12);
 
       await playLoaderIntro(overlay);
+      setLoaderProgress(24);
 
       const routeChanged = await navigateToRoute(targetRoute);
 
       if (!routeChanged) {
         return;
       }
+      setLoaderProgress(58, { duration: 0.45 });
 
       const targetPath = normalizeRoutePath(getPathnameFromHref(targetRoute));
       await armRouteReadyWait(targetPath, READY_TIMEOUT_MS);
+      setLoaderProgress(86, { duration: 0.5 });
 
       const elapsed = Date.now() - transitionStartedAt;
       const remainder = Math.max(0, MIN_LOADER_MS - elapsed);
       if (remainder) {
+        setLoaderProgress(94, { duration: Math.min(remainder / 1000, 0.45) });
         await new Promise((r) => setTimeout(r, remainder));
       }
 
+      setLoaderProgress(100, { duration: 0.28 });
       await hideLoaderAndEnter(overlay, loadingTrack);
     } catch (error) {
       console.error('❌ Transition error:', error);
     } finally {
       // Cleanup
       setIsTransitioning(false);
+      if (progressTweenRef.current) {
+        progressTweenRef.current.kill();
+        progressTweenRef.current = null;
+      }
 
       requestAnimationFrame(() => {
         const root = document.getElementById(PAGE_TRANSITION_ROOT_ID);
@@ -314,6 +381,8 @@ export function TransitionProvider({ children }) {
           document.body.removeChild(overlayRef.current);
           overlayRef.current = null;
           loadingBarRef.current = null;
+          loadingBarFillRef.current = null;
+          loadingPercentRef.current = null;
         }
       }, 100);
     }

@@ -10,7 +10,7 @@ export const projectsData = [
     industry: "Security & Intelligence",
     timeOfProject: "3 months",
     imageUrl: "/assets/projects/aktek/aktek-cover-1.webp",
-    videoUrl: "/assets/projects/aktek/aktetk-card-p.mp4",
+    videoUrl: "/assets/projects/aktek/opt-aktetk-card-p.mp4",
     logoUrl: "/assets/projects/aktek/logo-aktek-w.svg",
     tags: ["Web Design", "Web Development", "3D"],
     summary:
@@ -63,10 +63,9 @@ export const projectsData = [
   ],
   siteLink: "",
   gallery: [
-    { type: "video", src: "/assets/projects/imprudente/opt-rotating-gallery-01.mp4", posterTime: 1, fullVideoLoop: true, caption: "Rotating gallery" },
+    { type: "video", src: "/assets/projects/imprudente/opt-forward-3920482-gallery-04.mp4", posterTime: 1, fullVideoLoop: true, caption: "Forward" },
     { type: "video", src: "/assets/projects/imprudente/video-flyer-final-gallery-02.mp4", posterTime: 1, fullVideoLoop: true, caption: "Flyer final" },
     { type: "image", src: "/assets/projects/imprudente/image-gallery-03.png", alt: "Frame gallery 03" },
-    { type: "video", src: "/assets/projects/imprudente/opt-forward-3920482-gallery-04.mp4", posterTime: 1, fullVideoLoop: true, caption: "Forward" },
     { type: "image", src: "/assets/projects/imprudente/gallery-05.png", alt: "Gallery 05" },
     { type: "image", src: "/assets/projects/imprudente/gallery-06.png", alt: "Gallery 06" },
   ]
@@ -82,7 +81,7 @@ export const projectsData = [
   country: "Argentina",
   industry: "Entertainment",
   timeOfProject: "Ongoing",
-  videoUrl: "/assets/projects/pulsar/opt-hero-card.mp4",
+  videoUrl: "/assets/projects/pulsar/opt-card-pulsar.mp4",
   logoUrl: "/assets/projects/pulsar/logo-pulsar-w.svg",
   tags: ["Creative Direction", "Visual Identity", "3D", "Motion Design", "Branding"],
   summary:

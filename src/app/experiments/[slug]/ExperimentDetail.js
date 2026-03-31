@@ -1,7 +1,7 @@
 "use client";
 import { useParams, notFound } from "next/navigation";
 import { experimentsData } from "../../../data/experiments";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useClippedTitleReveal } from "../../../hooks/useClippedTitleReveal";
@@ -13,6 +13,68 @@ import "swiper/css";
 
 if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
 
+function minCircularSlideDistance(i, active, len) {
+  if (len < 2) return Math.abs(i - active);
+  const d = Math.abs(i - active);
+  return Math.min(d, len - d);
+}
+
+function ExperimentGalleryMedia({ media, index, activeIndex, titleSuffix, useLoop, slideCount }) {
+  const isVideo = typeof media === "string" && (media.endsWith(".mp4") || media.includes("video"));
+  const videoRef = useRef(null);
+
+  const { shouldLoad, shouldPlay } = useMemo(() => {
+    const dist = useLoop
+      ? minCircularSlideDistance(index, activeIndex, slideCount)
+      : Math.abs(index - activeIndex);
+    return {
+      shouldLoad: dist <= 1,
+      shouldPlay: index === activeIndex,
+    };
+  }, [activeIndex, index, slideCount, useLoop]);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || !isVideo) return;
+    if (!shouldLoad) {
+      v.pause();
+      return;
+    }
+    if (shouldPlay) {
+      const p = v.play();
+      if (p?.catch) p.catch(() => {});
+    } else {
+      v.pause();
+    }
+  }, [isVideo, shouldLoad, shouldPlay]);
+
+  if (!isVideo) {
+    return (
+      <img
+        src={media}
+        alt={`${titleSuffix} ${index + 1}`}
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        loading="lazy"
+        decoding="async"
+      />
+    );
+  }
+
+  return (
+    <video
+      ref={videoRef}
+      src={shouldLoad ? media : undefined}
+      muted
+      loop
+      playsInline
+      preload={!shouldLoad ? "none" : shouldPlay ? "auto" : "metadata"}
+      disablePictureInPicture
+      disableRemotePlayback
+      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+    />
+  );
+}
+
 export default function ExperimentPage() {
   const pageRef = useRef(null);
   const titleRef = useClippedTitleReveal({ scrollTrigger: false, delay: 0.2 });
@@ -23,6 +85,7 @@ export default function ExperimentPage() {
 
   const [videoOpen, setVideoOpen] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
+  const [galleryActiveIndex, setGalleryActiveIndex] = useState(0);
 
   const params = useParams();
   const experiment = experimentsData.find((e) => e.slug === params.slug);
@@ -246,20 +309,6 @@ export default function ExperimentPage() {
                 </div>
               )}
 
-              {experiment.videoUrl && (
-                <div className="absolute inset-0 flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="bg-black/40 rounded-full p-4">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="white"
-                      viewBox="0 0 24 24"
-                      className="w-12 h-12"
-                    >
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
@@ -319,38 +368,35 @@ export default function ExperimentPage() {
                 slidesPerView={1.15}
                 keyboard={{ enabled: true }}
                 grabCursor={true}
+                watchSlidesProgress={false}
                 loop={galleryImages.length > 4}
                 breakpoints={{
                   640: { slidesPerView: 2.1, spaceBetween: 32 },
                   1024: { slidesPerView: 4.15, spaceBetween: 36 },
                 }}
+                onInit={(swiper) => setGalleryActiveIndex(swiper.realIndex ?? 0)}
+                onSlideChange={(swiper) => setGalleryActiveIndex(swiper.realIndex ?? 0)}
+                onTransitionEnd={(swiper) => setGalleryActiveIndex(swiper.realIndex ?? 0)}
               >
                 {galleryImages.map((media, i) => {
                   const isVideo =
-                    media.endsWith(".mp4") || media.includes("video");
+                    typeof media === "string" &&
+                    (media.endsWith(".mp4") || media.includes("video"));
 
                   return (
                     <SwiperSlide key={i}>
                       <div className="relative cursor-pointer aspect-[4/5] rounded-lg overflow-hidden group">
-                        {isVideo ? (
-                          <video
-                            src={media}
-                            muted
-                            loop
-                            autoPlay
-                            playsInline
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <img
-                            src={media}
-                            alt={`${experiment.title} ${i + 1}`}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          />
-                        )}
+                        <ExperimentGalleryMedia
+                          media={media}
+                          index={i}
+                          activeIndex={galleryActiveIndex}
+                          titleSuffix={experiment.title}
+                          useLoop={galleryImages.length > 4}
+                          slideCount={galleryImages.length}
+                        />
 
                         {isVideo && (
-                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               fill="white"

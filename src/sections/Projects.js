@@ -12,19 +12,15 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import TextCtaLink from "../components/ui/TextCtaLink";
 import { HOME_MOTION } from "../utils/homeMotion";
 import { useClippedTitleReveal } from "../hooks/useClippedTitleReveal";
+import { getProjectUrl } from "../utils/projectUtils";
 
 const Monitor = dynamic(() => import("../components/Three/Monitor"), { ssr: false, loading: () => null });
 
 export default function Projects() {
   const { push } = useTransitionRouter();
+  const pushRef = useRef(push);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [hotIndices, setHotIndices] = useState(() =>
-    projectsData.map((_, i) => i).slice(0, Math.min(4, Math.max(1, projectsData.length)))
-  );
-  const swiperRef = useRef(null);
-  const syncRafRef = useRef(null);
 
-  // Refs for button and slider animations
   const sectionRef = useRef(null);
   const workTitleRef = useClippedTitleReveal({
     start: "top 88%",
@@ -34,12 +30,18 @@ export default function Projects() {
   });
   const buttonRef = useRef(null);
   const sliderRef = useRef(null);
+  const handleProjectNavigateRef = useRef((slug) => {
+    pushRef.current(getProjectUrl(slug));
+  });
+
+  useEffect(() => {
+    pushRef.current = push;
+  }, [push]);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
     const ctx = gsap.context(() => {
-      // Animate buttons with scale-up + fade-in
       if (buttonRef.current) {
         gsap.set(buttonRef.current, { scale: 0.94, opacity: 0 });
         gsap.to(buttonRef.current, {
@@ -57,7 +59,6 @@ export default function Projects() {
         });
       }
 
-      // Animate project cards with left-to-right stagger
       if (sliderRef.current) {
         const slides = sliderRef.current.querySelectorAll(".swiper-slide");
 
@@ -88,68 +89,28 @@ export default function Projects() {
     };
   }, []);
 
-  const syncHotFromSwiper = (swiper) => {
-    if (!swiper) return;
-    const n = projectsData.length;
-    const indices = new Set();
-    const add = (i) => {
-      if (!Number.isFinite(i)) return;
-      if (i < 0 || i >= n) return;
-      indices.add(i);
-    };
-
-    // Always include active + immediate neighbors to keep transitions smooth.
-    add(swiper.realIndex || 0);
-    add((swiper.realIndex || 0) - 1);
-    add((swiper.realIndex || 0) + 1);
-
-    // Include any slide that Swiper considers visible in the viewport.
-    // This gives the "Analogue" feeling: anything you can see is alive.
-    if (Array.isArray(swiper.slides)) {
-      swiper.slides.forEach((el, i) => {
-        if (el?.classList?.contains("swiper-slide-visible")) add(i);
-      });
-    }
-
-    setHotIndices(Array.from(indices));
-  };
-
-  const scheduleSyncHot = (swiper) => {
-    if (syncRafRef.current) return;
-    syncRafRef.current = requestAnimationFrame(() => {
-      syncRafRef.current = null;
-      syncHotFromSwiper(swiper || swiperRef.current);
-    });
-  };
-
   return (
-    <section ref={sectionRef} className="relative w-full pt-6 md:pt-8 pb-5 md:pb-8 min-h-[100vh] flex flex-col justify-center mb-0">
-      {/* Section number — left margin, coherent with Hero/About */}
+    <section
+      ref={sectionRef}
+      className="relative w-full pt-6 md:pt-8 pb-10 md:pb-8 max-md:pb-[clamp(3.25rem,11vh,5.5rem)] min-h-0 md:min-h-[100vh] flex flex-col justify-start md:justify-center mb-0"
+    >
       <div className="absolute bottom-[clamp(1.5rem,4vh,2.5rem)] left-0 z-10 pointer-events-none">
         <span className="text-white/25 text-[10px] uppercase tracking-[0.24em]">03</span>
       </div>
-      {/* HEADER */}
-      <div className="mb-7 md:mb-10 flex items-end justify-between gap-6">
-        <div className="flex items-end gap-3 md:gap-4">
-          <div className="relative w-[clamp(3.024rem,9.66vw,6.216rem)] h-[clamp(3.024rem,9.66vw,6.216rem)] overflow-visible scale-[1.14] origin-bottom">
+      <div className="relative mb-7 md:mb-10 flex items-end justify-between gap-4 md:gap-6 md:items-baseline">
+        <div className="flex items-end gap-3 md:gap-4 font-anton text-[clamp(3.6rem,11.5vw,7.4rem)] leading-[0.84] tracking-[0.02em] text-white uppercase">
+          <div className="relative h-[1em] w-[1em] shrink-0 overflow-visible">
             <Monitor />
           </div>
-          <h1
-            ref={workTitleRef}
-            className="font-anton text-[clamp(3.6rem,11.5vw,7.4rem)] text-white uppercase leading-[0.84] tracking-[0.02em] font-normal"
-          >
+          <h1 ref={workTitleRef} className="font-normal m-0 p-0">
             WORK
           </h1>
         </div>
-        <div
-          ref={buttonRef}
-          className="w-fit mb-2"
-        >
+        <div ref={buttonRef} className="w-fit shrink-0">
           <TextCtaLink text="View all" onClick={() => push("/projects")} />
         </div>
       </div>
 
-      {/* CAROUSEL - Project cards */}
       <div ref={sliderRef} className="relative group/slider">
         <Swiper
           modules={[Keyboard, Mousewheel]}
@@ -157,9 +118,8 @@ export default function Projects() {
           loop={false}
           slidesPerView="auto"
           centeredSlides={false}
-          watchSlidesProgress={true}
+          watchSlidesProgress={false}
           mousewheel={{
-            // En desktop el wheel ayuda; en mobile suele sentirse “pegajoso”.
             enabled: true,
             forceToAxis: true,
             sensitivity: 1,
@@ -179,24 +139,15 @@ export default function Projects() {
             1024: { spaceBetween: 18 },
             1360: { spaceBetween: 20 },
           }}
-          onSwiper={(swiper) => {
-            swiperRef.current = swiper;
-          }}
           onInit={(swiper) => {
-            setActiveIndex(swiper.realIndex || 0);
-            syncHotFromSwiper(swiper);
-            // Swiper aplica clases de visibilidad después del init; hacemos un sync diferido
-            // para capturar correctamente `swiper-slide-visible` en el primer paint.
-            requestAnimationFrame(() => scheduleSyncHot(swiper));
-            requestAnimationFrame(() => scheduleSyncHot(swiper));
+            setActiveIndex(swiper.realIndex ?? 0);
           }}
           onSlideChange={(swiper) => {
-            setActiveIndex(swiper.realIndex || 0);
-            scheduleSyncHot(swiper);
+            setActiveIndex(swiper.realIndex ?? 0);
           }}
-          onTouchMove={(swiper) => scheduleSyncHot(swiper)}
-          onSetTranslate={(swiper) => scheduleSyncHot(swiper)}
-          onTransitionEnd={(swiper) => scheduleSyncHot(swiper)}
+          onTransitionEnd={(swiper) => {
+            setActiveIndex(swiper.realIndex ?? 0);
+          }}
           className="relative projects-swiper"
         >
           {projectsData.map((project, idx) => (
@@ -204,19 +155,20 @@ export default function Projects() {
               key={project.slug}
               className="
                 !h-auto
-                !w-[88%]
-                sm:!w-[72%]
-                lg:!w-[46%]
-                xl:!w-[42%]
-                2xl:!w-[40%]
+                !w-[92%]
+                sm:!w-[80%]
+                md:!w-[68%]
+                lg:!w-[54%]
+                xl:!w-[50%]
+                2xl:!w-[47%]
               "
             >
               <ProjectCard
                 {...project}
                 index={idx}
                 activeIndex={activeIndex}
-                hotIndices={hotIndices}
-                className="w-full"
+                onNavigate={handleProjectNavigateRef.current}
+                className="w-full home-project-card"
               />
             </SwiperSlide>
           ))}
@@ -238,7 +190,24 @@ export default function Projects() {
           height: auto;
         }
         :global(.projects-swiper .swiper-slide > *) {
-          height: 100%;
+          width: 100%;
+          height: auto;
+          align-self: stretch;
+        }
+        /* Móvil: sin halo/borde del focus ring ni sombra; evita línea clara en el recorte redondeado */
+        @media (max-width: 639px) {
+          :global(.projects-swiper a.home-project-card) {
+            -webkit-tap-highlight-color: transparent;
+            box-shadow: none !important;
+            --tw-ring-offset-width: 0px;
+            --tw-ring-shadow: 0 0 #0000;
+          }
+          :global(.projects-swiper a.home-project-card:focus),
+          :global(.projects-swiper a.home-project-card:focus-visible) {
+            outline: none;
+            box-shadow: none !important;
+            --tw-ring-shadow: 0 0 #0000;
+          }
         }
       `}</style>
     </section>

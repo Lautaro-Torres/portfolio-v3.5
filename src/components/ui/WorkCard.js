@@ -27,6 +27,10 @@ export default function WorkCard({
   const [isVideoReady, setIsVideoReady] = useState(false);
   const [hasPosterError, setHasPosterError] = useState(false);
 
+  useEffect(() => {
+    setIsVideoReady(false);
+  }, [videoUrl]);
+
   const handleClick = (e) => {
     e.preventDefault();
 
@@ -168,6 +172,7 @@ export default function WorkCard({
       {/* Background: video or image */}
       {useVideo ? (
         <video
+          key={videoUrl}
           ref={videoRef}
           src={shouldLoadVideo ? videoUrl : undefined}
           muted
@@ -176,6 +181,7 @@ export default function WorkCard({
           playsInline
           preload={shouldLoadVideo ? "metadata" : "none"}
           onLoadedData={() => setIsVideoReady(true)}
+          onError={() => setIsVideoReady(false)}
           className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-all duration-400 ease-ui-standard group-hover:scale-[1.03] ${
             isVideoReady ? "opacity-100" : "opacity-0"
           }`}
@@ -251,9 +257,9 @@ export default function WorkCard({
         </span>
       </div>
 
-      <div className="absolute bottom-7 left-7 z-20 hidden md:flex flex-col-reverse items-start">
-        {/* Tags arriba, logo/título anclado abajo: si hay muchas tags, crecen hacia arriba y no empujan el logo. */}
-        <div className="flex flex-nowrap gap-2 mb-3 overflow-hidden whitespace-nowrap max-w-full">
+      <div className="absolute bottom-7 left-7 z-20 hidden md:flex flex-col-reverse items-start gap-y-5">
+        {/* Tags arriba, logo/título abajo; gap-y separa logo y pills (antes quedaban muy pegados). */}
+        <div className="flex flex-nowrap gap-2 overflow-hidden whitespace-nowrap max-w-full">
           {tags?.slice(0, 3).map((tag, idx) => (
             <span
               key={tag + idx}

@@ -1,14 +1,13 @@
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { getProjectUrl } from "../../utils/projectUtils";
-import { useTransitionRouter } from "../../hooks/useTransitionRouter";
 
 const DRAG_THRESHOLD_PX = 8;
 
 const isVideoUrl = (url) =>
   typeof url === "string" && /\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(url);
 
-export default function ProjectCard({
+function ProjectCard({
   title,
   imageUrl,
   videoUrl,
@@ -17,11 +16,10 @@ export default function ProjectCard({
   slug,
   index,
   activeIndex,
-  hotIndices,
+  onNavigate,
   className = "",
 }) {
   const useVideo = videoUrl && isVideoUrl(videoUrl);
-  const { push } = useTransitionRouter();
   const cardRef = useRef(null);
   const videoRef = useRef(null);
   const pauseMetaRef = useRef({ pausedAt: 0, pausedOnMs: 0, duration: 0 });
@@ -29,21 +27,67 @@ export default function ProjectCard({
   const hasDragged = useRef(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
   const [hasPosterError, setHasPosterError] = useState(false);
+  /** True cuando la card intersecta el viewport (slidesPerView auto ≠ solo realIndex). */
+  const [isCardVisible, setIsCardVisible] = useState(false);
 
   const hasIndexSignal = Number.isFinite(index) && Number.isFinite(activeIndex);
+
+  useLayoutEffect(() => {
+    if (!useVideo) return;
+    const root = cardRef.current;
+    if (!root) return;
+
+    const apply = (intersecting, ratio) => {
+      setIsCardVisible(Boolean(intersecting && ratio > 0.06));
+    };
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        const e = entries[0];
+        if (!e) return;
+        apply(e.isIntersecting, e.intersectionRatio);
+      },
+      { root: null, threshold: [0, 0.06, 0.1, 0.2, 0.35, 0.5, 0.75, 1] }
+    );
+    io.observe(root);
+
+    const syncFromRect = () => {
+      const r = root.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const w = Math.max(0, Math.min(r.right, vw) - Math.max(r.left, 0));
+      const h = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0));
+      const cardArea = Math.max(1, r.width * r.height);
+      const visibleArea = w * h;
+      const ratio = visibleArea / cardArea;
+      apply(w > 2 && h > 2, ratio);
+    };
+
+    syncFromRect();
+    queueMicrotask(syncFromRect);
+
+    return () => {
+      io.disconnect();
+    };
+  }, [useVideo, slug]);
+
   const { shouldLoadVideo, shouldPlayVideo } = useMemo(() => {
     if (!useVideo) return { shouldLoadVideo: false, shouldPlayVideo: false };
-    if (!hasIndexSignal) return { shouldLoadVideo: false, shouldPlayVideo: false };
-
-    const isHot = Array.isArray(hotIndices) ? hotIndices.includes(index) : false;
+    if (!hasIndexSignal) {
+      return {
+        shouldLoadVideo: isCardVisible,
+        shouldPlayVideo: isCardVisible,
+      };
+    }
     const dist = Math.abs(index - activeIndex);
+    const isActive = index === activeIndex;
     return {
-      // Cargar todo lo que esté visible en el viewport del slider (+ vecinos por seguridad)
-      shouldLoadVideo: isHot || dist <= 1,
-      // Reproducir lo visible (impacto). Si querés volver a "sólo activo", basta cambiar esto a dist===0.
-      shouldPlayVideo: isHot || dist === 0,
+      // Cargar: visibles + vecinos del slide activo (prefetch al deslizar).
+      shouldLoadVideo: isCardVisible || dist <= 1 || isActive,
+      // Reproducir: cualquier card que se vea, o la que Swiper marca activa (fallback antes del IO).
+      shouldPlayVideo: isCardVisible || isActive,
     };
-  }, [activeIndex, hasIndexSignal, hotIndices, index, useVideo]);
+  }, [activeIndex, hasIndexSignal, index, isCardVisible, useVideo]);
 
   useEffect(() => {
     if (!useVideo) return;
@@ -133,7 +177,7 @@ export default function ProjectCard({
     // Allow browser default for ctrl/cmd+click (open in new tab)
     if (e.ctrlKey || e.metaKey || e.button === 1) return;
     e.preventDefault();
-    push(getProjectUrl(slug));
+    onNavigate?.(slug);
   };
 
   const url = getProjectUrl(slug);
@@ -147,8 +191,8 @@ export default function ProjectCard({
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       className={`
-        group block w-full h-[77vh] min-h-[77vh] md:h-[65vh] md:min-h-[65vh] relative rounded-lg overflow-hidden shadow-lg bg-[#0a0a0a] flex flex-col
-        transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 cursor-pointer hover:shadow-2xl ${className}
+        group block w-full h-[60vh] min-h-[60vh] sm:h-auto sm:min-h-0 sm:aspect-video sm:max-h-[min(88vw,52vh)] md:max-h-[min(80vw,48vh)] relative rounded-lg overflow-hidden shadow-none sm:shadow-lg bg-[#0a0a0a] flex flex-col border-0 outline-none ring-0
+        transition-all duration-300 focus:outline-none focus-visible:ring-0 sm:focus-visible:ring-2 sm:focus-visible:ring-white/50 cursor-pointer sm:hover:shadow-2xl ${className}
       `}
       tabIndex={0}
       aria-label={`View details for ${title}`}
@@ -159,7 +203,7 @@ export default function ProjectCard({
           src={imageUrl}
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          className="absolute inset-0 sm:inset-[-1px] w-full h-full sm:w-[calc(100%+2px)] sm:h-[calc(100%+2px)] object-cover pointer-events-none border-0 max-sm:scale-[1.03] max-sm:origin-center"
           loading="lazy"
           onError={() => setHasPosterError(true)}
         />
@@ -176,10 +220,13 @@ export default function ProjectCard({
           autoPlay={false}
           loop
           playsInline
-          preload={shouldLoadVideo ? "metadata" : "none"}
+          preload={!shouldLoadVideo ? "none" : "metadata"}
+          disablePictureInPicture
+          disableRemotePlayback
           onLoadedMetadata={() => setIsVideoReady(true)}
           onCanPlay={() => setIsVideoReady(true)}
-          className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-all duration-400 ease-ui-standard group-hover:scale-[1.03] ${
+          onPlaying={() => setIsVideoReady(true)}
+          className={`absolute inset-0 sm:inset-[-1px] w-full h-full sm:w-[calc(100%+2px)] sm:h-[calc(100%+2px)] object-cover pointer-events-none border-0 max-sm:scale-[1.03] max-sm:origin-center transition-all duration-400 ease-ui-standard group-hover:scale-[1.03] ${
             isVideoReady ? "opacity-100" : "opacity-0"
           }`}
         />
@@ -279,3 +326,5 @@ export default function ProjectCard({
     </a>
   );
 }
+
+export default memo(ProjectCard);
