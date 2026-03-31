@@ -81,7 +81,7 @@ export default function Navigation() {
             if (smoother) {
               smoother.scrollTo(targetElement, true, "power2.inOut");
             } else {
-              targetElement.scrollIntoView({ behavior: "smooth" });
+              targetElement.scrollIntoView({ behavior: "auto" });
             }
           }
         }, 800); // Wait for dynamic sections to load

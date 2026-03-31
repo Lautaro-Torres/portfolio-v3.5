@@ -160,11 +160,15 @@ export function useProjectIntroAnimation(refs) {
         );
       }
 
-      // 3. Overlay hides instantly (no slide/fade — avoids video duplication)
-      tl.set(overlay, { opacity: 0, visibility: "hidden", pointerEvents: "none" });
+      // 3) Trigger settle slightly BEFORE the overlay disappears so the underlying hero
+      // video can already be playing when we handoff, avoiding a perceived "jump".
       if (typeof onOverlaySettled === "function") {
-        tl.call(() => onOverlaySettled());
+        tl.call(() => onOverlaySettled(), null, "heroSettled+=0.12");
       }
+
+      // 4) Overlay hides at the end (short fade keeps the hero takeover feel intact).
+      tl.to(overlay, { opacity: 0, duration: 0.08, ease: "none" }, ">-=0.02");
+      tl.set(overlay, { visibility: "hidden", pointerEvents: "none" });
 
       timelineRef.current = tl;
     };

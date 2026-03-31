@@ -79,7 +79,10 @@ function LayoutContent({ children }) {
       <CustomCursor />
       <div id="smooth-wrapper" className="relative w-full">
         <div id="smooth-content" className="relative w-full">
-          {children}
+          {/* Single transition target for all routes (loading.tsx has no <main>). Keep nav/badge outside. */}
+          <div id="page-transition-root" className="relative w-full">
+            {children}
+          </div>
           <div id="contact">
             <Footer />
           </div>

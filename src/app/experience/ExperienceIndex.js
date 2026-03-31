@@ -5,12 +5,14 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import ExperienceAccordion from "../../components/ui/ExperienceAccordion";
 import { useClippedTitleReveal } from "../../hooks/useClippedTitleReveal";
+import { useSimpleRouteReady } from "../../hooks/useSimpleRouteReady";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
 export default function ExperienceIndex() {
+  useSimpleRouteReady();
   const pageRef = useRef(null);
   const titleRef = useClippedTitleReveal();
   const introRef = useRef(null);

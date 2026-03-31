@@ -6,7 +6,7 @@ import { useTransitionRouter } from "../hooks/useTransitionRouter";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Keyboard, Mousewheel } from "swiper/modules";
 import "swiper/css";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import TextCtaLink from "../components/ui/TextCtaLink";
@@ -17,6 +17,10 @@ const Monitor = dynamic(() => import("../components/Three/Monitor"), { ssr: fals
 
 export default function Projects() {
   const { push } = useTransitionRouter();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [hotIndices, setHotIndices] = useState([0]);
+  const swiperRef = useRef(null);
+  const syncRafRef = useRef(null);
 
   // Refs for button and slider animations
   const sectionRef = useRef(null);
@@ -82,6 +86,40 @@ export default function Projects() {
     };
   }, []);
 
+  const syncHotFromSwiper = (swiper) => {
+    if (!swiper) return;
+    const n = projectsData.length;
+    const indices = new Set();
+    const add = (i) => {
+      if (!Number.isFinite(i)) return;
+      if (i < 0 || i >= n) return;
+      indices.add(i);
+    };
+
+    // Always include active + immediate neighbors to keep transitions smooth.
+    add(swiper.realIndex || 0);
+    add((swiper.realIndex || 0) - 1);
+    add((swiper.realIndex || 0) + 1);
+
+    // Include any slide that Swiper considers visible in the viewport.
+    // This gives the "Analogue" feeling: anything you can see is alive.
+    if (Array.isArray(swiper.slides)) {
+      swiper.slides.forEach((el, i) => {
+        if (el?.classList?.contains("swiper-slide-visible")) add(i);
+      });
+    }
+
+    setHotIndices(Array.from(indices));
+  };
+
+  const scheduleSyncHot = (swiper) => {
+    if (syncRafRef.current) return;
+    syncRafRef.current = requestAnimationFrame(() => {
+      syncRafRef.current = null;
+      syncHotFromSwiper(swiper || swiperRef.current);
+    });
+  };
+
   return (
     <section ref={sectionRef} className="relative w-full pt-6 md:pt-8 pb-5 md:pb-8 min-h-[100vh] flex flex-col justify-center mb-0">
       {/* Section number — left margin, coherent with Hero/About */}
@@ -113,60 +151,71 @@ export default function Projects() {
       <div ref={sliderRef} className="relative group/slider">
         <Swiper
           modules={[Keyboard, Mousewheel]}
-          spaceBetween={20}
+          spaceBetween={14}
           loop={false}
-          slidesPerView={1.1}
+          slidesPerView="auto"
           centeredSlides={false}
+          watchSlidesProgress={true}
           mousewheel={{
+            // En desktop el wheel ayuda; en mobile suele sentirse “pegajoso”.
             enabled: true,
             forceToAxis: true,
             sensitivity: 1,
             releaseOnEdges: true,
           }}
           keyboard={{ enabled: true }}
-          speed={600}
-          resistanceRatio={0.25}
-          threshold={10}
+          speed={520}
+          resistanceRatio={0.32}
+          threshold={12}
           followFinger={true}
           allowTouchMove={true}
           simulateTouch={true}
           preventClicks={false}
           preventClicksPropagation={false}
           breakpoints={{
-            0: {
-              slidesPerView: 1.08,
-              centeredSlides: false,
-              spaceBetween: 14,
-              slidesOffsetBefore: 0,
-              slidesOffsetAfter: 0,
-            },
-            640: {
-              slidesPerView: 1.45,
-              centeredSlides: false,
-              spaceBetween: 16,
-              slidesOffsetBefore: 0,
-              slidesOffsetAfter: 0,
-            },
-            1024: {
-              slidesPerView: 2.18,
-              centeredSlides: false,
-              spaceBetween: 18,
-              slidesOffsetBefore: 0,
-              slidesOffsetAfter: 8,
-            },
-            1360: {
-              slidesPerView: 2.28,
-              centeredSlides: false,
-              spaceBetween: 20,
-              slidesOffsetBefore: 0,
-              slidesOffsetAfter: 10,
-            },
+            640: { spaceBetween: 16 },
+            1024: { spaceBetween: 18 },
+            1360: { spaceBetween: 20 },
           }}
+          onSwiper={(swiper) => {
+            swiperRef.current = swiper;
+          }}
+          onInit={(swiper) => {
+            setActiveIndex(swiper.realIndex || 0);
+            syncHotFromSwiper(swiper);
+            // Swiper aplica clases de visibilidad después del init; hacemos un sync diferido
+            // para capturar correctamente `swiper-slide-visible` en el primer paint.
+            requestAnimationFrame(() => scheduleSyncHot(swiper));
+            requestAnimationFrame(() => scheduleSyncHot(swiper));
+          }}
+          onSlideChange={(swiper) => {
+            setActiveIndex(swiper.realIndex || 0);
+            scheduleSyncHot(swiper);
+          }}
+          onTouchMove={(swiper) => scheduleSyncHot(swiper)}
+          onSetTranslate={(swiper) => scheduleSyncHot(swiper)}
+          onTransitionEnd={(swiper) => scheduleSyncHot(swiper)}
           className="relative projects-swiper"
         >
-          {projectsData.map((project) => (
-            <SwiperSlide key={project.slug} className="flex !h-auto">
-              <ProjectCard {...project} />
+          {projectsData.map((project, idx) => (
+            <SwiperSlide
+              key={project.slug}
+              className="
+                !h-auto
+                !w-[88%]
+                sm:!w-[72%]
+                lg:!w-[46%]
+                xl:!w-[42%]
+                2xl:!w-[40%]
+              "
+            >
+              <ProjectCard
+                {...project}
+                index={idx}
+                activeIndex={activeIndex}
+                hotIndices={hotIndices}
+                className="w-full"
+              />
             </SwiperSlide>
           ))}
         </Swiper>

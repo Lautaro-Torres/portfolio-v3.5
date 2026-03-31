@@ -71,7 +71,35 @@ body {
   overflow-y: auto;
 }
 
-/* Removed ScrollSmoother wrapper styles since component was removed */
+/* ScrollSmoother (desktop): evita que el body scrollee además del proxy — sensación de “doble scroll”. */
+html.smooth-scroll-active {
+  height: 100%;
+}
+html.smooth-scroll-active body {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Honest indeterminate bar (route transition — not a fake %) */
+@keyframes route-loader-shuttle {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(320%); }
+}
+.route-loader-track {
+  position: relative;
+  overflow: hidden;
+}
+.route-loader-indeterminate {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 36%;
+  border-radius: 9999px;
+  background: #fff;
+  transform: translateX(-100%);
+  animation: route-loader-shuttle 1.2s ease-in-out infinite;
+}
 
 /* ====== Base ====== */
 body {

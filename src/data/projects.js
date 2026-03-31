@@ -84,7 +84,7 @@ export const projectsData = [
   timeOfProject: "Ongoing",
   videoUrl: "/assets/projects/pulsar/opt-hero-card.mp4",
   logoUrl: "/assets/projects/pulsar/logo-pulsar-w.svg",
-  tags: ["Creative Direction", "Visual Identity", "Motion Design", "3D"],
+  tags: ["Creative Direction", "Visual Identity", "3D", "Motion Design", "Branding"],
   summary:
     "Co founded electronic music production brand in Salta, Argentina. Led creative direction and production across 26+ editions, reaching up to 200 attendees per event and reels up to 30k views.",
   description:

@@ -8,6 +8,7 @@ import { useClippedTitleReveal } from "../../../hooks/useClippedTitleReveal";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Keyboard } from "swiper/modules";
 import TextCtaLink from "../../../components/ui/TextCtaLink";
+import { markRouteReady, normalizeRoutePath } from "../../../utils/routeReadyGate";
 import "swiper/css";
 
 if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
@@ -28,6 +29,45 @@ export default function ExperimentPage() {
   if (!experiment) notFound();
 
   const galleryImages = experiment.galleryImages || [];
+
+  useEffect(() => {
+    const path = normalizeRoutePath(`/experiments/${experiment.slug}`);
+    const root = pageRef.current;
+    if (!root) return;
+    let done = false;
+    const fire = () => {
+      if (done) return;
+      done = true;
+      markRouteReady(path);
+    };
+    const imgs = Array.from(root.querySelectorAll("img"));
+    const pending = [];
+    imgs.forEach((img) => {
+      if (img.complete && img.naturalWidth > 0) return;
+      pending.push(
+        new Promise((resolve) => {
+          img.addEventListener("load", resolve, { once: true });
+          img.addEventListener("error", resolve, { once: true });
+        })
+      );
+    });
+    const run = async () => {
+      try {
+        if (document.fonts?.ready) await document.fonts.ready;
+      } catch {
+        /* ignore */
+      }
+      if (pending.length === 0) {
+        requestAnimationFrame(() => requestAnimationFrame(fire));
+      } else {
+        await Promise.all(pending);
+        requestAnimationFrame(fire);
+      }
+    };
+    run();
+    const t = setTimeout(fire, 14000);
+    return () => clearTimeout(t);
+  }, [experiment.slug]);
 
   // Initial GSAP animations
   useEffect(() => {

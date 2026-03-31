@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getProjectUrl } from "../../utils/projectUtils";
 import { useTransitionRouter } from "../../hooks/useTransitionRouter";
 
@@ -10,10 +10,14 @@ const isVideoUrl = (url) =>
 
 export default function ProjectCard({
   title,
+  imageUrl,
   videoUrl,
   logoUrl,
   tags,
   slug,
+  index,
+  activeIndex,
+  hotIndices,
   className = "",
 }) {
   const useVideo = videoUrl && isVideoUrl(videoUrl);
@@ -23,76 +27,71 @@ export default function ProjectCard({
   const pauseMetaRef = useRef({ pausedAt: 0, pausedOnMs: 0, duration: 0 });
   const startPos = useRef({ x: 0, y: 0 });
   const hasDragged = useRef(false);
-  const [shouldLoadVideo, setShouldLoadVideo] = useState(!useVideo);
-  const [shouldPlayVideo, setShouldPlayVideo] = useState(!useVideo);
+  const [isVideoReady, setIsVideoReady] = useState(false);
+  const [hasPosterError, setHasPosterError] = useState(false);
+
+  const hasIndexSignal = Number.isFinite(index) && Number.isFinite(activeIndex);
+  const { shouldLoadVideo, shouldPlayVideo } = useMemo(() => {
+    if (!useVideo) return { shouldLoadVideo: false, shouldPlayVideo: false };
+    if (!hasIndexSignal) return { shouldLoadVideo: false, shouldPlayVideo: false };
+
+    const isHot = Array.isArray(hotIndices) ? hotIndices.includes(index) : false;
+    const dist = Math.abs(index - activeIndex);
+    return {
+      // Cargar todo lo que esté visible en el viewport del slider (+ vecinos por seguridad)
+      shouldLoadVideo: isHot || dist <= 1,
+      // Reproducir lo visible (impacto). Si querés volver a "sólo activo", basta cambiar esto a dist===0.
+      shouldPlayVideo: isHot || dist === 0,
+    };
+  }, [activeIndex, hasIndexSignal, hotIndices, index, useVideo]);
 
   useEffect(() => {
     if (!useVideo) return;
+    // Reset ready state when we unload/reload source.
+    setIsVideoReady(false);
+  }, [useVideo, videoUrl]);
+
+  // Fallback: if this card is ever used outside the Swiper, load+play based on viewport proximity.
+  useEffect(() => {
+    if (!useVideo) return;
+    if (hasIndexSignal) return;
     const card = cardRef.current;
     if (!card) return;
     if (typeof window === "undefined") {
-      setShouldLoadVideo(true);
       return;
     }
 
     const preloadAheadPx = window.innerWidth < 768 ? 420 : 620;
     const top = card.getBoundingClientRect().top;
     if (top <= window.innerHeight + preloadAheadPx) {
-      setShouldLoadVideo(true);
       return;
     }
 
     if (!("IntersectionObserver" in window)) {
-      setShouldLoadVideo(true);
       return;
     }
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry?.isIntersecting) return;
-        setShouldLoadVideo(true);
-        observer.disconnect();
-      },
-      {
-        root: null,
-        rootMargin: `${preloadAheadPx}px 0px`,
-        threshold: 0.01,
-      }
-    );
-
-    observer.observe(card);
-    return () => observer.disconnect();
-  }, [useVideo]);
+    // If needed later we can reintroduce IO here, but for now Projects slider uses activeIndex.
+  }, [hasIndexSignal, useVideo]);
 
   useEffect(() => {
     if (!useVideo) return;
-    const card = cardRef.current;
-    if (!card) return;
-    if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
-      setShouldPlayVideo(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setShouldPlayVideo(Boolean(entry?.isIntersecting));
-      },
-      {
-        root: null,
-        // Tighter play window to reduce concurrent video decode work.
-        rootMargin: "220px 0px",
-        threshold: 0.2,
-      }
-    );
-
-    observer.observe(card);
-    return () => observer.disconnect();
-  }, [useVideo]);
-
-  useEffect(() => {
-    if (!useVideo || !shouldLoadVideo) return;
     const video = videoRef.current;
     if (!video) return;
+
+    if (!shouldLoadVideo) {
+      // When unloaded, pause and drop time metadata (avoid decode work).
+      pauseMetaRef.current = { pausedAt: 0, pausedOnMs: 0, duration: 0 };
+      if (!video.paused) video.pause();
+      // Force-unload the resource to keep the slider light.
+      try {
+        video.removeAttribute("src");
+        video.load();
+      } catch {
+        // no-op
+      }
+      return;
+    }
 
     if (shouldPlayVideo) {
       const { pausedAt, pausedOnMs, duration } = pauseMetaRef.current;
@@ -146,6 +145,7 @@ export default function ProjectCard({
   };
 
   const url = getProjectUrl(slug);
+  const showPoster = Boolean(imageUrl && !hasPosterError);
 
   return (
     <a
@@ -161,6 +161,20 @@ export default function ProjectCard({
       tabIndex={0}
       aria-label={`View details for ${title}`}
     >
+      {/* Poster (siempre visible como base) */}
+      {showPoster ? (
+        <img
+          src={imageUrl}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          loading="lazy"
+          onError={() => setHasPosterError(true)}
+        />
+      ) : (
+        <div className="absolute inset-0 bg-[#0a0a0a]" aria-hidden="true" />
+      )}
+
       {/* Background: video or image */}
       {useVideo ? (
         <video
@@ -171,7 +185,11 @@ export default function ProjectCard({
           loop
           playsInline
           preload={shouldLoadVideo ? "metadata" : "none"}
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none transition-transform duration-700 ease-ui-standard group-hover:scale-[1.03]"
+          onLoadedMetadata={() => setIsVideoReady(true)}
+          onCanPlay={() => setIsVideoReady(true)}
+          className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-all duration-400 ease-ui-standard group-hover:scale-[1.03] ${
+            isVideoReady ? "opacity-100" : "opacity-0"
+          }`}
         />
       ) : null}
 
@@ -190,8 +208,8 @@ export default function ProjectCard({
         </div>
       </div>
 
-      {/* Chevron hint - desktop, bottom right */}
-      <div className="absolute bottom-7 right-7 z-20 hidden md:flex opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+      {/* Chevron hint - desktop, top right (evita superposiciones con tags/brand) */}
+      <div className="absolute top-7 right-7 z-20 hidden md:flex opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
         <span className="inline-flex items-center justify-center rounded-full text-white/90">
           <svg className="w-8 h-8 drop-shadow-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
@@ -225,11 +243,11 @@ export default function ProjectCard({
             </span>
           )}
         </div>
-        <div className="flex flex-wrap gap-2 items-start mt-2 transition-all duration-700 ease-ui-standard opacity-90 group-hover:opacity-100">
-          {tags?.map((tag, idx) => (
+        <div className="flex flex-nowrap gap-2 items-start mt-2 transition-all duration-700 ease-ui-standard opacity-90 group-hover:opacity-100 overflow-hidden whitespace-nowrap max-w-full">
+          {tags?.slice(0, 3).map((tag, idx) => (
             <span
               key={tag + idx}
-              className="px-4 py-2 text-xs font-general font-light tracking-[0.14em] uppercase text-white bg-[#0a0a0a]/40 backdrop-blur-md border border-white/30 rounded-full"
+              className="px-[clamp(0.65rem,1.05vw,1rem)] py-[clamp(0.34rem,0.6vw,0.5rem)] text-[clamp(9px,0.85vw,12px)] font-general font-light tracking-[0.14em] uppercase text-white bg-[#0a0a0a]/40 backdrop-blur-md border border-white/30 rounded-full shrink-0"
               style={{ letterSpacing: "0.15em" }}
             >
               {tag}
@@ -255,11 +273,11 @@ export default function ProjectCard({
 
       {/* MOBILE TAGS */}
       <div className="pointer-events-none absolute bottom-3 left-3 right-3 z-20 md:hidden">
-        <div className="flex flex-nowrap gap-1 overflow-hidden whitespace-nowrap">
-          {tags?.map((tag, idx) => (
+        <div className="flex flex-nowrap gap-1 overflow-hidden whitespace-nowrap max-w-full">
+          {tags?.slice(0, 3).map((tag, idx) => (
             <span
               key={tag + idx}
-              className="shrink-0 px-2 py-1 text-[10px] font-general font-light uppercase text-white bg-[#0a0a0a]/40 backdrop-blur-md border border-white/20 rounded-full tracking-[0.14em]"
+              className="shrink-0 px-[clamp(0.45rem,2.4vw,0.65rem)] py-[clamp(0.22rem,1.2vw,0.3rem)] text-[clamp(9px,2.2vw,10px)] font-general font-light uppercase text-white bg-[#0a0a0a]/40 backdrop-blur-md border border-white/20 rounded-full tracking-[0.14em]"
             >
               {tag}
             </span>

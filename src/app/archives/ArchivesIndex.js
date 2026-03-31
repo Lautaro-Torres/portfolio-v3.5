@@ -8,12 +8,14 @@ import { archivesData } from "../../data/archives";
 import { useTransitionRouter } from "../../hooks/useTransitionRouter";
 import { projectsData } from "../../data/projects";
 import { useClippedTitleReveal } from "../../hooks/useClippedTitleReveal";
+import { useSimpleRouteReady } from "../../hooks/useSimpleRouteReady";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
 export default function ArchivesIndex() {
+  useSimpleRouteReady();
   const { push, isTransitioning } = useTransitionRouter();
   const pageRef = useRef(null);
   const titleRef = useClippedTitleReveal();

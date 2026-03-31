@@ -36,11 +36,9 @@ export default function WorkCard({
   };
 
   const hasLogo = logoUrl?.trim(); // logo vacío = fallback
-  const showPoster = Boolean(
-    posterUrl &&
-      !hasPosterError &&
-      (!useVideo || (useVideo && shouldLoadVideo && !isVideoReady))
-  );
+  // Mantener siempre el póster visible como fallback; el video se superpone con fade-in
+  // para evitar flashes en negro cuando cambia el estado de carga.
+  const showPoster = Boolean(posterUrl && !hasPosterError);
 
   useEffect(() => {
     if (!useVideo) return;
@@ -51,7 +49,8 @@ export default function WorkCard({
       return;
     }
 
-    const preloadAheadPx = 760;
+    // Precargar bastante antes de entrar al viewport para que el video ya esté listo cuando la card aparezca.
+    const preloadAheadPx = 1200;
     const top = card.getBoundingClientRect().top;
     if (top <= window.innerHeight + preloadAheadPx) {
       setShouldLoadVideo(true);
@@ -81,7 +80,7 @@ export default function WorkCard({
   }, [useVideo]);
 
   useEffect(() => {
-    if (!useVideo) return;
+      if (!useVideo) return;
     const card = cardRef.current;
     if (!card) return;
     if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
@@ -95,8 +94,9 @@ export default function WorkCard({
       },
       {
         root: null,
-        // Keep playback only for cards close to viewport.
-        rootMargin: "280px 0px",
+        // Mantener playback sólo en tarjetas relativamente cercanas, pero arrancar un poco antes
+        // de que entren del todo en el viewport para que la animación ya vaya fluida.
+        rootMargin: "420px 0px",
         threshold: 0.01,
       }
     );
@@ -136,7 +136,7 @@ export default function WorkCard({
       ref={cardRef}
       onClick={handleClick}
       className={`
-        group w-full h-[35vh] relative rounded-lg overflow-hidden shadow-lg bg-[#0a0a0a] flex flex-col border-0 appearance-none
+        group w-full h-full relative rounded-lg overflow-hidden shadow-lg bg-[#0a0a0a] flex flex-col border-0 appearance-none
         transition-all duration-300 focus:outline-none ${containerClassName}
         ${isTransitioning ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:shadow-2xl"}
       `}
@@ -166,7 +166,7 @@ export default function WorkCard({
           playsInline
           preload={shouldLoadVideo ? "metadata" : "none"}
           onLoadedData={() => setIsVideoReady(true)}
-          className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-all duration-700 ease-ui-standard group-hover:scale-[1.03] ${
+          className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-all duration-400 ease-ui-standard group-hover:scale-[1.03] ${
             isVideoReady ? "opacity-100" : "opacity-0"
           }`}
         />
@@ -217,11 +217,11 @@ export default function WorkCard({
 
       {/* MOBILE TAGS */}
       <div className="absolute bottom-3 left-3 right-3 z-20 md:hidden">
-        <div className="flex flex-wrap gap-1">
-          {tags?.map((tag, idx) => (
+        <div className="flex flex-nowrap gap-1 overflow-hidden whitespace-nowrap max-w-full">
+          {tags?.slice(0, 3).map((tag, idx) => (
             <span
               key={tag + idx}
-              className="px-2 py-1 text-[10px] font-general font-light uppercase text-white bg-[#0a0a0a]/40 backdrop-blur-md border border-white/20 rounded-full tracking-[0.14em]"
+              className="px-[clamp(0.45rem,2.4vw,0.65rem)] py-[clamp(0.22rem,1.2vw,0.3rem)] text-[clamp(9px,2.2vw,10px)] font-general font-light uppercase text-white bg-[#0a0a0a]/40 backdrop-blur-md border border-white/20 rounded-full tracking-[0.14em] shrink-0"
             >
               {tag}
             </span>
@@ -232,28 +232,29 @@ export default function WorkCard({
       {/* ------------------------------ */}
       {/* DESKTOP CONTENT */}
       {/* ------------------------------ */}
-      <div className="absolute bottom-7 left-7 z-20 hidden md:flex flex-col items-start">
-        <div className="flex items-center">
-          {/* Chevron */}
-          <span
-            className={`
-              inline-flex items-center justify-center text-white/90
-              transition-all duration-700 ease-ui-standard
-              opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0
-              mr-[-30px]
-            `}
-          >
-            <svg
-              className="w-8 h-8 drop-shadow-lg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
-            </svg>
-          </span>
+      {/* Hover chevron - desktop, top right (evita superposiciones) */}
+      <div className="absolute top-7 right-7 z-20 hidden md:flex opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+        <span className="inline-flex items-center justify-center rounded-full text-white/90">
+          <svg className="w-8 h-8 drop-shadow-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
+          </svg>
+        </span>
+      </div>
 
+      <div className="absolute bottom-7 left-7 z-20 hidden md:flex flex-col-reverse items-start">
+        {/* Tags arriba, logo/título anclado abajo: si hay muchas tags, crecen hacia arriba y no empujan el logo. */}
+        <div className="flex flex-nowrap gap-2 mb-3 overflow-hidden whitespace-nowrap max-w-full">
+          {tags?.slice(0, 3).map((tag, idx) => (
+            <span
+              key={tag + idx}
+              className="px-[clamp(0.65rem,1.05vw,1rem)] py-[clamp(0.34rem,0.6vw,0.5rem)] text-[clamp(9px,0.85vw,12px)] font-general font-light uppercase text-white bg-[#0a0a0a]/40 backdrop-blur-md border border-white/20 rounded-full tracking-[0.14em] shrink-0"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        <div className="flex items-center">
           {/* Logo OR Fallback Title */}
           {hasLogo ? (
             <Image
@@ -281,18 +282,6 @@ export default function WorkCard({
               {title}
             </span>
           )}
-        </div>
-
-        {/* DESKTOP TAGS */}
-        <div className="flex flex-wrap gap-2 mt-3">
-          {tags?.map((tag, idx) => (
-            <span
-              key={tag + idx}
-              className="px-4 py-2 text-[10px] md:text-xs font-general font-light uppercase text-white bg-[#0a0a0a]/40 backdrop-blur-md border border-white/20 rounded-full tracking-[0.14em]"
-            >
-              {tag}
-            </span>
-          ))}
         </div>
       </div>
     </button>

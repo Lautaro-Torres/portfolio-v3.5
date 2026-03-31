@@ -1,11 +1,18 @@
 "use client";
+import { useEffect } from "react";
 import HeroSection from "../sections/HeroSection";
 import AboutSection from "../sections/AboutSection";
 import Projects from "../sections/Projects";
+import { markRouteReady } from "../utils/routeReadyGate";
 // TEMP: Experiments feature disabled
 // const ExperimentsSection = dynamic(() => import("../sections/ExperimentsSection"), { ssr: false });
 
 export default function Home() {
+  useEffect(() => {
+    const id = setTimeout(() => markRouteReady("/"), 9000);
+    return () => clearTimeout(id);
+  }, []);
+
   return (
     <main className="relative w-full">
       <HeroSection />

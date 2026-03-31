@@ -6,6 +6,7 @@ import { useProjectIntroAnimation } from "../../../hooks/useProjectIntroAnimatio
 import { VideoPoster } from "../../../components/VideoPoster";
 import { ProjectFacts } from "../../../components/ProjectFacts";
 import TextCtaLink from "../../../components/ui/TextCtaLink";
+import { markRouteReady } from "../../../utils/routeReadyGate";
 
 if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
 
@@ -26,6 +27,7 @@ export default function ProjectPage({ project }) {
   const galleryModalRef = useRef(null);
   const galleryStageRef = useRef(null);
   const galleryRef = useRef(null);
+  const heroWarmupDoneRef = useRef(false);
 
   const [videoOpen, setVideoOpen] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -77,6 +79,18 @@ export default function ProjectPage({ project }) {
 
   useEffect(() => {
     setHasHeroSettled(false);
+    heroWarmupDoneRef.current = false;
+  }, [project?.slug]);
+
+  useEffect(() => {
+    if (!hasHeroSettled || !project?.slug) return;
+    markRouteReady(`/projects/${project.slug}`);
+  }, [hasHeroSettled, project?.slug]);
+
+  useEffect(() => {
+    if (!project?.slug) return;
+    const id = setTimeout(() => markRouteReady(`/projects/${project.slug}`), 22000);
+    return () => clearTimeout(id);
   }, [project?.slug]);
 
   useEffect(() => {
@@ -84,10 +98,39 @@ export default function ProjectPage({ project }) {
     const heroVideo = heroVideoRef.current;
     if (!heroVideo) return;
 
-    // Keep decoder warm under the overlay for a seamless handoff.
+    // Keep decoder warm under the overlay for a seamless handoff,
+    // but do not continuously play two identical videos at once.
     if (!hasHeroSettled) {
-      const warmupPlay = heroVideo.play();
-      if (warmupPlay?.catch) warmupPlay.catch(() => {});
+      if (heroWarmupDoneRef.current) return;
+      heroWarmupDoneRef.current = true;
+
+      const tryWarmupOnce = () => {
+        if (!heroVideoRef.current) return;
+        // One short play→pause nudges the decoder without sustained playback.
+        const p = heroVideo.play();
+        if (p?.then) {
+          p.then(() => {
+            try {
+              heroVideo.pause();
+            } catch {}
+          }).catch(() => {});
+        } else {
+          try {
+            heroVideo.pause();
+          } catch {}
+        }
+      };
+
+      if (heroVideo.readyState >= 2) {
+        tryWarmupOnce();
+      } else {
+        heroVideo.addEventListener("canplay", tryWarmupOnce, { once: true });
+        // Ensure the network pipeline kicks in even if autoplay is blocked.
+        try {
+          heroVideo.load();
+        } catch {}
+      }
+
       return;
     }
 
@@ -127,6 +170,21 @@ export default function ProjectPage({ project }) {
       heroVideo.removeEventListener("loadedmetadata", runSyncSequence);
     };
   }, [hasHeroSettled, project?.slug, project?.videoUrl]);
+
+  useEffect(() => {
+    if (!hasHeroSettled) return;
+    const overlayVideo = overlayVideoRef.current;
+    if (!overlayVideo) return;
+
+    // Let the hero start first, then stop overlay decoding.
+    const id = window.setTimeout(() => {
+      try {
+        overlayVideo.pause();
+      } catch {}
+    }, 140);
+
+    return () => window.clearTimeout(id);
+  }, [hasHeroSettled, project?.slug]);
 
   useEffect(() => {
     const logoEl = heroLogoRef.current;

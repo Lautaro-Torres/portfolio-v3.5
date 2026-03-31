@@ -2,69 +2,143 @@
 import { projectsData } from "../../data/projects";
 import { getProjectCardVideoUrl } from "../../utils/projectUtils";
 import WorkCard from "../../components/ui/WorkCard.js";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { markRouteReady, normalizeRoutePath } from "../../utils/routeReadyGate";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ScrollSmoother } from "gsap/ScrollSmoother";
 import { useClippedTitleReveal } from "../../hooks/useClippedTitleReveal";
 
 if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
+  gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
+}
+
+/** Same breakpoint as Tailwind `md:` — must match grid visibility classes. */
+const MD_UP = "(min-width: 768px)";
+const MD_DOWN = "(max-width: 767px)";
+
+const SCROLLER = "#smooth-wrapper";
+
+function refreshSmootherLayout() {
+  ScrollTrigger.refresh();
+  const smoother = ScrollSmoother.get();
+  if (smoother && typeof smoother.refresh === "function") {
+    smoother.refresh();
+  }
 }
 
 export default function ProjectsIndex() {
+  const pathname = usePathname();
   const pageRef = useRef(null);
   const titleRef = useClippedTitleReveal();
   const desktopGridRef = useRef(null);
   const mobileGridRef = useRef(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Animate desktop grid cards
-      if (desktopGridRef.current) {
-        const cards = desktopGridRef.current.querySelectorAll('.work-card-wrapper');
-        if (cards.length > 0) {
-          gsap.set(cards, { y: 44, opacity: 0 });
-          gsap.to(cards, {
-            y: 0,
-            opacity: 1,
-            duration: 0.7,
-            stagger: 0.11,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: desktopGridRef.current,
-              start: "top 80%",
-              toggleActions: "play none none none",
-              once: true,
-              invalidateOnRefresh: true,
-            },
-          });
-        }
-      }
+    if (normalizeRoutePath(pathname) !== "/projects") return;
+    const root = pageRef.current;
+    if (!root) return;
+    let done = false;
+    const fire = () => {
+      if (done) return;
+      done = true;
+      markRouteReady("/projects");
+      // Una vez que consideramos la ruta lista, refrescamos el layout del smoother/ScrollTrigger
+      // sólo una vez para evitar recalcular alturas en cada pequeño cambio de las cards.
+      requestAnimationFrame(() => {
+        refreshSmootherLayout();
+      });
+    };
+    const imgs = Array.from(root.querySelectorAll("img"));
+    const videos = Array.from(root.querySelectorAll("video"));
+    const pending = [];
+    imgs.forEach((img) => {
+      if (img.complete && img.naturalWidth > 0) return;
+      pending.push(
+        new Promise((resolve) => {
+          img.addEventListener("load", resolve, { once: true });
+          img.addEventListener("error", resolve, { once: true });
+        })
+      );
+    });
+    videos.forEach((v) => {
+      if (v.readyState >= 2) return;
+      pending.push(
+        new Promise((resolve) => {
+          v.addEventListener("loadeddata", resolve, { once: true });
+          v.addEventListener("error", resolve, { once: true });
+        })
+      );
+    });
+    if (pending.length === 0) {
+      requestAnimationFrame(() => requestAnimationFrame(fire));
+    } else {
+      Promise.all(pending).finally(() => requestAnimationFrame(fire));
+    }
+    const t = setTimeout(fire, 16000);
+    return () => clearTimeout(t);
+  }, [pathname]);
 
-      // Animate mobile grid cards
-      if (mobileGridRef.current) {
-        const cards = mobileGridRef.current.querySelectorAll('.work-card-wrapper');
-        if (cards.length > 0) {
-          gsap.set(cards, { y: 44, opacity: 0 });
-          gsap.to(cards, {
-            y: 0,
-            opacity: 1,
-            duration: 0.7,
-            stagger: 0.11,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: mobileGridRef.current,
-              start: "top 80%",
-              toggleActions: "play none none none",
-              once: true,
-              invalidateOnRefresh: true,
-            },
-          });
-        }
-      }
-    }, pageRef);
+  useEffect(() => {
+    const mm = gsap.matchMedia();
 
-    return () => ctx.revert();
+    // Only register triggers for the grid that is actually visible (display:none breaks ST / ScrollSmoother refresh).
+    mm.add(MD_UP, () => {
+      const grid = desktopGridRef.current;
+      if (!grid) return;
+      const cards = grid.querySelectorAll(".work-card-wrapper");
+      if (!cards.length) return;
+      gsap.set(cards, { y: 44, opacity: 0 });
+      gsap.to(cards, {
+        y: 0,
+        opacity: 1,
+        duration: 0.7,
+        stagger: 0.11,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: grid,
+          scroller: SCROLLER,
+          start: "top 80%",
+          toggleActions: "play none none none",
+          once: true,
+          invalidateOnRefresh: true,
+        },
+      });
+    });
+
+    mm.add(MD_DOWN, () => {
+      const grid = mobileGridRef.current;
+      if (!grid) return;
+      const cards = grid.querySelectorAll(".work-card-wrapper");
+      if (!cards.length) return;
+      gsap.set(cards, { y: 44, opacity: 0 });
+      gsap.to(cards, {
+        y: 0,
+        opacity: 1,
+        duration: 0.7,
+        stagger: 0.11,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: grid,
+          /* Sin ScrollSmoother el scroll es el viewport; #smooth-wrapper no es scroller. */
+          start: "top 80%",
+          toggleActions: "play none none none",
+          once: true,
+          invalidateOnRefresh: true,
+        },
+      });
+    });
+
+    const refreshAfterMatchMedia = requestAnimationFrame(() => {
+      refreshSmootherLayout();
+    });
+
+    return () => {
+      mm.revert();
+      cancelAnimationFrame(refreshAfterMatchMedia);
+      requestAnimationFrame(refreshSmootherLayout);
+    };
   }, []);
 
   // Create both desktop and mobile layouts
@@ -156,10 +230,10 @@ export default function ProjectsIndex() {
       <main className="relative w-full pt-20 md:pt-24">
         <div className="w-full max-w-[1900px] mx-auto px-[5%]">
         {/* Page Title */}
-        <div className="relative z-10 pb-8 md:pb-10">
+        <div className="relative z-10 pb-5 md:pb-10">
           <h1
             ref={titleRef}
-            className="font-anton text-white uppercase leading-[0.84] tracking-[0.01em] font-normal text-[clamp(3.8rem,17vw,17rem)]"
+            className="font-anton text-white uppercase leading-[0.84] tracking-[0.01em] font-normal text-[clamp(3.1rem,14vw,17rem)]"
           >
             Projects
           </h1>
@@ -169,8 +243,8 @@ export default function ProjectsIndex() {
         <div ref={desktopGridRef} className="w-full hidden md:block">
           <div className="flex flex-col gap-y-6">
             {desktopRows.map((row, rowIdx) => {
-              // Altura uniforme para todas las tarjetas de escritorio, con mínimo cómodo en pantallas bajas
-              const rowHeight = "h-[60vh] min-h-[320px]";
+              // Altura uniforme para todas las tarjetas de escritorio (un poco más altas), con mínimo cómodo en pantallas bajas
+              const rowHeight = "h-[70vh] min-h-[320px]";
               
               const getGridClass = (cols, isFullWidth) => {
                 if (isFullWidth) return 'grid gap-4 grid-cols-1';
@@ -187,7 +261,7 @@ export default function ProjectsIndex() {
                   className={getGridClass(row.cols, row.isFullWidth)}
                 >
                   {row.items.map((project) => (
-                    <div key={project.id} className="work-card-wrapper">
+                    <div key={project.id} className={`work-card-wrapper ${rowHeight}`}>
                       <WorkCard
                         title={project.title}
                         videoUrl={getProjectCardVideoUrl(project)}
@@ -195,7 +269,7 @@ export default function ProjectsIndex() {
                         logoUrl={project.logoUrl}
                         tags={project.tags}
                         href={`/projects/${project.slug}`}
-                        containerClassName={rowHeight}
+                        containerClassName="h-full"
                         isFullWidthCard={row.isFullWidth}
                         ariaLabel={`View details for ${project.title}`}
                       />
@@ -208,11 +282,11 @@ export default function ProjectsIndex() {
         </div>
 
         {/* Mobile Grid */}
-        <div ref={mobileGridRef} className="w-full block md:hidden">
+        <div ref={mobileGridRef} className="w-full block md:hidden -mt-1">
           <div className="flex flex-col gap-y-3 md:gap-y-6">
             {mobileRows.map((row, rowIdx) => {
-              // Altura uniforme y reducida para todas las tarjetas, con mínimo en píxeles
-              const rowHeight = "h-[40vh] min-h-[220px]";
+              // Altura uniforme en mobile: suficiente para ver título + primera card en el mismo viewport.
+              const rowHeight = "h-[44vh] min-h-[240px]";
               
               const getGridClass = (cols, isFullWidth) => {
                 if (isFullWidth) return 'grid gap-2 md:gap-4 grid-cols-1';
@@ -225,7 +299,7 @@ export default function ProjectsIndex() {
                   className={getGridClass(row.cols, row.isFullWidth)}
                 >
                   {row.items.map((project) => (
-                    <div key={project.id} className="work-card-wrapper">
+                    <div key={project.id} className={`work-card-wrapper ${rowHeight}`}>
                       <WorkCard
                         title={project.title}
                         videoUrl={getProjectCardVideoUrl(project)}
@@ -233,7 +307,7 @@ export default function ProjectsIndex() {
                         logoUrl={project.logoUrl}
                         tags={project.tags}
                         href={`/projects/${project.slug}`}
-                        containerClassName={rowHeight}
+                        containerClassName="h-full"
                         isFullWidthCard={row.isFullWidth}
                         ariaLabel={`View details for ${project.title}`}
                       />

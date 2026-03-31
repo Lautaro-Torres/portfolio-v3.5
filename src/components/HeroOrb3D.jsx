@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { gsap } from "gsap";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { markRouteReady } from "../utils/routeReadyGate";
 
 const PRESETS = {
   developer: {
@@ -67,7 +68,8 @@ const BASE_ROTATION_X = -0.2;
 const BASE_ROTATION_Y = 0;
 const BASE_ROTATION_Z = 0.11;
 
-const IDLE_BOB_AMPLITUDE = 0.045;
+// Vertical idle bob. Slightly stronger to give more travel before scrolling.
+const IDLE_BOB_AMPLITUDE = 0.15;
 const IDLE_BOB_FREQUENCY = 1.2;
 const IDLE_ROT_X_AMPLITUDE = 0.02;
 const IDLE_ROT_X_FREQUENCY = 0.8;
@@ -78,9 +80,12 @@ const IDLE_ROT_Z_FREQUENCY = 0.45;
 const IDLE_SPIN_SPEED = 0.16;
 const TRANSITION_SPIN_SPEED = 2.7;
 const SPIN_VELOCITY_DAMPING = 5.2;
-const MOBILE_MODEL_SCALE_MULTIPLIER = 1.14;
-const MOBILE_IDLE_BOB_MULTIPLIER = 1.32;
-const MOBILE_MODEL_Y_OFFSET = 0.25;
+// Mobile: base multiplier que luego se ajusta levemente según el viewport.
+const MOBILE_MODEL_SCALE_MULTIPLIER_BASE = 1.2;
+// Mobile: a bit more pronounced so the hero breathes more in tall viewports.
+const MOBILE_IDLE_BOB_MULTIPLIER = 1.55;
+// Slightly lower on mobile so it crosses CREATIVE without hiding it.
+const MOBILE_MODEL_Y_OFFSET = 0.5;
 
 const CURSOR_MAX_ROTATION = 0.12;
 const CURSOR_DAMPING = 0.09;
@@ -784,9 +789,19 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
     // Group
     const modelGroup = new THREE.Group();
     modelGroup.position.set(0, BASE_POSITION_Y, 0);
-    modelGroup.scale.setScalar(
-      BASE_MODEL_SCALE * (isMobile ? MOBILE_MODEL_SCALE_MULTIPLIER : 1)
-    );
+
+    // Escala responsiva en mobile: partimos de 1.2 y la ajustamos suave según el alto del viewport
+    // para que el mate no se coma demasiado espacio en pantallas muy bajas ni quede diminuto en
+    // viewports muy altos.
+    let mobileScaleMultiplier = MOBILE_MODEL_SCALE_MULTIPLIER_BASE;
+    if (isMobile && typeof window !== "undefined") {
+      const vh = window.innerHeight || 800;
+      // 0.95x en viewports muy bajos (~640px), 1.0x alrededor de 812–844px, 1.06x en pantallas altas.
+      const t = THREE.MathUtils.clamp((vh - 640) / (900 - 640), 0, 1);
+      mobileScaleMultiplier *= THREE.MathUtils.lerp(0.95, 1.06, t);
+    }
+
+    modelGroup.scale.setScalar(BASE_MODEL_SCALE * (isMobile ? mobileScaleMultiplier : 1));
     modelGroup.rotation.set(BASE_ROTATION_X, BASE_ROTATION_Y, BASE_ROTATION_Z);
     modelRef.current = modelGroup;
     scene.add(modelGroup);
@@ -848,6 +863,9 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
         ) {
           applyModePBRState(activeModeRef.current, "model-loaded-while-pbr-mode");
         }
+
+        // Home hero: mate mesh is the critical 3D asset for first paint.
+        markRouteReady("/");
       },
       undefined,
       (err) => {

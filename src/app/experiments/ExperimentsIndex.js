@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useClippedTitleReveal } from "../../hooks/useClippedTitleReveal";
+import { useSimpleRouteReady } from "../../hooks/useSimpleRouteReady";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -13,6 +14,7 @@ if (typeof window !== "undefined") {
 const EXPERIMENTS_ENABLED = false;
 
 export default function ExperimentsIndex() {
+  useSimpleRouteReady();
   const pageRef = useRef(null);
   const titleRef = useClippedTitleReveal();
   const countRef = useRef(null);

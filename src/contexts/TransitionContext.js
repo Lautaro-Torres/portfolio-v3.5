@@ -3,12 +3,15 @@
 import { createContext, useContext, useState, useRef, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import gsap from "gsap";
+import { armRouteReadyWait, normalizeRoutePath } from "../utils/routeReadyGate";
 
 const TransitionContext = createContext();
 
+/** Stable DOM target for route opacity transitions — see `layout.js` (#page-transition-root). */
+const PAGE_TRANSITION_ROOT_ID = "page-transition-root";
+
 export function TransitionProvider({ children }) {
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [transitionProgress, setTransitionProgress] = useState(0);
   const [currentRoute, setCurrentRoute] = useState("");
   const router = useRouter();
   const pathname = usePathname();
@@ -105,85 +108,65 @@ export function TransitionProvider({ children }) {
     overlay.style.transform = 'translateY(-100%)';
     overlay.style.isolation = 'isolate';
 
-    const loadingContainer = document.createElement('div');
-    loadingContainer.className = 'relative w-64 h-1 bg-white/10 rounded-full overflow-hidden';
+    const loadingTrack = document.createElement("div");
+    loadingTrack.className =
+      "relative w-64 h-1 bg-white/10 rounded-full route-loader-track";
 
-    const loadingBar = document.createElement('div');
-    loadingBar.className = 'absolute inset-0 bg-white rounded-full';
-    loadingBar.style.transform = 'scaleX(0)';
-    loadingBar.style.transformOrigin = 'left center';
+    const shuttle = document.createElement("div");
+    shuttle.className = "route-loader-indeterminate";
 
-    const loadingText = document.createElement('div');
-    loadingText.className = 'absolute bottom-20 left-1/2 transform -translate-x-1/2';
-    loadingText.innerHTML = '<p class="text-white/60 text-sm font-general font-light tracking-[0.14em] uppercase">Loading</p>';
+    const loadingText = document.createElement("div");
+    loadingText.className = "absolute bottom-20 left-1/2 transform -translate-x-1/2";
+    loadingText.innerHTML =
+      '<p class="text-white/60 text-sm font-general font-light tracking-[0.14em] uppercase">Cargando vista…</p>';
 
-    loadingContainer.appendChild(loadingBar);
-    overlay.appendChild(loadingContainer);
+    loadingTrack.appendChild(shuttle);
+    overlay.appendChild(loadingTrack);
     overlay.appendChild(loadingText);
     document.body.appendChild(overlay);
 
     overlayRef.current = overlay;
-    loadingBarRef.current = loadingBar;
+    loadingBarRef.current = loadingTrack;
 
     return overlay;
   };
 
-  // Step 1: Exit animation for current content
+  /**
+   * Always the same element: wraps `{children}` only (footer stays outside).
+   * Never use `document.body` or `#smooth-content` here — body breaks `position: fixed` (nav, badge);
+   * smooth-content is transformed by ScrollSmoother and must not get stray opacity tweens.
+   */
+  const getTransitionTarget = () => document.getElementById(PAGE_TRANSITION_ROOT_ID);
+
+  // Step 1: Exit animation for current content (opacity only — no transform on ancestors of fixed UI)
   const exitCurrentView = () => {
     return new Promise((resolve) => {
-      const content = document.querySelector('main') || document.body;
+      const content = getTransitionTarget();
+      if (!content) {
+        resolve();
+        return;
+      }
       gsap.to(content, {
         opacity: 0.3,
-        y: -30,
         duration: 0.5,
         ease: "power2.inOut",
         onComplete: () => {
           resolve();
-        }
+        },
       });
     });
   };
 
-  // Step 2: Show loader with minimum duration
-  const showLoader = (overlay, loadingBar) => {
+  // Slide transition overlay in (indeterminate bar — no fake %)
+  const playLoaderIntro = (overlay) => {
     return new Promise((resolve) => {
-      const startTime = Date.now();
-      const minDuration = 700; // Minimum 700ms for loader visibility
-      
-      // Set initial states
       gsap.set(overlay, { autoAlpha: 1, yPercent: -100 });
-      gsap.set(loadingBar, { scaleX: 0 });
-
-      const tl = gsap.timeline({
-        onComplete: () => {
-          const elapsed = Date.now() - startTime;
-          const remaining = Math.max(0, minDuration - elapsed);
-
-          // Ensure minimum duration
-          setTimeout(() => {
-            resolve();
-          }, remaining);
-        }
-      });
-
-      // Slide overlay down
-      tl.to(overlay, {
+      transitionTlRef.current = gsap.to(overlay, {
         yPercent: 0,
         duration: 0.4,
-        ease: "power2.inOut"
-      })
-      // Animate loading bar to 100%
-      .to(loadingBar, {
-        scaleX: 1,
-        duration: 0.6,
         ease: "power2.inOut",
-        onUpdate: function() {
-          const progress = Math.round(this.progress() * 100);
-          setTransitionProgress(progress);
-        }
-      }, "-=0.1");
-
-      transitionTlRef.current = tl;
+        onComplete: () => resolve(),
+      });
     });
   };
 
@@ -205,7 +188,8 @@ export function TransitionProvider({ children }) {
         resolve(false);
       }, 3500);
 
-      router.push(targetRoute);
+      // Let ScrollOptimizer own scroll (ScrollSmoother + window). Next's default scroll fights the proxy.
+      router.push(targetRoute, { scroll: false });
     });
 
     if (!routeChanged && typeof window !== "undefined" && window.location.pathname !== targetPathname) {
@@ -217,42 +201,53 @@ export function TransitionProvider({ children }) {
   };
 
   // Step 4: Hide loader and show new content
-  const hideLoaderAndEnter = (overlay, loadingBar) => {
+  const hideLoaderAndEnter = (overlay, loadingTrack) => {
     return new Promise((resolve) => {
+      const enterTarget = getTransitionTarget();
+
       const tl = gsap.timeline({
         onComplete: () => {
           resolve();
-        }
+        },
       });
 
-      // Exit loader animation
-      tl.to(loadingBar, {
-        scaleY: 12,
+      tl.to(loadingTrack, {
         opacity: 0,
-        duration: 0.3,
+        duration: 0.22,
         ease: "power2.inOut",
-        transformOrigin: "center center"
       })
-      // Slide overlay up
-      .to(overlay, {
-        yPercent: -100,
-        duration: 0.5,
-        ease: "power2.inOut"
-      }, "-=0.1")
-      // Fade overlay out
-      .to(overlay, {
-        autoAlpha: 0,
-        duration: 0.2
-      }, "-=0.1")
-      // Enter new content
-      .fromTo(document.querySelector('main') || document.body, 
-        { opacity: 0.3, y: 30 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.6,
-          ease: "power2.out"
-        }, "-=0.3");
+        // Slide overlay up
+        .to(
+          overlay,
+          {
+            yPercent: -100,
+            duration: 0.5,
+            ease: "power2.inOut",
+          },
+          "-=0.1"
+        )
+        // Fade overlay out
+        .to(
+          overlay,
+          {
+            autoAlpha: 0,
+            duration: 0.2,
+          },
+          "-=0.1"
+        );
+
+      if (enterTarget) {
+        tl.fromTo(
+          enterTarget,
+          { opacity: 0.3 },
+          {
+            opacity: 1,
+            duration: 0.6,
+            ease: "power2.out",
+          },
+          "-=0.3"
+        );
+      }
     });
   };
 
@@ -267,10 +262,15 @@ export function TransitionProvider({ children }) {
     }
 
     setIsTransitioning(true);
-    setTransitionProgress(0);
+
+    const transitionRoot = document.getElementById(PAGE_TRANSITION_ROOT_ID);
+    if (transitionRoot) gsap.killTweensOf(transitionRoot);
 
     const overlay = createTransitionOverlay();
-    const loadingBar = loadingBarRef.current;
+    const loadingTrack = loadingBarRef.current;
+    const transitionStartedAt = Date.now();
+    const MIN_LOADER_MS = 720;
+    const READY_TIMEOUT_MS = 28000;
 
     // Kill any existing timeline
     if (transitionTlRef.current) {
@@ -278,29 +278,37 @@ export function TransitionProvider({ children }) {
     }
 
     try {
-      // STEP 1: Exit current view (wait for completion)
       await exitCurrentView();
-      
-      // STEP 2: Show loader with minimum duration (wait for completion)
-      await showLoader(overlay, loadingBar);
-      
-      // STEP 3: Navigate to new route (wait for completion)
+
+      await playLoaderIntro(overlay);
+
       const routeChanged = await navigateToRoute(targetRoute);
 
       if (!routeChanged) {
         return;
       }
-      
-      // STEP 4: Hide loader and enter new view (wait for completion)
-      await hideLoaderAndEnter(overlay, loadingBar);
 
+      const targetPath = normalizeRoutePath(getPathnameFromHref(targetRoute));
+      await armRouteReadyWait(targetPath, READY_TIMEOUT_MS);
+
+      const elapsed = Date.now() - transitionStartedAt;
+      const remainder = Math.max(0, MIN_LOADER_MS - elapsed);
+      if (remainder) {
+        await new Promise((r) => setTimeout(r, remainder));
+      }
+
+      await hideLoaderAndEnter(overlay, loadingTrack);
     } catch (error) {
       console.error('❌ Transition error:', error);
     } finally {
       // Cleanup
       setIsTransitioning(false);
-      setTransitionProgress(100);
-      
+
+      requestAnimationFrame(() => {
+        const root = document.getElementById(PAGE_TRANSITION_ROOT_ID);
+        if (root) gsap.set(root, { opacity: 1, clearProps: "transform" });
+      });
+
       setTimeout(() => {
         if (overlayRef.current && document.body.contains(overlayRef.current)) {
           document.body.removeChild(overlayRef.current);
@@ -313,8 +321,9 @@ export function TransitionProvider({ children }) {
 
   const value = {
     isTransitioning,
-    transitionProgress,
-    startTransition
+    /** @deprecated No fake % — loader is indeterminate until the route reports ready. */
+    transitionProgress: null,
+    startTransition,
   };
 
   return (
