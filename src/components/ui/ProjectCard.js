@@ -80,16 +80,8 @@ export default function ProjectCard({
     if (!video) return;
 
     if (!shouldLoadVideo) {
-      // When unloaded, pause and drop time metadata (avoid decode work).
       pauseMetaRef.current = { pausedAt: 0, pausedOnMs: 0, duration: 0 };
       if (!video.paused) video.pause();
-      // Force-unload the resource to keep the slider light.
-      try {
-        video.removeAttribute("src");
-        video.load();
-      } catch {
-        // no-op
-      }
       return;
     }
 

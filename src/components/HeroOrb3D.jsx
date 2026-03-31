@@ -906,7 +906,7 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
           frameRef.current = requestAnimationFrame(animate);
         }
       },
-      { threshold: 0.01 }
+      { root: null, rootMargin: "120px 0px 120px 0px", threshold: 0 }
     );
     io.observe(host);
     intersectionObserverRef.current = io;

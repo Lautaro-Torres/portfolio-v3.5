@@ -5,10 +5,9 @@ import { createContext, useContext, useState } from "react";
 const LoadingContext = createContext();
 
 export function LoadingProvider({ children }) {
-  // Loader is temporarily paused: app starts in "loaded + revealed" mode.
-  const [isInitialLoading, setIsInitialLoading] = useState(false);
-  const [hasLoadedBefore, setHasLoadedBefore] = useState(true);
-  const [isRevealComplete, setIsRevealComplete] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [hasLoadedBefore, setHasLoadedBefore] = useState(false);
+  const [isRevealComplete, setIsRevealComplete] = useState(false);
 
   const completeLoading = () => {
     setIsInitialLoading(false);

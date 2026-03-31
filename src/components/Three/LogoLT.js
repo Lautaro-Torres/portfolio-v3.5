@@ -197,48 +197,58 @@ export default function LogoLT() {
         alignItems: "center",
         justifyContent: "center",
         zIndex: 10,
-        // Enable interaction so users can drag/rotate the logo
-        pointerEvents: "auto",
-        touchAction: "none",
-        // Hardware acceleration
+        pointerEvents: isMobile ? "none" : "auto",
+        touchAction: isMobile ? "pan-y" : "none",
         transform: "translateZ(0)",
         backfaceVisibility: "hidden",
-        perspective: "1000px"
+        perspective: "1000px",
       }}
     >
-      <Canvas 
-        camera={cameraSettings}
-        dpr={[1, 1.8]}
-        frameloop="always"
-        performance={{ min: 0.5 }}
-        gl={{
-          antialias: true,
-          powerPreference: "high-performance",
-          alpha: true, // Transparent canvas to show page background (same as Monitor)
-          stencil: false, // Disable stencil buffer if not needed
-          depth: true,
-        }}
+      {/* Mobile: sólo la zona central captura gestos (drag del logo); el resto deja pasar el scroll. */}
+      <div
+        style={
+          isMobile
+            ? {
+                pointerEvents: "auto",
+                touchAction: "none",
+                width: "min(78vw, 320px)",
+                height: "min(52vh, 380px)",
+                maxWidth: "100%",
+                maxHeight: "100%",
+              }
+            : {
+                width: "100%",
+                height: "100%",
+                pointerEvents: "auto",
+                touchAction: "none",
+              }
+        }
       >
-        <>
-          <AdaptiveEvents />
-          <ambientLight intensity={0.2} />
-          <directionalLight 
-            position={[10, 10, 10]}
-            intensity={0.58}
-            castShadow={false}
-          />
-          <directionalLight
-            position={[-8, 5, -6]}
-            intensity={0.28}
-            castShadow={false}
-          />
-          <pointLight position={[0, -2.5, 4]} intensity={0.32} distance={18} />
-          {/* Pass visibility down so inner hook can skip updates when hidden */}
-          <LogoLTModel isActive={isVisible} />
-          <SharedEnvironment />
-          {/* Keep the scene minimal; enable external stats button if needed */}
-        </>
-      </Canvas>
+        <Canvas
+          style={{ width: "100%", height: "100%", display: "block" }}
+          camera={cameraSettings}
+          dpr={[1, 1.8]}
+          frameloop="always"
+          performance={{ min: 0.5 }}
+          gl={{
+            antialias: true,
+            powerPreference: "high-performance",
+            alpha: true,
+            stencil: false,
+            depth: true,
+          }}
+        >
+          <>
+            <AdaptiveEvents />
+            <ambientLight intensity={0.2} />
+            <directionalLight position={[10, 10, 10]} intensity={0.58} castShadow={false} />
+            <directionalLight position={[-8, 5, -6]} intensity={0.28} castShadow={false} />
+            <pointLight position={[0, -2.5, 4]} intensity={0.32} distance={18} />
+            <LogoLTModel isActive={isVisible} />
+            <SharedEnvironment />
+          </>
+        </Canvas>
+      </div>
     </div>
   );
 } 

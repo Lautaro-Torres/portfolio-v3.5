@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTransitionRouter } from "../../hooks/useTransitionRouter";
 
 const isVideoUrl = (url) =>
@@ -22,8 +22,8 @@ export default function WorkCard({
   const cardRef = useRef(null);
   const videoRef = useRef(null);
   const pauseMetaRef = useRef({ pausedAt: 0, pausedOnMs: 0, duration: 0 });
-  const [shouldLoadVideo, setShouldLoadVideo] = useState(!useVideo);
-  const [shouldPlayVideo, setShouldPlayVideo] = useState(!useVideo);
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+  const [shouldPlayVideo, setShouldPlayVideo] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
   const [hasPosterError, setHasPosterError] = useState(false);
 
@@ -40,6 +40,17 @@ export default function WorkCard({
   // para evitar flashes en negro cuando cambia el estado de carga.
   const showPoster = Boolean(posterUrl && !hasPosterError);
 
+  useLayoutEffect(() => {
+    if (!useVideo) return;
+    const card = cardRef.current;
+    if (!card || typeof window === "undefined") return;
+    const preloadAheadPx = 1200;
+    const top = card.getBoundingClientRect().top;
+    if (top <= window.innerHeight + preloadAheadPx) {
+      setShouldLoadVideo(true);
+    }
+  }, [useVideo]);
+
   useEffect(() => {
     if (!useVideo) return;
     const card = cardRef.current;
@@ -49,7 +60,6 @@ export default function WorkCard({
       return;
     }
 
-    // Precargar bastante antes de entrar al viewport para que el video ya esté listo cuando la card aparezca.
     const preloadAheadPx = 1200;
     const top = card.getBoundingClientRect().top;
     if (top <= window.innerHeight + preloadAheadPx) {

@@ -102,11 +102,20 @@ export default function ScrollOptimizer() {
       if (cancelled) return;
       resetScrollToTopAndRefresh();
     };
+    const isMobile = window.matchMedia("(max-width: 767px)").matches;
+    // Mobile: scroll nativo — un solo reset + refresh evita pelearse con touch scroll.
+    if (isMobile) {
+      run();
+      const rafId = requestAnimationFrame(run);
+      return () => {
+        cancelled = true;
+        cancelAnimationFrame(rafId);
+      };
+    }
     run();
     const rafId = requestAnimationFrame(run);
     const t200 = window.setTimeout(run, 200);
     const t500 = window.setTimeout(run, 500);
-    // Project detail streams content + intro layout; a late pass avoids staying at the old /projects scroll.
     const extraIds = [];
     if (isProjectDetailPath(pathname)) {
       extraIds.push(

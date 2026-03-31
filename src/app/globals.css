@@ -80,6 +80,14 @@ html.smooth-scroll-active body {
   overflow: hidden;
 }
 
+/* Mobile: el track del layout no debe capturar gestos verticales frente al scroll nativo. */
+@media (max-width: 767px) {
+  #smooth-wrapper,
+  #smooth-content {
+    touch-action: pan-y;
+  }
+}
+
 /* Honest indeterminate bar (route transition — not a fake %) */
 @keyframes route-loader-shuttle {
   0% { transform: translateX(-100%); }

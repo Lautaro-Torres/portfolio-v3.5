@@ -18,7 +18,9 @@ const Monitor = dynamic(() => import("../components/Three/Monitor"), { ssr: fals
 export default function Projects() {
   const { push } = useTransitionRouter();
   const [activeIndex, setActiveIndex] = useState(0);
-  const [hotIndices, setHotIndices] = useState([0]);
+  const [hotIndices, setHotIndices] = useState(() =>
+    projectsData.map((_, i) => i).slice(0, Math.min(4, Math.max(1, projectsData.length)))
+  );
   const swiperRef = useRef(null);
   const syncRafRef = useRef(null);
 

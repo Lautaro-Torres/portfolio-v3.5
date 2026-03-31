@@ -5,6 +5,7 @@ import Footer from "../components/ui/Footer";
 import DagobertoBadge from "../components/ui/DagobertoBadge";
 import ScrollOptimizer from "../components/ui/ScrollOptimizer";
 import PageReveal from "../components/ui/PageReveal";
+import LoadingScreen from "../components/ui/LoadingScreen";
 import { LoadingProvider } from "../contexts/LoadingContext";
 import { TransitionProvider } from "../contexts/TransitionContext";
 
@@ -105,6 +106,7 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <LoadingProvider>
+          <LoadingScreen />
           <TransitionProvider>
             <ScrollOptimizer />
             <PageReveal>

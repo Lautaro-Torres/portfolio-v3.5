@@ -209,17 +209,16 @@ export default function HeroSection() {
           trigger: heroRef.current,
           start: "top top",
           end: "bottom top",
-          scrub: 0.55,
+          scrub: 1,
           invalidateOnRefresh: true,
         },
       });
 
-      // Keep centered at start; during scroll move down to reach lower hero margin.
+      // Solo traslación vertical en el mate — sin scale (evita “temblor” / sensación de zoom al scrollear).
       parallaxTl.to(
         heroOrbWrapRef.current,
         {
           yPercent: isMobile ? 10 * heightFactor : 6,
-          scale: 0.995,
           duration: 0.72,
           ease: "none",
         },
@@ -229,7 +228,6 @@ export default function HeroSection() {
         heroOrbWrapRef.current,
         {
           yPercent: isMobile ? 26 * heightFactor : 16,
-          scale: 0.98,
           duration: 0.28,
           ease: "none",
         }
