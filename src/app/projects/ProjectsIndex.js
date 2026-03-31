@@ -243,8 +243,8 @@ export default function ProjectsIndex() {
         <div ref={desktopGridRef} className="w-full hidden md:block">
           <div className="flex flex-col gap-y-6">
             {desktopRows.map((row, rowIdx) => {
-              // Altura uniforme para todas las tarjetas de escritorio (un poco más altas), con mínimo cómodo en pantallas bajas
-              const rowHeight = "h-[70vh] min-h-[320px]";
+              // Altura más apaisada y controlada para mantener una lectura premium sin columnas tan altas.
+              const rowHeight = "h-[52vh] min-h-[280px]";
               
               const getGridClass = (cols, isFullWidth) => {
                 if (isFullWidth) return 'grid gap-4 grid-cols-1';
@@ -285,8 +285,8 @@ export default function ProjectsIndex() {
         <div ref={mobileGridRef} className="w-full block md:hidden -mt-1">
           <div className="flex flex-col gap-y-3 md:gap-y-6">
             {mobileRows.map((row, rowIdx) => {
-              // Altura uniforme en mobile: suficiente para ver título + primera card en el mismo viewport.
-              const rowHeight = "h-[44vh] min-h-[240px]";
+              // En mobile reducimos altura para evitar sensación excesivamente vertical.
+              const rowHeight = "h-[36vh] min-h-[210px]";
               
               const getGridClass = (cols, isFullWidth) => {
                 if (isFullWidth) return 'grid gap-2 md:gap-4 grid-cols-1';

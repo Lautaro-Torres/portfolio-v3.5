@@ -25,6 +25,7 @@ export default function ProjectCard({
   const cardRef = useRef(null);
   const videoRef = useRef(null);
   const pauseMetaRef = useRef({ pausedAt: 0, pausedOnMs: 0, duration: 0 });
+  const hasEverLoadedVideoRef = useRef(false);
   const startPos = useRef({ x: 0, y: 0 });
   const hasDragged = useRef(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
@@ -44,6 +45,7 @@ export default function ProjectCard({
       shouldPlayVideo: isHot || dist === 0,
     };
   }, [activeIndex, hasIndexSignal, hotIndices, index, useVideo]);
+  const effectiveShouldLoadVideo = shouldLoadVideo || hasEverLoadedVideoRef.current;
 
   useEffect(() => {
     if (!useVideo) return;
@@ -79,19 +81,13 @@ export default function ProjectCard({
     const video = videoRef.current;
     if (!video) return;
 
-    if (!shouldLoadVideo) {
+    if (!effectiveShouldLoadVideo) {
       // When unloaded, pause and drop time metadata (avoid decode work).
       pauseMetaRef.current = { pausedAt: 0, pausedOnMs: 0, duration: 0 };
       if (!video.paused) video.pause();
-      // Force-unload the resource to keep the slider light.
-      try {
-        video.removeAttribute("src");
-        video.load();
-      } catch {
-        // no-op
-      }
       return;
     }
+    hasEverLoadedVideoRef.current = true;
 
     if (shouldPlayVideo) {
       const { pausedAt, pausedOnMs, duration } = pauseMetaRef.current;
@@ -112,7 +108,7 @@ export default function ProjectCard({
       };
       video.pause();
     }
-  }, [useVideo, shouldLoadVideo, shouldPlayVideo]);
+  }, [useVideo, effectiveShouldLoadVideo, shouldPlayVideo]);
 
   const handlePointerDown = (e) => {
     const x = e.touches ? e.touches[0].clientX : e.clientX;
@@ -155,7 +151,7 @@ export default function ProjectCard({
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       className={`
-        group block w-full h-[77vh] min-h-[77vh] md:h-[65vh] md:min-h-[65vh] relative rounded-lg overflow-hidden shadow-lg bg-[#0a0a0a] flex flex-col
+        group block w-full h-[58vh] min-h-[360px] md:h-[52vh] md:min-h-[340px] lg:h-[50vh] lg:min-h-[320px] relative rounded-lg overflow-hidden shadow-lg bg-[#0a0a0a] flex flex-col
         transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 cursor-pointer hover:shadow-2xl ${className}
       `}
       tabIndex={0}
@@ -179,12 +175,12 @@ export default function ProjectCard({
       {useVideo ? (
         <video
           ref={videoRef}
-          src={shouldLoadVideo ? videoUrl : undefined}
+          src={effectiveShouldLoadVideo ? videoUrl : undefined}
           muted
           autoPlay={false}
           loop
           playsInline
-          preload={shouldLoadVideo ? "metadata" : "none"}
+          preload={effectiveShouldLoadVideo ? "metadata" : "none"}
           onLoadedMetadata={() => setIsVideoReady(true)}
           onCanPlay={() => setIsVideoReady(true)}
           className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-all duration-400 ease-ui-standard group-hover:scale-[1.03] ${
