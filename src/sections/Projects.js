@@ -203,10 +203,10 @@ export default function Projects() {
               className="
                 !h-auto
                 !w-[88%]
-                sm:!w-[72%]
-                lg:!w-[46%]
-                xl:!w-[42%]
-                2xl:!w-[40%]
+                sm:!w-[76%]
+                lg:!w-[52%]
+                xl:!w-[48%]
+                2xl:!w-[45%]
               "
             >
               <ProjectCard

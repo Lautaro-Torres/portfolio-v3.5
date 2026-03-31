@@ -21,6 +21,10 @@ export function TransitionProvider({ children }) {
   const pendingRouteRef = useRef(null);
   const routeChangeResolverRef = useRef(null);
   const routeChangeTimeoutRef = useRef(null);
+  const progressValueRef = useRef({ value: 0 });
+  const progressTweenRef = useRef(null);
+  const progressTextRef = useRef(null);
+  const progressBarRef = useRef(null);
 
   const clearPendingRoute = () => {
     pendingRouteRef.current = null;
@@ -108,27 +112,38 @@ export function TransitionProvider({ children }) {
     overlay.style.transform = 'translateY(-100%)';
     overlay.style.isolation = 'isolate';
 
+    const progressText = document.createElement("div");
+    progressText.className = "pointer-events-none select-none font-anton text-white leading-none tracking-[0.02em]";
+    progressText.style.fontFamily = "'Anton', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+    progressText.style.fontWeight = "400";
+    progressText.style.fontSize = "min(30vh, 30vw)";
+    progressText.style.lineHeight = "0.9";
+    progressText.textContent = "0%";
+
     const loadingTrack = document.createElement("div");
-    loadingTrack.className =
-      "relative w-64 h-1 bg-white/10 rounded-full route-loader-track";
+    loadingTrack.className = "absolute bottom-0 left-0 right-0 h-px bg-white/18 overflow-hidden";
+    const loadingBar = document.createElement("div");
+    loadingBar.className = "h-full bg-white";
+    loadingBar.style.width = "0%";
 
-    const shuttle = document.createElement("div");
-    shuttle.className = "route-loader-indeterminate";
-
-    const loadingText = document.createElement("div");
-    loadingText.className = "absolute bottom-20 left-1/2 transform -translate-x-1/2";
-    loadingText.innerHTML =
-      '<p class="text-white/60 text-sm font-general font-light tracking-[0.14em] uppercase">Cargando vista…</p>';
-
-    loadingTrack.appendChild(shuttle);
+    loadingTrack.appendChild(loadingBar);
+    overlay.appendChild(progressText);
     overlay.appendChild(loadingTrack);
-    overlay.appendChild(loadingText);
     document.body.appendChild(overlay);
 
     overlayRef.current = overlay;
     loadingBarRef.current = loadingTrack;
+    progressTextRef.current = progressText;
+    progressBarRef.current = loadingBar;
 
     return overlay;
+  };
+
+  const setLoaderProgress = (value) => {
+    const clamped = Math.max(0, Math.min(100, Math.round(value)));
+    progressValueRef.current.value = clamped;
+    if (progressTextRef.current) progressTextRef.current.textContent = `${clamped}%`;
+    if (progressBarRef.current) progressBarRef.current.style.width = `${clamped}%`;
   };
 
   /**
@@ -147,9 +162,9 @@ export function TransitionProvider({ children }) {
         return;
       }
       gsap.to(content, {
-        opacity: 0.3,
-        duration: 0.5,
-        ease: "power2.inOut",
+        opacity: 1,
+        duration: 0.12,
+        ease: "none",
         onComplete: () => {
           resolve();
         },
@@ -237,16 +252,7 @@ export function TransitionProvider({ children }) {
         );
 
       if (enterTarget) {
-        tl.fromTo(
-          enterTarget,
-          { opacity: 0.3 },
-          {
-            opacity: 1,
-            duration: 0.6,
-            ease: "power2.out",
-          },
-          "-=0.3"
-        );
+        tl.fromTo(enterTarget, { opacity: 1 }, { opacity: 1, duration: 0.01, ease: "none" }, "-=0.3");
       }
     });
   };
@@ -281,6 +287,19 @@ export function TransitionProvider({ children }) {
       await exitCurrentView();
 
       await playLoaderIntro(overlay);
+      setLoaderProgress(0);
+      progressTweenRef.current?.kill();
+      progressTweenRef.current = gsap.to(progressValueRef, {
+        value: 92,
+        duration: 2.4,
+        ease: "power2.out",
+        onStart: () => {
+          progressValueRef.current.value = 0;
+        },
+        onUpdate: function () {
+          setLoaderProgress(this.targets()[0].value || 0);
+        },
+      });
 
       const routeChanged = await navigateToRoute(targetRoute);
 
@@ -297,12 +316,16 @@ export function TransitionProvider({ children }) {
         await new Promise((r) => setTimeout(r, remainder));
       }
 
+      progressTweenRef.current?.kill();
+      setLoaderProgress(100);
       await hideLoaderAndEnter(overlay, loadingTrack);
     } catch (error) {
       console.error('❌ Transition error:', error);
     } finally {
       // Cleanup
       setIsTransitioning(false);
+      progressTweenRef.current?.kill();
+      progressTweenRef.current = null;
 
       requestAnimationFrame(() => {
         const root = document.getElementById(PAGE_TRANSITION_ROOT_ID);
@@ -314,6 +337,8 @@ export function TransitionProvider({ children }) {
           document.body.removeChild(overlayRef.current);
           overlayRef.current = null;
           loadingBarRef.current = null;
+          progressTextRef.current = null;
+          progressBarRef.current = null;
         }
       }, 100);
     }

@@ -175,12 +175,20 @@ export function useProjectIntroAnimation(refs) {
 
     // Wait for layout to be ready
     let timeoutId;
+    const failSafeId = setTimeout(() => {
+      if (isCompleteRef.current) return;
+      isCompleteRef.current = true;
+      gsap.set(overlay, { opacity: 0, visibility: "hidden", pointerEvents: "none" });
+      if (typeof onOverlaySettled === "function") onOverlaySettled();
+      if (typeof onComplete === "function") onComplete();
+    }, 2800);
     const rafId = requestAnimationFrame(() => {
       timeoutId = setTimeout(runIntro, 40);
     });
 
     return () => {
       cancelAnimationFrame(rafId);
+      clearTimeout(failSafeId);
       if (timeoutId) clearTimeout(timeoutId);
       restoreTitle();
       cleanup();
