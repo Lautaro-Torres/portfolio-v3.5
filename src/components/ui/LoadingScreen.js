@@ -97,16 +97,30 @@ export default function LoadingScreen() {
       }, wait);
     };
 
-    const handleWindowLoad = () => {
-      if (!cancelled) goToProgress(100, 0.55);
+    let loadMilestoneDone = false;
+    const finishLoadMilestone = () => {
+      if (loadMilestoneDone || cancelled) return;
+      loadMilestoneDone = true;
+      if (typeof window !== "undefined") {
+        window.removeEventListener("load", onWindowLoad);
+      }
+      goToProgress(100, 0.55);
       runExit();
     };
+
+    const onWindowLoad = () => finishLoadMilestone();
 
     if (typeof document !== "undefined" && document.readyState === "complete") {
       goToProgress(100, 0.35);
       runExit();
     } else if (typeof window !== "undefined") {
-      window.addEventListener("load", handleWindowLoad, { once: true });
+      window.addEventListener("load", onWindowLoad, { once: true });
+      // Mobile: effect can run after window.load already fired; avoid waiting until maxMs.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (!cancelled && document.readyState === "complete") finishLoadMilestone();
+        });
+      });
     } else {
       goToProgress(100, 0.25);
       runExit();
@@ -123,7 +137,7 @@ export default function LoadingScreen() {
         innerExitTimerId = null;
       }
       if (typeof window !== "undefined") {
-        window.removeEventListener("load", handleWindowLoad);
+        window.removeEventListener("load", onWindowLoad);
       }
       document.removeEventListener("DOMContentLoaded", onDomReady);
       progressTweenRef.current?.kill();
@@ -142,7 +156,7 @@ export default function LoadingScreen() {
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-[2147483600] bg-[#0a0a0a] flex flex-col justify-between overflow-x-hidden"
+      className="fixed inset-0 z-[2147483647] min-h-[100dvh] bg-[#0a0a0a] flex flex-col justify-between overflow-x-hidden"
       style={{ isolation: "isolate" }}
       role="progressbar"
       aria-valuemin={0}

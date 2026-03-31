@@ -106,13 +106,14 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <LoadingProvider>
-          <LoadingScreen />
           <TransitionProvider>
             <ScrollOptimizer />
             <PageReveal>
               <LayoutContent>{children}</LayoutContent>
             </PageReveal>
           </TransitionProvider>
+          {/* After rest of UI in DOM so equal z-index stacks above nav/badge; must stay inside LoadingProvider */}
+          <LoadingScreen />
         </LoadingProvider>
       </body>
     </html>

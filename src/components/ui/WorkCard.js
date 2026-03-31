@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTransitionRouter } from "../../hooks/useTransitionRouter";
+import { requestVideoPlay } from "../../utils/requestVideoPlay";
 
 const isVideoUrl = (url) =>
   url && typeof url === "string" && /\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(url);
@@ -229,8 +230,7 @@ export default function WorkCard({
         const elapsedSec = Math.max(0, (performance.now() - pausedOnMs) / 1000);
         video.currentTime = (pausedAt + elapsedSec) % duration;
       }
-      const playPromise = video.play();
-      if (playPromise?.catch) playPromise.catch(() => {});
+      requestVideoPlay(video);
       return;
     }
 
@@ -242,7 +242,7 @@ export default function WorkCard({
       };
       video.pause();
     }
-  }, [useVideo, shouldLoadVideo, shouldPlayVideo]);
+  }, [useVideo, shouldLoadVideo, shouldPlayVideo, videoUrl]);
 
   const tagList = projectsGrid ? tags : tags?.slice(0, 3);
   const tagRowClass = projectsGrid

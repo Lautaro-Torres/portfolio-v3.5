@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { requestVideoPlay } from "../utils/requestVideoPlay";
 
 /**
  * Renders a poster for a video. If `poster` URL is provided, uses it.
@@ -50,8 +51,7 @@ export function VideoPoster({
     if ((!shouldUseLoopPreview && !shouldUseFullVideoLoop) || !previewVideoRef.current) return;
     const video = previewVideoRef.current;
     if (isInView) {
-      const playPromise = video.play();
-      if (playPromise && typeof playPromise.catch === "function") playPromise.catch(() => {});
+      requestVideoPlay(video);
     } else {
       video.pause();
     }
@@ -129,8 +129,7 @@ export function VideoPoster({
     const safeEnd = safeStart + Math.max(0.8, previewLoopSeconds);
     if (video.currentTime >= safeEnd || video.currentTime >= dur - 0.05) {
       video.currentTime = safeStart;
-      const p = video.play();
-      if (p && typeof p.catch === "function") p.catch(() => {});
+      requestVideoPlay(video);
     }
   }, [previewLoopStart, previewLoopSeconds]);
 
@@ -151,8 +150,7 @@ export function VideoPoster({
   const handleFullLoopEnded = useCallback((e) => {
     const video = e.currentTarget;
     video.currentTime = 0;
-    const p = video.play();
-    if (p && typeof p.catch === "function") p.catch(() => {});
+    requestVideoPlay(video);
   }, []);
 
   // Full video loop: plays entire video, then restarts (no short segment / reverse)

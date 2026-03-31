@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { requestVideoPlay } from "../utils/requestVideoPlay";
 import {
   motion,
   useAnimationFrame,
@@ -212,8 +213,7 @@ export default function AboutPortalCard({
         const elapsedSec = Math.max(0, (performance.now() - pausedOnMs) / 1000);
         video.currentTime = (pausedAt + elapsedSec) % duration;
       }
-      const playPromise = video.play();
-      playPromise?.catch?.(() => {});
+      requestVideoPlay(video);
       return;
     }
 
@@ -225,7 +225,7 @@ export default function AboutPortalCard({
       };
       video.pause();
     }
-  }, [shouldLoadVideo, shouldPlayVideo]);
+  }, [shouldLoadVideo, shouldPlayVideo, videoSrc]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.matchMedia) return;
@@ -306,7 +306,7 @@ export default function AboutPortalCard({
   return (
     <div
       ref={cardRef}
-      className={`relative h-full w-full overflow-hidden rounded-2xl select-none [perspective:1700px] ${className}`}
+      className={`relative h-full w-full overflow-visible rounded-2xl select-none [perspective:1700px] ${className}`}
       style={{ touchAction: isInteractive ? "auto" : "none" }}
       onPointerDown={(e) => {
         if (isInteractive) return;

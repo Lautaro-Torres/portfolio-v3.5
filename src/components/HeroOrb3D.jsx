@@ -639,6 +639,7 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
     renderer.setClearColor(0x000000, 0);
     renderer.domElement.style.background = "transparent";
     renderer.domElement.style.pointerEvents = "none";
+    renderer.domElement.style.display = "block";
     rendererRef.current = renderer;
     host.appendChild(renderer.domElement);
 
@@ -824,9 +825,11 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
     modelGroup.position.set(0, BASE_POSITION_Y, 0);
 
     // Escala: desktop sigue al viewport; mobile usa multiplicador fijo (no a innerHeight por resize al scroll).
-    // setSize() en mobile ignora micro-cambios de alto (barra de URL, sub-pixel) para no retocar aspect/canvas.
-    let mobileCanvasAppliedW = 0;
-    let mobileCanvasAppliedH = 0;
+    // Mobile Safari: el hero usa 100dvh → el host cambia de alto con la barra de URL; ResizeObserver disparaba
+    // setSize + camera.aspect en crecidas de alto → zoom aparente y flicker. Buffer y aspect se latch-ean;
+    // el canvas se escala con CSS (cover) al host sin recalcular la proyección durante el scroll.
+    let mobileBufferW = 0;
+    let mobileBufferH = 0;
 
     const applyModelGroupLayout = () => {
       const w = host.clientWidth || window.innerWidth || 1024;
@@ -919,54 +922,45 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
 
     // Sizing
     const setSize = () => {
-      const w = host.clientWidth || 1;
-      const h = host.clientHeight || 1;
-      if (w < 32 || h < 32) return;
+      const hw = host.clientWidth || 1;
+      const hh = host.clientHeight || 1;
+      if (hw < 32 || hh < 32) return;
 
       const layoutMobile = (host.clientWidth || window.innerWidth || 0) <= 768;
 
       if (!layoutMobile) {
-        mobileCanvasAppliedW = 0;
-        mobileCanvasAppliedH = 0;
-        renderer.setSize(w, h, false);
-        camera.aspect = w / h;
+        mobileBufferW = 0;
+        mobileBufferH = 0;
+        renderer.domElement.style.width = "";
+        renderer.domElement.style.height = "";
+        renderer.domElement.style.objectFit = "";
+        renderer.setSize(hw, hh, false);
+        camera.aspect = hw / hh;
         camera.updateProjectionMatrix();
         applyModelGroupLayout();
         return;
       }
 
-      // Mobile / Safari iOS: dynamic toolbar changes height in ~50–110px steps. Old logic required
-      // BOTH dw<72 and dh<72 for "micro" skip, so dh-only changes in the 72–119 band always ran
-      // setSize + camera.aspect → apparent zoom + flicker. Stabilize by never shrinking the WebGL
-      // buffer on height-only updates; grow on real height increase; always follow width + orientation.
-      const rw = mobileCanvasAppliedW;
-      const rh = mobileCanvasAppliedH;
-      if (rw > 0 && rh > 0) {
-        const wasLandscape = rw > rh;
-        const nowLandscape = w > h;
-        const orientationFlip = wasLandscape !== nowLandscape;
-        const dw = Math.abs(w - rw);
-        const dh = Math.abs(h - rh);
-        const relW = rw > 0 ? dw / rw : 0;
-        const relH = rh > 0 ? dh / rh : 0;
-        const widthChanged = orientationFlip || dw >= 4 || relW >= 0.03;
-        const heightGrew = h > rh + 6;
-        const onlyHeightShrink = !orientationFlip && !widthChanged && h < rh - 3;
-        const jitterOnly =
-          !orientationFlip &&
-          !widthChanged &&
-          !heightGrew &&
-          dw < 8 &&
-          dh < 160 &&
-          relW < 0.09 &&
-          relH < 0.22;
+      const hostLandscape = hw > hh;
+      const lockLandscape =
+        mobileBufferW > 0 && mobileBufferH > 0 && mobileBufferW > mobileBufferH;
+      const orientationFlip =
+        mobileBufferW > 0 &&
+        mobileBufferH > 0 &&
+        lockLandscape !== hostLandscape;
 
-        if (onlyHeightShrink) return;
-        if (jitterOnly) return;
+      if (mobileBufferW === 0 || mobileBufferH === 0 || orientationFlip) {
+        mobileBufferW = hw;
+        mobileBufferH = hh;
       }
 
-      mobileCanvasAppliedW = w;
-      mobileCanvasAppliedH = h;
+      const w = mobileBufferW;
+      const h = mobileBufferH;
+
+      renderer.domElement.style.width = "100%";
+      renderer.domElement.style.height = "100%";
+      renderer.domElement.style.objectFit = "cover";
+
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
@@ -976,8 +970,8 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
 
     let orientationSetSizeTimer = 0;
     const onOrientationChange = () => {
-      mobileCanvasAppliedW = 0;
-      mobileCanvasAppliedH = 0;
+      mobileBufferW = 0;
+      mobileBufferH = 0;
       window.clearTimeout(orientationSetSizeTimer);
       orientationSetSizeTimer = window.setTimeout(() => {
         orientationSetSizeTimer = 0;

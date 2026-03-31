@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { getProjectUrl } from "../../utils/projectUtils";
+import { requestVideoPlay } from "../../utils/requestVideoPlay";
 
 const DRAG_THRESHOLD_PX = 8;
 /** Home: pocas slides; dist máx. entre extremos con N cards es N-1 (p. ej. 4 → 3). Margen para sumar proyectos. */
@@ -47,8 +48,9 @@ function ProjectCard({
     if (!root) return;
 
     const apply = (intersecting, ratio) => {
-      // Umbral bajo: con slides parcialmente visibles, 0.06 dejaba isCardVisible en false aunque el clip debía cargar.
-      setIsCardVisible(Boolean(intersecting && ratio > 0.01));
+      // Cualquier solape real; en iOS + Swiper/transform a veces ratio≈0 con isIntersecting true.
+      const anyOverlap = ratio > 0.0005 || (intersecting && ratio === 0);
+      setIsCardVisible(Boolean(intersecting && anyOverlap));
     };
 
     const io = new IntersectionObserver(
@@ -176,8 +178,7 @@ function ProjectCard({
         const elapsedSec = Math.max(0, (performance.now() - pausedOnMs) / 1000);
         video.currentTime = (pausedAt + elapsedSec) % duration;
       }
-      const playPromise = video.play();
-      if (playPromise?.catch) playPromise.catch(() => {});
+      requestVideoPlay(video);
       return;
     }
 
@@ -189,7 +190,7 @@ function ProjectCard({
       };
       video.pause();
     }
-  }, [useVideo, shouldLoadVideo, shouldPlayVideo]);
+  }, [useVideo, shouldLoadVideo, shouldPlayVideo, videoUrl]);
 
   const handlePointerDown = (e) => {
     const x = e.touches ? e.touches[0].clientX : e.clientX;
