@@ -3,9 +3,18 @@ import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "rea
 import { getProjectUrl } from "../../utils/projectUtils";
 
 const DRAG_THRESHOLD_PX = 8;
+/** Home: pocas slides; dist máx. entre extremos con N cards es N-1 (p. ej. 4 → 3). Margen para sumar proyectos. */
+const SWIPER_PREFETCH_MAX_DIST = 6;
 
 const isVideoUrl = (url) =>
   typeof url === "string" && /\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(url);
+
+/** Evita medir cards sin caja real (p. ej. grid duplicado oculto con display:none). */
+function hasLayoutBox(el) {
+  if (!el) return false;
+  const r = el.getBoundingClientRect();
+  return r.width >= 4 && r.height >= 4;
+}
 
 function ProjectCard({
   title,
@@ -38,7 +47,8 @@ function ProjectCard({
     if (!root) return;
 
     const apply = (intersecting, ratio) => {
-      setIsCardVisible(Boolean(intersecting && ratio > 0.06));
+      // Umbral bajo: con slides parcialmente visibles, 0.06 dejaba isCardVisible en false aunque el clip debía cargar.
+      setIsCardVisible(Boolean(intersecting && ratio > 0.01));
     };
 
     const io = new IntersectionObserver(
@@ -52,6 +62,7 @@ function ProjectCard({
     io.observe(root);
 
     const syncFromRect = () => {
+      if (!hasLayoutBox(root)) return;
       const r = root.getBoundingClientRect();
       const vw = window.innerWidth;
       const vh = window.innerHeight;
@@ -82,16 +93,46 @@ function ProjectCard({
     const dist = Math.abs(index - activeIndex);
     const isActive = index === activeIndex;
     return {
-      // Cargar: visibles + vecinos del slide activo (prefetch al deslizar).
-      shouldLoadVideo: isCardVisible || dist <= 1 || isActive,
+      // Cargar: visible, activa o dentro del prefetch (cubre todo el carrusel con ~4–8 ítems).
+      shouldLoadVideo: isCardVisible || isActive || dist <= SWIPER_PREFETCH_MAX_DIST,
       // Reproducir: cualquier card que se vea, o la que Swiper marca activa (fallback antes del IO).
       shouldPlayVideo: isCardVisible || isActive,
     };
   }, [activeIndex, hasIndexSignal, index, isCardVisible, useVideo]);
 
+  // Si el <video> ya tiene metadata antes de que corran los handlers (caché / carrera), mostrarlo igual.
+  useEffect(() => {
+    if (!useVideo || !shouldLoadVideo) return;
+    const v = videoRef.current;
+    if (!v) return;
+    const bump = () => {
+      if (v.readyState >= 1) setIsVideoReady(true);
+    };
+    bump();
+    let n = 0;
+    let rafId = 0;
+    let cancelled = false;
+    const tick = () => {
+      if (cancelled) return;
+      bump();
+      if (n++ < 4) rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(rafId);
+    };
+  }, [useVideo, shouldLoadVideo, videoUrl]);
+
+  // Reset solo cuando cambia la URL del clip, no en el primer mount: si el navegador dispara
+  // canplay/loadedmetadata antes de este effect, un reset aquí dejaba el vídeo invisible para siempre.
+  const didMountResetSkip = useRef(false);
   useEffect(() => {
     if (!useVideo) return;
-    // Reset ready state when we unload/reload source.
+    if (!didMountResetSkip.current) {
+      didMountResetSkip.current = true;
+      return;
+    }
     setIsVideoReady(false);
   }, [useVideo, videoUrl]);
 
@@ -220,12 +261,14 @@ function ProjectCard({
           autoPlay={false}
           loop
           playsInline
-          preload={!shouldLoadVideo ? "none" : "metadata"}
+          preload={!shouldLoadVideo ? "none" : "auto"}
           disablePictureInPicture
           disableRemotePlayback
           onLoadedMetadata={() => setIsVideoReady(true)}
+          onLoadedData={() => setIsVideoReady(true)}
           onCanPlay={() => setIsVideoReady(true)}
           onPlaying={() => setIsVideoReady(true)}
+          onError={() => setIsVideoReady(false)}
           className={`absolute inset-0 sm:inset-[-1px] w-full h-full sm:w-[calc(100%+2px)] sm:h-[calc(100%+2px)] object-cover pointer-events-none border-0 max-sm:scale-[1.03] max-sm:origin-center transition-all duration-400 ease-ui-standard group-hover:scale-[1.03] ${
             isVideoReady ? "opacity-100" : "opacity-0"
           }`}

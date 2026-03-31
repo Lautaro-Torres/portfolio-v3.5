@@ -5,6 +5,20 @@ import { useTransitionRouter } from "../../hooks/useTransitionRouter";
 const isVideoUrl = (url) =>
   url && typeof url === "string" && /\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(url);
 
+/** Grid duplicado (md:hidden / hidden md:block): el oculto no tiene caja; no forzar carga ahí. */
+function hasLayoutBox(el) {
+  if (!el) return false;
+  const r = el.getBoundingClientRect();
+  return r.width >= 4 && r.height >= 4;
+}
+
+function isNearViewport(el, marginPx) {
+  if (!hasLayoutBox(el)) return false;
+  const r = el.getBoundingClientRect();
+  const vh = typeof window !== "undefined" ? window.innerHeight : 0;
+  return r.top < vh + marginPx && r.bottom > -marginPx;
+}
+
 export default function WorkCard({
   title,
   videoUrl,
@@ -27,9 +41,15 @@ export default function WorkCard({
   const [isVideoReady, setIsVideoReady] = useState(false);
   const [hasPosterError, setHasPosterError] = useState(false);
 
+  const didMountVideoReadySkip = useRef(false);
   useEffect(() => {
+    if (!useVideo) return;
+    if (!didMountVideoReadySkip.current) {
+      didMountVideoReadySkip.current = true;
+      return;
+    }
     setIsVideoReady(false);
-  }, [videoUrl]);
+  }, [useVideo, videoUrl]);
 
   const handleClick = (e) => {
     e.preventDefault();
@@ -44,13 +64,13 @@ export default function WorkCard({
   // para evitar flashes en negro cuando cambia el estado de carga.
   const showPoster = Boolean(posterUrl && !hasPosterError);
 
+  const PRELOAD_MARGIN_PX = 2200;
+
   useLayoutEffect(() => {
     if (!useVideo) return;
     const card = cardRef.current;
     if (!card || typeof window === "undefined") return;
-    const preloadAheadPx = 1200;
-    const top = card.getBoundingClientRect().top;
-    if (top <= window.innerHeight + preloadAheadPx) {
+    if (isNearViewport(card, PRELOAD_MARGIN_PX)) {
       setShouldLoadVideo(true);
     }
   }, [useVideo]);
@@ -64,9 +84,7 @@ export default function WorkCard({
       return;
     }
 
-    const preloadAheadPx = 1200;
-    const top = card.getBoundingClientRect().top;
-    if (top <= window.innerHeight + preloadAheadPx) {
+    if (isNearViewport(card, PRELOAD_MARGIN_PX)) {
       setShouldLoadVideo(true);
       return;
     }
@@ -84,8 +102,8 @@ export default function WorkCard({
       },
       {
         root: null,
-        rootMargin: `${preloadAheadPx}px 0px`,
-        threshold: 0.01,
+        rootMargin: `${PRELOAD_MARGIN_PX}px 0px`,
+        threshold: 0,
       }
     );
 
@@ -93,10 +111,51 @@ export default function WorkCard({
     return () => observer.disconnect();
   }, [useVideo]);
 
+  // Tras ScrollSmoother / transición de ruta, la primera medición puede ser incorrecta: reintentar.
+  // Sin caja de layout (grid duplicado oculto): no hacer rAF — el IntersectionObserver ya no aplica ahí.
   useEffect(() => {
-      if (!useVideo) return;
+    if (!useVideo || shouldLoadVideo) return;
     const card = cardRef.current;
-    if (!card) return;
+    if (!card || !hasLayoutBox(card)) return;
+
+    const tryPromote = () => {
+      if (isNearViewport(card, PRELOAD_MARGIN_PX)) {
+        setShouldLoadVideo(true);
+        return true;
+      }
+      return false;
+    };
+
+    const t0 = window.setTimeout(tryPromote, 0);
+    const t1 = window.setTimeout(tryPromote, 80);
+    const t2 = window.setTimeout(tryPromote, 320);
+    const t3 = window.setTimeout(tryPromote, 750);
+    const onResize = () => tryPromote();
+    window.addEventListener("resize", onResize);
+
+    let frames = 0;
+    const MAX_FRAMES = 90;
+    let rafId = 0;
+    const rafLoop = () => {
+      if (tryPromote() || frames++ >= MAX_FRAMES) return;
+      rafId = requestAnimationFrame(rafLoop);
+    };
+    rafId = requestAnimationFrame(rafLoop);
+
+    return () => {
+      window.clearTimeout(t0);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.clearTimeout(t3);
+      window.removeEventListener("resize", onResize);
+      cancelAnimationFrame(rafId);
+    };
+  }, [useVideo, shouldLoadVideo]);
+
+  useEffect(() => {
+    if (!useVideo) return;
+    const card = cardRef.current;
+    if (!card || !hasLayoutBox(card)) return;
     if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
       setShouldPlayVideo(true);
       return;
@@ -108,16 +167,38 @@ export default function WorkCard({
       },
       {
         root: null,
-        // Mantener playback sólo en tarjetas relativamente cercanas, pero arrancar un poco antes
-        // de que entren del todo en el viewport para que la animación ya vaya fluida.
-        rootMargin: "420px 0px",
-        threshold: 0.01,
+        rootMargin: "640px 0px",
+        threshold: 0,
       }
     );
 
     observer.observe(card);
     return () => observer.disconnect();
   }, [useVideo]);
+
+  // Caché / carreras: si ya hay metadata, no quedar en opacity-0 esperando otro evento.
+  useEffect(() => {
+    if (!useVideo || !shouldLoadVideo) return;
+    const v = videoRef.current;
+    if (!v) return;
+    const bump = () => {
+      if (v.readyState >= 1) setIsVideoReady(true);
+    };
+    bump();
+    let n = 0;
+    let rafId = 0;
+    let cancelled = false;
+    const tick = () => {
+      if (cancelled) return;
+      bump();
+      if (n++ < 4) rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(rafId);
+    };
+  }, [useVideo, shouldLoadVideo, videoUrl]);
 
   useEffect(() => {
     if (!useVideo || !shouldLoadVideo) return;
@@ -179,8 +260,11 @@ export default function WorkCard({
           autoPlay={false}
           loop
           playsInline
-          preload={shouldLoadVideo ? "metadata" : "none"}
+          preload={shouldLoadVideo ? "auto" : "none"}
+          onLoadedMetadata={() => setIsVideoReady(true)}
           onLoadedData={() => setIsVideoReady(true)}
+          onCanPlay={() => setIsVideoReady(true)}
+          onPlaying={() => setIsVideoReady(true)}
           onError={() => setIsVideoReady(false)}
           className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-all duration-400 ease-ui-standard group-hover:scale-[1.03] ${
             isVideoReady ? "opacity-100" : "opacity-0"
