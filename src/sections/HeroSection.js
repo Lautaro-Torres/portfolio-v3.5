@@ -28,6 +28,8 @@ export default function HeroSection() {
   const taglineRef = useRef(null);
   const subtitleRef = useRef(null);
   const orbRef = useRef(null);
+  /** Mobile: factor de parallax del copy latcheado al montar (client*) — no innerHeight dinámico al scroll. */
+  const mobileParallaxFactorRef = useRef(1);
   const introTlRef = useRef(null);
   /** Evita doble commit y permite saltar intro por scroll sin depender solo de onComplete. */
   const introFinishedRef = useRef(false);
@@ -45,6 +47,30 @@ export default function HeroSection() {
     document.body.classList.add("home-hero-intro-pending");
     return () => {
       document.body.classList.remove("home-hero-intro-pending");
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    const applyMobileParallaxFactor = () => {
+      const mq = window.matchMedia("(max-width: 767px)");
+      if (!mq.matches) {
+        mobileParallaxFactorRef.current = 1;
+        return;
+      }
+      const w = document.documentElement.clientWidth || window.innerWidth || 375;
+      const h = document.documentElement.clientHeight || window.innerHeight || 812;
+      const aspect = h / w || 2;
+      const raw = aspect / 2;
+      mobileParallaxFactorRef.current = Math.min(Math.max(raw, 0.85), 1.35);
+    };
+    applyMobileParallaxFactor();
+    const mq = window.matchMedia("(max-width: 767px)");
+    mq.addEventListener("change", applyMobileParallaxFactor);
+    window.addEventListener("orientationchange", applyMobileParallaxFactor);
+    return () => {
+      mq.removeEventListener("change", applyMobileParallaxFactor);
+      window.removeEventListener("orientationchange", applyMobileParallaxFactor);
     };
   }, []);
 
@@ -279,16 +305,7 @@ export default function HeroSection() {
         return;
 
       const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
-      const heightFactor =
-        isMobile && typeof window !== "undefined"
-          ? (() => {
-              const w = window.innerWidth || 375;
-              const h = window.innerHeight || 812;
-              const aspect = h / w || 2; // ~2 en muchos iPhone modernos
-              const raw = aspect / 2; // normalizar alrededor de 1
-              return Math.min(Math.max(raw, 0.85), 1.35);
-            })()
-          : 1;
+      const heightFactor = isMobile ? mobileParallaxFactorRef.current : 1;
 
       const parallaxTl = gsap.timeline({
         scrollTrigger: {
@@ -401,7 +418,7 @@ export default function HeroSection() {
   return (
     <section
       ref={heroRef}
-      className={`hero-home relative w-full min-h-[100dvh] h-[100dvh] flex items-center justify-center mb-0 overflow-hidden ${
+      className={`hero-home relative w-full min-h-[100svh] h-[100svh] md:min-h-[100dvh] md:h-[100dvh] flex items-center justify-center mb-0 overflow-hidden ${
         introComplete ? "hero-home-intro-complete bg-[#0a0a0a]" : "bg-black"
       }`}
     >
@@ -439,7 +456,7 @@ export default function HeroSection() {
       {/* Section number — matches 90% container margins */}
       <div
         ref={heroFooterRef}
-        className="hero-home-layer-support absolute bottom-[clamp(1.5rem,4vh,2.5rem)] left-[5%] right-[5%] z-40 pointer-events-none"
+        className="hero-home-layer-support absolute bottom-[clamp(1.5rem,4svh,2.5rem)] left-[5%] right-[5%] z-40 pointer-events-none"
       >
         <div
           ref={heroFooterInnerRef}
@@ -478,7 +495,7 @@ export default function HeroSection() {
           {/* Main Titles - letter-by-letter staggered reveal */}
           <div
             ref={heroMainTitlesRef}
-            className="hero-home-layer-titles w-full flex flex-col md:flex-row items-start md:items-center justify-start md:justify-between gap-0 md:gap-4 lg:gap-6 mb-8 lg:mb-12 mt-[-9vh] md:mt-0"
+            className="hero-home-layer-titles w-full flex flex-col md:flex-row items-start md:items-center justify-start md:justify-between gap-0 md:gap-4 lg:gap-6 mb-8 lg:mb-12 max-md:mt-[-9svh] md:mt-0"
           >
             <div className="w-full md:w-auto md:shrink-0 text-left overflow-hidden py-[8px] md:py-[48px] flex items-center justify-start">
               <span 

@@ -67,6 +67,9 @@ export default function ScrollOptimizer() {
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
+    // Evita refrescos de ScrollTrigger cuando la UI del navegador en mobile cambia el viewport (address bar).
+    // No usamos ScrollTrigger.normalizeScroll aquí: en home el scroll es nativo y normalize puede chocar con touch.
+    ScrollTrigger.config({ ignoreMobileResize: true });
 
     const mq = window.matchMedia(DESKTOP_SCROLL_MEDIA);
     let refreshTimer;
