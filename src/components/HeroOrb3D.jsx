@@ -935,19 +935,34 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
         return;
       }
 
-      if (mobileCanvasAppliedW > 0 && mobileCanvasAppliedH > 0) {
-        const dw = Math.abs(w - mobileCanvasAppliedW);
-        const dh = Math.abs(h - mobileCanvasAppliedH);
-        const relW = dw / mobileCanvasAppliedW;
-        const relH = dh / mobileCanvasAppliedH;
-        const wasLandscape = mobileCanvasAppliedW > mobileCanvasAppliedH;
+      // Mobile / Safari iOS: dynamic toolbar changes height in ~50–110px steps. Old logic required
+      // BOTH dw<72 and dh<72 for "micro" skip, so dh-only changes in the 72–119 band always ran
+      // setSize + camera.aspect → apparent zoom + flicker. Stabilize by never shrinking the WebGL
+      // buffer on height-only updates; grow on real height increase; always follow width + orientation.
+      const rw = mobileCanvasAppliedW;
+      const rh = mobileCanvasAppliedH;
+      if (rw > 0 && rh > 0) {
+        const wasLandscape = rw > rh;
         const nowLandscape = w > h;
         const orientationFlip = wasLandscape !== nowLandscape;
-        const majorResize =
-          orientationFlip || dw >= 120 || dh >= 120 || relW >= 0.12 || relH >= 0.12;
-        const microResize =
-          !majorResize && dw < 72 && dh < 72 && relW < 0.09 && relH < 0.09;
-        if (microResize) return;
+        const dw = Math.abs(w - rw);
+        const dh = Math.abs(h - rh);
+        const relW = rw > 0 ? dw / rw : 0;
+        const relH = rh > 0 ? dh / rh : 0;
+        const widthChanged = orientationFlip || dw >= 4 || relW >= 0.03;
+        const heightGrew = h > rh + 6;
+        const onlyHeightShrink = !orientationFlip && !widthChanged && h < rh - 3;
+        const jitterOnly =
+          !orientationFlip &&
+          !widthChanged &&
+          !heightGrew &&
+          dw < 8 &&
+          dh < 160 &&
+          relW < 0.09 &&
+          relH < 0.22;
+
+        if (onlyHeightShrink) return;
+        if (jitterOnly) return;
       }
 
       mobileCanvasAppliedW = w;

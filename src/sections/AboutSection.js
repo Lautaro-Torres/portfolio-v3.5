@@ -12,8 +12,30 @@ import { useClippedTitleReveal } from "../hooks/useClippedTitleReveal";
 const ABOUT_TITLE_LINE1 = "BRIDGING REALITY";
 const ABOUT_TITLE_LINE2 = "INTO THE DIGITAL";
 
+const ABOUT_VIDEO_PRIMARY = "/assets/videos/opt-lautor-loop-card-2.mp4";
+const ABOUT_VIDEO_FALLBACK =
+  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
+
+async function aboutPrimaryVideoExists() {
+  try {
+    const r = await fetch(ABOUT_VIDEO_PRIMARY, { method: "HEAD", cache: "no-store" });
+    if (r.ok) return true;
+    if (r.status === 405) {
+      const g = await fetch(ABOUT_VIDEO_PRIMARY, {
+        method: "GET",
+        cache: "no-store",
+        headers: { Range: "bytes=0-0" },
+      });
+      return g.ok;
+    }
+  } catch {
+    return false;
+  }
+  return false;
+}
+
 export default function AboutSection() {
-  const aboutRenderVideo = "/assets/videos/opt-lautor-loop-card-2.mp4";
+  const [aboutVideoSrc, setAboutVideoSrc] = useState(ABOUT_VIDEO_PRIMARY);
   const [isMobileTitle, setIsMobileTitle] = useState(false);
   const sectionRef = useRef(null);
   const cardRef = useRef(null);
@@ -73,6 +95,18 @@ export default function AboutSection() {
     sync();
     media.addEventListener("change", sync);
     return () => media.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const ok = await aboutPrimaryVideoExists();
+      if (cancelled) return;
+      setAboutVideoSrc(ok ? ABOUT_VIDEO_PRIMARY : ABOUT_VIDEO_FALLBACK);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -148,7 +182,8 @@ export default function AboutSection() {
       const sharedStart = isMobile ? "top 96%" : "top 88%";
       const sharedEnd = isMobile ? "bottom 4%" : "bottom 14%";
 
-      if (cardParallaxRef.current) {
+      // Mobile: skip yPercent scrub — transform does not affect layout, so card + text can visually overlap.
+      if (!isMobile && cardParallaxRef.current) {
         gsap.fromTo(
           cardParallaxRef.current,
           { yPercent: cardTravelFrom },
@@ -159,14 +194,14 @@ export default function AboutSection() {
               trigger: sectionRef.current,
               start: sharedStart,
               end: sharedEnd,
-              scrub: isMobile ? 1.05 : 1.15,
+              scrub: 1.15,
               invalidateOnRefresh: true,
             },
           }
         );
       }
 
-      if (textParallaxRef.current) {
+      if (!isMobile && textParallaxRef.current) {
         gsap.fromTo(
           textParallaxRef.current,
           { yPercent: textTravelFrom },
@@ -177,7 +212,7 @@ export default function AboutSection() {
               trigger: sectionRef.current,
               start: sharedStart,
               end: sharedEnd,
-              scrub: isMobile ? 0.95 : 0.98,
+              scrub: 0.98,
               invalidateOnRefresh: true,
             },
           }
@@ -232,7 +267,7 @@ export default function AboutSection() {
       >
         {/* Mobile: tarjeta alta (3:5, no cuadrada) + texto con el resto; desktop: grid 2 cols. */}
         <div className="w-full h-[calc(100%-var(--about-pad-top)-var(--about-pad-bottom))] md:h-auto md:grid md:grid-cols-[0.82fr_1.18fr] md:gap-x-16 lg:gap-x-20 md:items-center md:justify-items-center min-h-0 flex flex-col md:block">
-          <div className="w-full shrink-0 flex justify-center items-start pt-1 pb-2 md:pb-0 md:h-auto md:items-center md:pt-0 md:shrink md:flex-initial min-h-0">
+          <div className="relative z-0 w-full shrink-0 flex justify-center items-start pt-1 pb-2 md:pb-0 md:h-auto md:items-center md:pt-0 md:shrink md:flex-initial min-h-0">
             <div ref={cardParallaxRef} className="w-full flex justify-center items-center min-h-0 md:h-full md:min-h-[540px]">
               <div
                 ref={cardRef}
@@ -244,7 +279,7 @@ export default function AboutSection() {
                 "
               >
                 <AboutPortalCard
-                  videoSrc={aboutRenderVideo}
+                  videoSrc={aboutVideoSrc}
                   name="Lautaro Torres"
                   className="absolute inset-0 h-full w-full md:static md:h-[540px] md:w-full md:max-w-[430px]"
                 />
@@ -254,7 +289,7 @@ export default function AboutSection() {
 
           <div
             ref={textParallaxRef}
-            className="w-full flex-1 min-h-0 md:flex-none md:h-auto md:self-center overflow-hidden flex flex-col justify-between gap-3 mt-4 md:mt-0"
+            className="relative z-20 w-full flex-1 min-h-0 md:flex-none md:h-auto md:self-center overflow-hidden flex flex-col justify-between gap-3 mt-4 md:mt-0"
           >
             <div className="grid grid-cols-12 gap-x-4 w-full min-h-0 pl-6 pr-4 md:pl-0 md:pr-0">
               <h2

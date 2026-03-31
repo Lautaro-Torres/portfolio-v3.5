@@ -213,7 +213,7 @@ export default function AboutPortalCard({
         video.currentTime = (pausedAt + elapsedSec) % duration;
       }
       const playPromise = video.play();
-      if (playPromise?.catch) playPromise.catch(() => {});
+      playPromise?.catch?.(() => {});
       return;
     }
 
@@ -306,7 +306,7 @@ export default function AboutPortalCard({
   return (
     <div
       ref={cardRef}
-      className={`relative h-full w-full select-none [perspective:1700px] ${className}`}
+      className={`relative h-full w-full overflow-hidden rounded-2xl select-none [perspective:1700px] ${className}`}
       style={{ touchAction: isInteractive ? "auto" : "none" }}
       onPointerDown={(e) => {
         if (isInteractive) return;
@@ -351,20 +351,20 @@ export default function AboutPortalCard({
           rotateX,
           rotateY,
         }}
-        className="relative h-full w-full rounded-2xl border border-white/12 bg-black/35 shadow-[0_28px_56px_rgba(0,0,0,0.5)] overflow-hidden [transform-style:preserve-3d] will-change-transform backdrop-blur-[2px]"
+        className="relative isolate h-full w-full rounded-2xl border border-white/12 bg-black/35 shadow-[0_28px_56px_rgba(0,0,0,0.5)] overflow-hidden [transform-style:preserve-3d] will-change-transform backdrop-blur-[2px]"
       >
         <motion.div
           style={{
             x: videoX,
             y: videoY,
-            scale: 1.18,
+            scale: 1.12,
           }}
-          className="absolute -inset-[14%] will-change-transform"
+          className="absolute inset-0 z-0 will-change-transform [transform-style:flat]"
         >
           <video
             key={videoSrc}
             ref={videoRef}
-            className={`h-full w-full object-cover transition-opacity duration-500 ease-out ${
+            className={`pointer-events-none h-full w-full min-h-0 min-w-0 object-cover transition-opacity duration-500 ease-out ${
               isVideoReady ? "opacity-100" : "opacity-0"
             }`}
             src={shouldLoadVideo ? videoSrc : undefined}
@@ -381,11 +381,11 @@ export default function AboutPortalCard({
           />
         </motion.div>
 
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_8%,rgba(255,255,255,0.28)_0%,rgba(255,255,255,0)_44%)] pointer-events-none z-[9]" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,rgba(0,0,0,0.25)_100%)] pointer-events-none z-[9]" />
-        <div className="absolute inset-0 bg-white/[0.04] pointer-events-none z-[6]" />
+        <div className="pointer-events-none absolute inset-0 z-[5] bg-[radial-gradient(circle_at_20%_8%,rgba(255,255,255,0.28)_0%,rgba(255,255,255,0)_44%)]" />
+        <div className="pointer-events-none absolute inset-0 z-[5] bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,rgba(0,0,0,0.25)_100%)]" />
+        <div className="pointer-events-none absolute inset-0 z-[5] bg-white/[0.04]" />
 
-        <div className="absolute inset-0 z-10 p-3 pointer-events-none [transform:translateZ(34px)]">
+        <div className="pointer-events-none absolute inset-0 z-20 p-3 [transform:translateZ(1px)]">
           <span className="type-tag text-[10px] md:text-[11px] text-white/82">
             {name}
           </span>

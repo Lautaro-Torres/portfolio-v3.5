@@ -74,16 +74,26 @@ export default function WorkCard({
     if (!useVideo) return;
     const card = cardRef.current;
     if (!card || typeof window === "undefined") return;
+    // /projects: la grilla visible siempre tiene caja; la duplicada (display:none) no — cargar por layout, no solo por distancia al viewport (ScrollSmoother puede desalinear la primera medición vs isNearViewport).
+    if (projectsGrid && hasLayoutBox(card)) {
+      setShouldLoadVideo(true);
+      return;
+    }
     if (isNearViewport(card, PRELOAD_MARGIN_PX)) {
       setShouldLoadVideo(true);
     }
-  }, [useVideo]);
+  }, [useVideo, projectsGrid]);
 
   useEffect(() => {
     if (!useVideo) return;
     const card = cardRef.current;
     if (!card) return;
     if (typeof window === "undefined") {
+      setShouldLoadVideo(true);
+      return;
+    }
+
+    if (projectsGrid && hasLayoutBox(card)) {
       setShouldLoadVideo(true);
       return;
     }
@@ -113,7 +123,7 @@ export default function WorkCard({
 
     observer.observe(card);
     return () => observer.disconnect();
-  }, [useVideo]);
+  }, [useVideo, projectsGrid]);
 
   // Tras ScrollSmoother / transición de ruta, la primera medición puede ser incorrecta: reintentar.
   // Sin caja de layout (grid duplicado oculto): no hacer rAF — el IntersectionObserver ya no aplica ahí.
@@ -123,6 +133,10 @@ export default function WorkCard({
     if (!card || !hasLayoutBox(card)) return;
 
     const tryPromote = () => {
+      if (projectsGrid && hasLayoutBox(card)) {
+        setShouldLoadVideo(true);
+        return true;
+      }
       if (isNearViewport(card, PRELOAD_MARGIN_PX)) {
         setShouldLoadVideo(true);
         return true;
@@ -154,7 +168,7 @@ export default function WorkCard({
       window.removeEventListener("resize", onResize);
       cancelAnimationFrame(rafId);
     };
-  }, [useVideo, shouldLoadVideo]);
+  }, [useVideo, shouldLoadVideo, projectsGrid]);
 
   useEffect(() => {
     if (!useVideo) return;
