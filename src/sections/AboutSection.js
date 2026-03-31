@@ -43,10 +43,6 @@ export default function AboutSection() {
   const titleRevealStart = isMobileTitle ? "top 86%" : "top 72%";
   const lowerTextRevealStartedRef = useRef(false);
   const lowerTextBlockRef = useRef(null);
-  /** Mobile: card vs columna completa de textos (título + párrafo + CTA) — un solo transform en los textos. */
-  const aboutCardParallaxRef = useRef(null);
-  const aboutTextsParallaxRef = useRef(null);
-
   const onTitleLine2CharsComplete = useCallback(() => {
     if (lowerTextRevealStartedRef.current) return;
     const el = lowerTextBlockRef.current;
@@ -201,59 +197,6 @@ export default function AboutSection() {
     return () => ctx.revert();
   }, []);
 
-  // Mobile: parallax card vs toda la columna tipográfica (no título y párrafo por separado).
-  useLayoutEffect(() => {
-    const section = sectionRef.current;
-    const cardLayer = aboutCardParallaxRef.current;
-    const textsLayer = aboutTextsParallaxRef.current;
-    if (!section || !cardLayer || !textsLayer) return;
-
-    const mm = gsap.matchMedia();
-
-    mm.add("(max-width: 767px)", () => {
-      gsap.set([cardLayer, textsLayer], { y: 0, force3D: true });
-
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: section,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: true,
-          invalidateOnRefresh: true,
-        },
-      });
-
-      tl.to(
-        cardLayer,
-        {
-          y: 40,
-          duration: 1,
-          ease: "none",
-          force3D: true,
-        },
-        0
-      );
-      tl.to(
-        textsLayer,
-        {
-          y: -72,
-          duration: 1,
-          ease: "none",
-          force3D: true,
-        },
-        0
-      );
-
-      return () => {
-        gsap.set([cardLayer, textsLayer], { clearProps: "transform" });
-      };
-    });
-
-    return () => {
-      mm.revert();
-    };
-  }, []);
-
   return (
     <section
       ref={sectionRef}
@@ -276,10 +219,7 @@ export default function AboutSection() {
         {/* Mobile: tarjeta + texto; altura natural (sin caja fija a dvh) para no recortar la card ni el copy. */}
         <div className="w-full md:grid md:grid-cols-[0.82fr_1.18fr] md:gap-x-16 lg:gap-x-20 md:items-center md:justify-items-center flex flex-col md:block">
           <div className="relative z-0 w-full shrink-0 flex justify-center items-start pt-1 pb-2 md:pb-0 md:h-auto md:items-center md:pt-0 md:shrink md:flex-initial">
-            <div
-              ref={aboutCardParallaxRef}
-              className="w-full flex justify-center items-center md:h-full md:min-h-[540px] will-change-transform md:will-change-auto"
-            >
+            <div className="w-full flex justify-center items-center md:h-full md:min-h-[540px]">
               <div
                 ref={cardRef}
                 className="
@@ -299,10 +239,7 @@ export default function AboutSection() {
           </div>
 
           <div className="relative z-20 w-full md:flex-none md:h-auto md:self-center flex flex-col justify-between gap-3 -mt-[clamp(2.25rem,9vw,3.5rem)] md:mt-0 pb-[clamp(1.25rem,4vh,2.5rem)] md:pb-0">
-            <div
-              ref={aboutTextsParallaxRef}
-              className="grid grid-cols-12 gap-x-4 w-full min-h-0 pl-6 pr-4 md:pl-0 md:pr-0 max-md:will-change-transform md:will-change-auto"
-            >
+            <div className="grid grid-cols-12 gap-x-4 w-full min-h-0 pl-6 pr-4 md:pl-0 md:pr-0">
               <h2
                 ref={titleWrapRef}
                 className="col-span-12 grid grid-cols-12 gap-x-4 gap-y-1 m-0 p-0 shrink-0 font-normal"

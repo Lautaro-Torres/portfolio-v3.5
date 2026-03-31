@@ -296,21 +296,21 @@ export default function HeroSection() {
           start: "top top",
           end: "bottom top",
           scrub: true,
-          invalidateOnRefresh: true,
-          fastScrollEnd: true,
+          // invalidateOnRefresh + fastScrollEnd pueden provocar saltos asimétricos al subir (ST / scroll end).
+          invalidateOnRefresh: false,
         },
       });
 
-      // Mate: solo translateY en px sobre capa con altura extra (patrón reutilizable, sin y% del contenedor canvas).
+      // Mate: solo translateY en px (sin scale). force3D en mobile compite con la capa WebGL → mejor 2D limpio.
       const orbParallaxMaxY = isMobile ? 88 : 52;
-      gsap.set(heroOrbParallaxRef.current, { y: 0, force3D: true });
+      gsap.set(heroOrbParallaxRef.current, { y: 0 });
       parallaxTl.to(
         heroOrbParallaxRef.current,
         {
           y: orbParallaxMaxY,
           duration: 1,
           ease: "none",
-          force3D: true,
+          force3D: !isMobile,
         },
         0
       );
@@ -412,7 +412,7 @@ export default function HeroSection() {
       >
         <div
           ref={heroOrbParallaxRef}
-          className="pointer-events-none absolute left-0 right-0 top-[-15dvh] h-[calc(100%+30dvh)] w-full min-h-0 will-change-transform"
+          className="pointer-events-none absolute left-0 right-0 w-full min-h-0 max-md:top-[-10svh] max-md:h-[calc(100%+20svh)] md:top-[-15dvh] md:h-[calc(100%+30dvh)] will-change-transform"
         >
           <MateHero ref={orbRef} />
         </div>

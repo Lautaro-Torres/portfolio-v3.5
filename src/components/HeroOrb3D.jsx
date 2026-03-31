@@ -817,12 +817,13 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
     const modelGroup = new THREE.Group();
     modelGroup.position.set(0, BASE_POSITION_Y, 0);
 
-    // Hero usa alturas dinámicas (p. ej. 100dvh): el host cambia de alto al scroll en Chrome y Safari.
-    // ResizeObserver + setSize + camera.aspect en cada cambio de alto → zoom aparente y glitch.
-    // Solo se vuelve a commitear buffer/aspect cuando cambia el ancho (o la orientación), no en drift de alto.
-    // Canvas 100% + object-fit: cover absorbe la diferencia sin retocar la proyección.
+    // Mobile: el padre del canvas usa dvh → al subir/bajar el scroll la barra de URL mueve dvh, el host
+    // cambia de tamaño y ResizeObserver disparaba setSize en momentos distintos según dirección → jitter
+    // y “compresión” (no es scale CSS: es camera.aspect + buffer). Tras el primer layout válido se
+    // ignoran más callbacks de RO hasta orientationchange.
     let committedW = 0;
     let committedH = 0;
+    let mobileResizeFrozen = false;
 
     const applyModelGroupLayout = () => {
       const w = host.clientWidth || window.innerWidth || 1024;
@@ -918,21 +919,29 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
       const hh = host.clientHeight || 1;
       if (hw < 32 || hh < 32) return;
 
-      if (committedW > 0 && committedH > 0) {
-        const dw = Math.abs(hw - committedW);
-        const dh = Math.abs(hh - committedH);
-        const wasLandscape = committedW > committedH;
-        const nowLandscape = hw > hh;
-        const orientationFlip = wasLandscape !== nowLandscape;
-        const relW = committedW > 0 ? dw / committedW : 0;
-        const widthChanged =
-          orientationFlip || dw >= 4 || relW >= 0.02;
-        const onlyHeightDrift = !widthChanged && dh >= 2;
-        if (onlyHeightDrift) return;
+      const layoutMobile = (host.clientWidth || window.innerWidth || 0) <= 768;
+
+      if (!layoutMobile) {
+        mobileResizeFrozen = false;
+        committedW = 0;
+        committedH = 0;
+        renderer.domElement.style.width = "100%";
+        renderer.domElement.style.height = "100%";
+        renderer.domElement.style.objectFit = "cover";
+        renderer.setSize(hw, hh, false);
+        camera.aspect = hw / hh;
+        camera.updateProjectionMatrix();
+        applyModelGroupLayout();
+        return;
+      }
+
+      if (mobileResizeFrozen) {
+        return;
       }
 
       committedW = hw;
       committedH = hh;
+      mobileResizeFrozen = true;
 
       renderer.domElement.style.width = "100%";
       renderer.domElement.style.height = "100%";
@@ -949,6 +958,7 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
     const onOrientationChange = () => {
       committedW = 0;
       committedH = 0;
+      mobileResizeFrozen = false;
       window.clearTimeout(orientationSetSizeTimer);
       orientationSetSizeTimer = window.setTimeout(() => {
         orientationSetSizeTimer = 0;

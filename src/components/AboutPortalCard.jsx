@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { requestVideoPlay } from "../utils/requestVideoPlay";
 import {
+  animate,
   motion,
   useAnimationFrame,
   useMotionValue,
@@ -16,6 +17,8 @@ function hasLayoutBox(el) {
   return r.width >= 4 && r.height >= 4;
 }
 
+const MANUAL_RETURN_SPRING = { type: "spring", stiffness: 168, damping: 28, mass: 0.55 };
+
 export default function AboutPortalCard({
   videoSrc,
   name = "Lautaro Torres",
@@ -25,13 +28,27 @@ export default function AboutPortalCard({
   const BASE_ROT_Y = 18;
   const TOUCH_TILT_FACTOR_X = 1.4;
   const TOUCH_TILT_FACTOR_Y = 1.25;
+  /** Límite del arrastre manual (espacio libre para el wobble idle sin saturar [-1,1]). */
+  const MANUAL_TILT_CLAMP = 0.68;
+  const IDLE_AMP_X = 0.024;
+  const IDLE_AMP_Y = 0.02;
 
-  const targetX = useMotionValue(0);
-  const targetY = useMotionValue(0);
-  const pointerX = useSpring(targetX, { stiffness: 210, damping: 28, mass: 0.58 });
-  const pointerY = useSpring(targetY, { stiffness: 210, damping: 28, mass: 0.58 });
+  const manualX = useMotionValue(0);
+  const manualY = useMotionValue(0);
+  const idleX = useMotionValue(0);
+  const idleY = useMotionValue(0);
 
-  const springConfig = { stiffness: 120, damping: 16, mass: 0.62 };
+  const combinedX = useTransform([manualX, idleX], ([m, i]) =>
+    Math.max(-1, Math.min(1, m + i))
+  );
+  const combinedY = useTransform([manualY, idleY], ([m, i]) =>
+    Math.max(-1, Math.min(1, m + i))
+  );
+
+  const pointerX = useSpring(combinedX, { stiffness: 220, damping: 32, mass: 0.56 });
+  const pointerY = useSpring(combinedY, { stiffness: 220, damping: 32, mass: 0.56 });
+
+  const springConfig = { stiffness: 108, damping: 19, mass: 0.62 };
   const rotateX = useSpring(
     useTransform(pointerY, [-1, 1], [BASE_ROT_X + 8, BASE_ROT_X - 8]),
     springConfig
@@ -43,7 +60,6 @@ export default function AboutPortalCard({
   const videoX = useSpring(useTransform(pointerX, [-1, 1], [10, -10]), springConfig);
   const videoY = useSpring(useTransform(pointerY, [-1, 1], [9, -9]), springConfig);
   const [isInteractive, setIsInteractive] = useState(false);
-  const [isTouchActive, setIsTouchActive] = useState(false);
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
   const [shouldPlayVideo, setShouldPlayVideo] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
@@ -53,6 +69,29 @@ export default function AboutPortalCard({
   const touchStartRef = useRef(null);
   const activePointerIdRef = useRef(null);
   const didMountVideoReadySkip = useRef(false);
+  const isTouchActiveRef = useRef(false);
+  const isInteractiveRef = useRef(false);
+  const returnAnimRef = useRef(null);
+
+  const stopReturnAnim = useCallback(() => {
+    const c = returnAnimRef.current;
+    if (c) {
+      c.stop();
+      returnAnimRef.current = null;
+    }
+  }, []);
+
+  const startManualReturn = useCallback(() => {
+    stopReturnAnim();
+    const ax = animate(manualX, 0, MANUAL_RETURN_SPRING);
+    const ay = animate(manualY, 0, MANUAL_RETURN_SPRING);
+    returnAnimRef.current = {
+      stop: () => {
+        ax.stop();
+        ay.stop();
+      },
+    };
+  }, [manualX, manualY, stopReturnAnim]);
 
   // About: vídeo crítico — en cliente siempre asignar src de inmediato (IO + primera medición
   // + ScrollTrigger podían dejar shouldLoadVideo en false hasta un segundo layout / navegación).
@@ -159,18 +198,24 @@ export default function AboutPortalCard({
   }, []);
 
   useEffect(() => {
+    isInteractiveRef.current = isInteractive;
+  }, [isInteractive]);
+
+  useEffect(() => {
     if (!isInteractive) return;
     const onMove = (event) => {
       const vw = window.innerWidth || 1;
       const vh = window.innerHeight || 1;
       const nx = (event.clientX / vw) * 2 - 1;
       const ny = (event.clientY / vh) * 2 - 1;
-      targetX.set(Math.max(-1, Math.min(1, nx)));
-      targetY.set(Math.max(-1, Math.min(1, ny)));
+      stopReturnAnim();
+      manualX.set(Math.max(-1, Math.min(1, nx)));
+      manualY.set(Math.max(-1, Math.min(1, ny)));
     };
     const onLeave = () => {
-      targetX.set(0);
-      targetY.set(0);
+      stopReturnAnim();
+      manualX.set(0);
+      manualY.set(0);
     };
     window.addEventListener("pointermove", onMove, { passive: true });
     window.addEventListener("blur", onLeave);
@@ -180,15 +225,18 @@ export default function AboutPortalCard({
       window.removeEventListener("blur", onLeave);
       window.removeEventListener("pointerleave", onLeave);
     };
-  }, [isInteractive, targetX, targetY]);
+  }, [isInteractive, manualX, manualY, stopReturnAnim]);
 
-  // Motion docs recommend `useAnimationFrame` for continuous per-frame animation.
+  // Idle wobble solo en `idleX`/`idleY`; el manual queda en 0 salvo drag / puntero fino.
+  // Refs evitan condiciones de carrera con el estado de React en el mismo frame.
   useAnimationFrame((time) => {
-    if (isInteractive || isTouchActive) return;
-    const idleX = Math.sin(time * 0.00055) * 0.085;
-    const idleY = Math.cos(time * 0.00045) * 0.06;
-    targetX.set(idleX);
-    targetY.set(idleY);
+    if (isInteractiveRef.current || isTouchActiveRef.current) {
+      idleX.set(0);
+      idleY.set(0);
+      return;
+    }
+    idleX.set(Math.sin(time * 0.0004) * IDLE_AMP_X);
+    idleY.set(Math.cos(time * 0.00034) * IDLE_AMP_Y);
   });
 
   const updateTouchTilt = useCallback(
@@ -200,17 +248,20 @@ export default function AboutPortalCard({
       if (!start) return;
       const deltaX = (clientX - start.clientX) / Math.max(1, rect.width / TOUCH_TILT_FACTOR_X);
       const deltaY = (clientY - start.clientY) / Math.max(1, rect.height / TOUCH_TILT_FACTOR_Y);
-      targetX.set(Math.max(-1, Math.min(1, start.baseX + deltaX)));
-      targetY.set(Math.max(-1, Math.min(1, start.baseY + deltaY)));
+      const cx = Math.max(-MANUAL_TILT_CLAMP, Math.min(MANUAL_TILT_CLAMP, start.baseX + deltaX));
+      const cy = Math.max(-MANUAL_TILT_CLAMP, Math.min(MANUAL_TILT_CLAMP, start.baseY + deltaY));
+      manualX.set(cx);
+      manualY.set(cy);
     },
-    [targetX, targetY]
+    [manualX, manualY]
   );
 
   const resetTouchTilt = useCallback(() => {
-    setIsTouchActive(false);
+    isTouchActiveRef.current = false;
     touchStartRef.current = null;
     activePointerIdRef.current = null;
-  }, []);
+    startManualReturn();
+  }, [startManualReturn]);
 
   const endPointerGesture = useCallback(
     (target, pointerId) => {
@@ -233,13 +284,14 @@ export default function AboutPortalCard({
       onPointerDown={(e) => {
         if (isInteractive) return;
         if (e.button !== undefined && e.button !== 0) return;
-        setIsTouchActive(true);
+        stopReturnAnim();
+        isTouchActiveRef.current = true;
         activePointerIdRef.current = e.pointerId;
         touchStartRef.current = {
           clientX: e.clientX,
           clientY: e.clientY,
-          baseX: pointerX.get(),
-          baseY: pointerY.get(),
+          baseX: manualX.get(),
+          baseY: manualY.get(),
         };
         try {
           e.currentTarget.setPointerCapture(e.pointerId);
@@ -249,7 +301,7 @@ export default function AboutPortalCard({
         updateTouchTilt(e.clientX, e.clientY);
       }}
       onPointerMove={(e) => {
-        if (isInteractive || !isTouchActive) return;
+        if (isInteractive || !isTouchActiveRef.current) return;
         if (activePointerIdRef.current !== e.pointerId) return;
         updateTouchTilt(e.clientX, e.clientY);
       }}
@@ -273,7 +325,7 @@ export default function AboutPortalCard({
           rotateX,
           rotateY,
         }}
-        className="relative isolate h-full w-full rounded-2xl border border-white/12 bg-black/35 shadow-[0_28px_56px_rgba(0,0,0,0.5)] overflow-hidden [transform-style:preserve-3d] will-change-transform backdrop-blur-[2px]"
+        className="relative isolate h-full w-full rounded-2xl border border-white/14 bg-black/[0.38] shadow-[0_24px_48px_rgba(0,0,0,0.48),inset_0_1px_0_rgba(255,255,255,0.1)] overflow-hidden [transform-style:preserve-3d] will-change-transform backdrop-blur-[3px]"
       >
         <motion.div
           style={{
