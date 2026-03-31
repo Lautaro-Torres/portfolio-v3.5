@@ -100,23 +100,18 @@ function getMobileModelScaleMultiplier() {
   return MOBILE_MODEL_SCALE_MULTIPLIER_FIXED;
 }
 
-function getDesktopModelScaleMultiplier(width, height) {
+function getDesktopModelScaleMultiplier(width) {
   const w = width;
-  const h = height || 800;
   const span = Math.max(DESKTOP_MODEL_WIDTH_LERP_END - DESKTOP_MODEL_WIDTH_LERP_START, 1);
   const t = THREE.MathUtils.clamp((w - DESKTOP_MODEL_WIDTH_LERP_START) / span, 0, 1);
-  let mult = THREE.MathUtils.lerp(DESKTOP_MODEL_SCALE_MIN_MULT, DESKTOP_MODEL_SCALE_MAX_MULT, t);
-  const shortT = THREE.MathUtils.clamp((h - 640) / (900 - 640), 0, 1);
-  mult *= THREE.MathUtils.lerp(0.92, 1, shortT);
-  return mult;
+  return THREE.MathUtils.lerp(DESKTOP_MODEL_SCALE_MIN_MULT, DESKTOP_MODEL_SCALE_MAX_MULT, t);
 }
 
-/** Desktop: escala según viewport. Mobile: constante (ver getMobileModelScaleMultiplier). */
-function getModelScaleMultiplier(clientWidth, clientHeight) {
+/** Desktop: escala solo según ancho (la altura del hero varía con dvh/UI y no debe mover el mate). */
+function getModelScaleMultiplier(clientWidth) {
   const w = clientWidth || (typeof window !== "undefined" ? window.innerWidth : 1024);
-  const h = clientHeight || (typeof window !== "undefined" ? window.innerHeight : 800);
   if (w <= 768) return getMobileModelScaleMultiplier();
-  return getDesktopModelScaleMultiplier(w, h);
+  return getDesktopModelScaleMultiplier(w);
 }
 
 // Escritorio: el mate “sigue” al puntero con rotación suave (sin mover posición).
@@ -296,8 +291,6 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
 
   const frameRef = useRef(null);
   const resizeObserverRef = useRef(null);
-  const intersectionObserverRef = useRef(null);
-  const visibilityRef = useRef(true);
   const spinTweenRef = useRef(null);
   const pointerRafRef = useRef(null);
   const pointerSampleRef = useRef({ x: 0, y: 0, dirty: false });
@@ -824,17 +817,16 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
     const modelGroup = new THREE.Group();
     modelGroup.position.set(0, BASE_POSITION_Y, 0);
 
-    // Escala: desktop sigue al viewport; mobile usa multiplicador fijo (no a innerHeight por resize al scroll).
-    // Mobile Safari: el hero usa 100dvh → el host cambia de alto con la barra de URL; ResizeObserver disparaba
-    // setSize + camera.aspect en crecidas de alto → zoom aparente y flicker. Buffer y aspect se latch-ean;
-    // el canvas se escala con CSS (cover) al host sin recalcular la proyección durante el scroll.
-    let mobileBufferW = 0;
-    let mobileBufferH = 0;
+    // Hero usa alturas dinámicas (p. ej. 100dvh): el host cambia de alto al scroll en Chrome y Safari.
+    // ResizeObserver + setSize + camera.aspect en cada cambio de alto → zoom aparente y glitch.
+    // Solo se vuelve a commitear buffer/aspect cuando cambia el ancho (o la orientación), no en drift de alto.
+    // Canvas 100% + object-fit: cover absorbe la diferencia sin retocar la proyección.
+    let committedW = 0;
+    let committedH = 0;
 
     const applyModelGroupLayout = () => {
       const w = host.clientWidth || window.innerWidth || 1024;
-      const h = host.clientHeight || window.innerHeight || 800;
-      const mult = getModelScaleMultiplier(w, h);
+      const mult = getModelScaleMultiplier(w);
       modelGroup.scale.setScalar(BASE_MODEL_SCALE * mult);
       motionStateRef.current.baseRotationZ =
         w <= 768 ? BASE_ROTATION_Z_MOBILE : BASE_ROTATION_Z_DESKTOP;
@@ -926,43 +918,28 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
       const hh = host.clientHeight || 1;
       if (hw < 32 || hh < 32) return;
 
-      const layoutMobile = (host.clientWidth || window.innerWidth || 0) <= 768;
-
-      if (!layoutMobile) {
-        mobileBufferW = 0;
-        mobileBufferH = 0;
-        renderer.domElement.style.width = "";
-        renderer.domElement.style.height = "";
-        renderer.domElement.style.objectFit = "";
-        renderer.setSize(hw, hh, false);
-        camera.aspect = hw / hh;
-        camera.updateProjectionMatrix();
-        applyModelGroupLayout();
-        return;
+      if (committedW > 0 && committedH > 0) {
+        const dw = Math.abs(hw - committedW);
+        const dh = Math.abs(hh - committedH);
+        const wasLandscape = committedW > committedH;
+        const nowLandscape = hw > hh;
+        const orientationFlip = wasLandscape !== nowLandscape;
+        const relW = committedW > 0 ? dw / committedW : 0;
+        const widthChanged =
+          orientationFlip || dw >= 4 || relW >= 0.02;
+        const onlyHeightDrift = !widthChanged && dh >= 2;
+        if (onlyHeightDrift) return;
       }
 
-      const hostLandscape = hw > hh;
-      const lockLandscape =
-        mobileBufferW > 0 && mobileBufferH > 0 && mobileBufferW > mobileBufferH;
-      const orientationFlip =
-        mobileBufferW > 0 &&
-        mobileBufferH > 0 &&
-        lockLandscape !== hostLandscape;
-
-      if (mobileBufferW === 0 || mobileBufferH === 0 || orientationFlip) {
-        mobileBufferW = hw;
-        mobileBufferH = hh;
-      }
-
-      const w = mobileBufferW;
-      const h = mobileBufferH;
+      committedW = hw;
+      committedH = hh;
 
       renderer.domElement.style.width = "100%";
       renderer.domElement.style.height = "100%";
       renderer.domElement.style.objectFit = "cover";
 
-      renderer.setSize(w, h, false);
-      camera.aspect = w / h;
+      renderer.setSize(hw, hh, false);
+      camera.aspect = hw / hh;
       camera.updateProjectionMatrix();
       applyModelGroupLayout();
     };
@@ -970,8 +947,8 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
 
     let orientationSetSizeTimer = 0;
     const onOrientationChange = () => {
-      mobileBufferW = 0;
-      mobileBufferH = 0;
+      committedW = 0;
+      committedH = 0;
       window.clearTimeout(orientationSetSizeTimer);
       orientationSetSizeTimer = window.setTimeout(() => {
         orientationSetSizeTimer = 0;
@@ -983,29 +960,6 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
     const ro = new ResizeObserver(setSize);
     ro.observe(host);
     resizeObserverRef.current = ro;
-
-    // Visibility-based pause/resume to avoid rendering while off-screen.
-    const io = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        visibilityRef.current = Boolean(entry?.isIntersecting);
-        if (!visibilityRef.current && frameRef.current) {
-          cancelAnimationFrame(frameRef.current);
-          frameRef.current = null;
-          return;
-        }
-        if (visibilityRef.current && !frameRef.current) {
-          frameRef.current = requestAnimationFrame(animate);
-        }
-      },
-      {
-        root: null,
-        rootMargin: isMobile ? "280px 0px 400px 0px" : "120px 0px 120px 0px",
-        threshold: 0,
-      }
-    );
-    io.observe(host);
-    intersectionObserverRef.current = io;
 
     const updateCursorRotationTargets = (clientX, clientY) => {
       const bounds = host.getBoundingClientRect();
@@ -1102,7 +1056,7 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
           motion.baseRotationZ + idleRotZ + (isMobile ? 0 : motion.cursorCurrentZ);
       }
       renderer.render(scene, camera);
-      frameRef.current = visibilityRef.current ? requestAnimationFrame(animate) : null;
+      frameRef.current = requestAnimationFrame(animate);
     }
     frameRef.current = requestAnimationFrame(animate);
 
@@ -1113,7 +1067,6 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
       if (pointerRafRef.current) cancelAnimationFrame(pointerRafRef.current);
       resizeObserverRef.current?.disconnect();
-      intersectionObserverRef.current?.disconnect();
       spinTweenRef.current?.kill();
       window.removeEventListener("orientationchange", onOrientationChange);
       window.removeEventListener("pointermove", onPointerMove);

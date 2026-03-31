@@ -16,13 +16,6 @@ function hasLayoutBox(el) {
   return r.width >= 4 && r.height >= 4;
 }
 
-function isNearViewport(el, marginPx) {
-  if (!hasLayoutBox(el)) return false;
-  const r = el.getBoundingClientRect();
-  const vh = typeof window !== "undefined" ? window.innerHeight : 0;
-  return r.top < vh + marginPx && r.bottom > -marginPx;
-}
-
 export default function AboutPortalCard({
   videoSrc,
   name = "Lautaro Torres",
@@ -61,14 +54,11 @@ export default function AboutPortalCard({
   const activePointerIdRef = useRef(null);
   const didMountVideoReadySkip = useRef(false);
 
-  const PRELOAD_MARGIN_PX = 2400;
-
+  // About: vídeo crítico — en cliente siempre asignar src de inmediato (IO + primera medición
+  // + ScrollTrigger podían dejar shouldLoadVideo en false hasta un segundo layout / navegación).
   useLayoutEffect(() => {
-    const card = cardRef.current;
-    if (!card || typeof window === "undefined") return;
-    if (isNearViewport(card, PRELOAD_MARGIN_PX)) {
-      setShouldLoadVideo(true);
-    }
+    if (typeof window === "undefined") return;
+    setShouldLoadVideo(true);
   }, []);
 
   useEffect(() => {
@@ -78,78 +68,6 @@ export default function AboutPortalCard({
     }
     setIsVideoReady(false);
   }, [videoSrc]);
-
-  useEffect(() => {
-    const card = cardRef.current;
-    if (!card) return;
-    if (typeof window === "undefined") {
-      setShouldLoadVideo(true);
-      return;
-    }
-
-    if (isNearViewport(card, PRELOAD_MARGIN_PX)) {
-      setShouldLoadVideo(true);
-      return;
-    }
-
-    if (!("IntersectionObserver" in window)) {
-      setShouldLoadVideo(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry?.isIntersecting) return;
-        setShouldLoadVideo(true);
-        observer.disconnect();
-      },
-      {
-        root: null,
-        rootMargin: `${PRELOAD_MARGIN_PX}px 0px`,
-        threshold: 0,
-      }
-    );
-
-    observer.observe(card);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (shouldLoadVideo) return;
-    const card = cardRef.current;
-    if (!card) return;
-
-    const tryPromote = () => {
-      if (isNearViewport(card, PRELOAD_MARGIN_PX)) {
-        setShouldLoadVideo(true);
-        return true;
-      }
-      return false;
-    };
-
-    const t0 = window.setTimeout(tryPromote, 0);
-    const t1 = window.setTimeout(tryPromote, 100);
-    const t2 = window.setTimeout(tryPromote, 400);
-    const onResize = () => tryPromote();
-    window.addEventListener("resize", onResize);
-
-    let frames = 0;
-    const MAX_FRAMES = 72;
-    let rafId = 0;
-    const rafLoop = () => {
-      if (tryPromote() || frames++ >= MAX_FRAMES) return;
-      rafId = requestAnimationFrame(rafLoop);
-    };
-    rafId = requestAnimationFrame(rafLoop);
-
-    return () => {
-      window.clearTimeout(t0);
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
-      window.removeEventListener("resize", onResize);
-      cancelAnimationFrame(rafId);
-    };
-  }, [shouldLoadVideo]);
 
   useEffect(() => {
     const card = cardRef.current;
@@ -214,7 +132,11 @@ export default function AboutPortalCard({
         video.currentTime = (pausedAt + elapsedSec) % duration;
       }
       requestVideoPlay(video);
-      return;
+      const onCanPlay = () => {
+        if (video.paused) requestVideoPlay(video);
+      };
+      video.addEventListener("canplay", onCanPlay);
+      return () => video.removeEventListener("canplay", onCanPlay);
     }
 
     if (!video.paused) {
@@ -385,11 +307,11 @@ export default function AboutPortalCard({
         <div className="pointer-events-none absolute inset-0 z-[5] bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,rgba(0,0,0,0.25)_100%)]" />
         <div className="pointer-events-none absolute inset-0 z-[5] bg-white/[0.04]" />
 
-        <div className="pointer-events-none absolute inset-0 z-20 p-3 [transform:translateZ(1px)]">
+        <div className="pointer-events-none absolute inset-0 z-20 p-3 [transform:translateZ(1px)] flex flex-col items-start gap-1 md:block">
           <span className="type-tag text-[10px] md:text-[11px] text-white/82">
             {name}
           </span>
-          <span className="type-body-sm absolute left-3 right-3 bottom-3 text-[11px] md:text-[12px] text-white/82 whitespace-nowrap">
+          <span className="type-body-sm text-left text-[10px] leading-snug text-white/82 max-w-[calc(100%-0.5rem)] md:max-w-none md:text-[12px] md:leading-normal md:absolute md:left-3 md:right-3 md:bottom-3 md:whitespace-nowrap">
             Somewhere between physical and digital
           </span>
         </div>

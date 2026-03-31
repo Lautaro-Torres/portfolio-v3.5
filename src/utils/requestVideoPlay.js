@@ -1,6 +1,7 @@
 /**
- * Programmatic play for muted inline clips. Mobile Safari often rejects the first
- * play() until enough data is buffered; this schedules a one-shot retry on canplay/loadeddata.
+ * Programmatic play for muted inline clips.
+ * - First play() can reject before enough data is buffered (common on mobile / cold cache).
+ * - If canplay/loadeddata already fired, listeners never run again — retry using readyState first.
  */
 export function requestVideoPlay(video) {
   if (!video) return;
@@ -12,23 +13,32 @@ export function requestVideoPlay(video) {
     /* ignore */
   }
 
-  const attempt = () => {
+  const tryPlay = () => {
     const p = video.play();
     if (!p || typeof p.catch !== "function") return;
-    p.catch(() => {
-      let settled = false;
-      const retry = () => {
-        if (settled) return;
-        settled = true;
-        video.removeEventListener("loadeddata", retry);
-        video.removeEventListener("canplay", retry);
-        const p2 = video.play();
-        p2?.catch?.(() => {});
-      };
-      video.addEventListener("loadeddata", retry, { once: true });
-      video.addEventListener("canplay", retry, { once: true });
-    });
+    p.catch(() => scheduleRetry());
   };
 
-  attempt();
+  const scheduleRetry = () => {
+    if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+      video.play()?.catch?.(() => {});
+      return;
+    }
+    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      queueMicrotask(() => video.play()?.catch?.(() => {}));
+      return;
+    }
+    let settled = false;
+    const retry = () => {
+      if (settled) return;
+      settled = true;
+      video.removeEventListener("loadeddata", retry);
+      video.removeEventListener("canplay", retry);
+      video.play()?.catch?.(() => {});
+    };
+    video.addEventListener("loadeddata", retry, { once: true });
+    video.addEventListener("canplay", retry, { once: true });
+  };
+
+  tryPlay();
 }

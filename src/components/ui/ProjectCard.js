@@ -179,7 +179,11 @@ function ProjectCard({
         video.currentTime = (pausedAt + elapsedSec) % duration;
       }
       requestVideoPlay(video);
-      return;
+      const onCanPlay = () => {
+        if (video.paused) requestVideoPlay(video);
+      };
+      video.addEventListener("canplay", onCanPlay);
+      return () => video.removeEventListener("canplay", onCanPlay);
     }
 
     if (!video.paused) {

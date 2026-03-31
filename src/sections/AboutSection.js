@@ -39,8 +39,6 @@ export default function AboutSection() {
   const [isMobileTitle, setIsMobileTitle] = useState(false);
   const sectionRef = useRef(null);
   const cardRef = useRef(null);
-  const cardParallaxRef = useRef(null);
-  const textParallaxRef = useRef(null);
   const titleWrapRef = useRef(null);
   const titleRevealStart = isMobileTitle ? "top 86%" : "top 72%";
   const lowerTextRevealStartedRef = useRef(false);
@@ -118,7 +116,7 @@ export default function AboutSection() {
 
       // 1) Card enters first — when section top hits 92% of viewport
       if (cardRef.current) {
-        // With 100dvh-locked sections, relying on a scrub-less tween's initial render can keep the
+        // If the trigger never fires as expected, a scrub-less tween can leave opacity:0; keep
         // element stuck at opacity:0 if the trigger never "enters" in the expected way. Keep visible
         // by default and only animate onEnter.
         gsap.set(cardRef.current, { opacity: 1, y: 0, clearProps: "opacity,transform" });
@@ -174,51 +172,6 @@ export default function AboutSection() {
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      const isMobile = window.innerWidth < 768;
-      const cardTravelFrom = isMobile ? 7 : 8;
-      const cardTravelTo = isMobile ? -16 : -18;
-      const textTravelFrom = isMobile ? 12 : 14;
-      const textTravelTo = isMobile ? -26 : -34;
-      const sharedStart = isMobile ? "top 96%" : "top 88%";
-      const sharedEnd = isMobile ? "bottom 4%" : "bottom 14%";
-
-      // Mobile: skip yPercent scrub — transform does not affect layout, so card + text can visually overlap.
-      if (!isMobile && cardParallaxRef.current) {
-        gsap.fromTo(
-          cardParallaxRef.current,
-          { yPercent: cardTravelFrom },
-          {
-            yPercent: cardTravelTo,
-            ease: "none",
-            scrollTrigger: {
-              trigger: sectionRef.current,
-              start: sharedStart,
-              end: sharedEnd,
-              scrub: 1.15,
-              invalidateOnRefresh: true,
-            },
-          }
-        );
-      }
-
-      if (!isMobile && textParallaxRef.current) {
-        gsap.fromTo(
-          textParallaxRef.current,
-          { yPercent: textTravelFrom },
-          {
-            yPercent: textTravelTo,
-            ease: "none",
-            scrollTrigger: {
-              trigger: sectionRef.current,
-              start: sharedStart,
-              end: sharedEnd,
-              scrub: 0.98,
-              invalidateOnRefresh: true,
-            },
-          }
-        );
-      }
-
       // Fade out 02 when scrolling to Projects (previous section's number disappears)
       const projectsEl = document.getElementById("projects");
       if (sectionNumberRef.current && projectsEl) {
@@ -248,7 +201,7 @@ export default function AboutSection() {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full mt-0 pt-0 mb-0 h-[100dvh] min-h-[100dvh] md:h-[100dvh] md:min-h-[100dvh]"
+      className="relative w-full mt-0 pt-0 mb-0 min-h-[100dvh] md:min-h-[100dvh]"
     >
       {/* Section number — always at bottom of section; fades when scrolling to Projects */}
       <div
@@ -258,22 +211,21 @@ export default function AboutSection() {
         <span className="text-white/25 text-[10px] uppercase tracking-[0.24em]">02</span>
       </div>
       <div
-        className="h-full flex items-center justify-center pt-[var(--about-pad-top)] pb-[var(--about-pad-bottom)] md:pt-[8vh] md:pb-0"
+        className="min-h-[100dvh] flex flex-col justify-center items-stretch pt-[var(--about-pad-top)] pb-[var(--about-pad-bottom)] md:min-h-[100dvh] md:flex-row md:items-center md:justify-center md:pt-[8vh] md:pb-0"
         style={{
           "--about-pad-top": "clamp(3.25rem,7vh,5.5rem)",
-          // Aún menos padding inferior en mobile para que el contenido llene mejor el viewport.
-          "--about-pad-bottom": "clamp(1.6rem,3.5vh,3.2rem)",
+          "--about-pad-bottom": "clamp(1.75rem,4vh,3.5rem)",
         }}
       >
-        {/* Mobile: tarjeta alta (3:5, no cuadrada) + texto con el resto; desktop: grid 2 cols. */}
-        <div className="w-full h-[calc(100%-var(--about-pad-top)-var(--about-pad-bottom))] md:h-auto md:grid md:grid-cols-[0.82fr_1.18fr] md:gap-x-16 lg:gap-x-20 md:items-center md:justify-items-center min-h-0 flex flex-col md:block">
-          <div className="relative z-0 w-full shrink-0 flex justify-center items-start pt-1 pb-2 md:pb-0 md:h-auto md:items-center md:pt-0 md:shrink md:flex-initial min-h-0">
-            <div ref={cardParallaxRef} className="w-full flex justify-center items-center min-h-0 md:h-full md:min-h-[540px]">
+        {/* Mobile: tarjeta + texto; altura natural (sin caja fija a dvh) para no recortar la card ni el copy. */}
+        <div className="w-full md:grid md:grid-cols-[0.82fr_1.18fr] md:gap-x-16 lg:gap-x-20 md:items-center md:justify-items-center flex flex-col md:block">
+          <div className="relative z-0 w-full shrink-0 flex justify-center items-start pt-1 pb-2 md:pb-0 md:h-auto md:items-center md:pt-0 md:shrink md:flex-initial">
+            <div className="w-full flex justify-center items-center md:h-full md:min-h-[540px]">
               <div
                 ref={cardRef}
                 className="
                   relative mx-auto w-[min(78vw,280px)]
-                  aspect-[3/5] max-h-[min(54dvh,520px)]
+                  aspect-[3/5] max-h-[min(62dvh,560px)]
                   md:w-full md:max-w-none md:aspect-auto md:max-h-none
                   md:flex md:items-center md:justify-center md:min-h-0 md:h-[min(540px,72vh)]
                 "
@@ -287,10 +239,7 @@ export default function AboutSection() {
             </div>
           </div>
 
-          <div
-            ref={textParallaxRef}
-            className="relative z-20 w-full flex-1 min-h-0 md:flex-none md:h-auto md:self-center overflow-hidden flex flex-col justify-between gap-3 mt-4 md:mt-0"
-          >
+          <div className="relative z-20 w-full md:flex-none md:h-auto md:self-center flex flex-col justify-between gap-3 -mt-[clamp(2.25rem,9vw,3.5rem)] md:mt-0 pb-[clamp(1.25rem,4vh,2.5rem)] md:pb-0">
             <div className="grid grid-cols-12 gap-x-4 w-full min-h-0 pl-6 pr-4 md:pl-0 md:pr-0">
               <h2
                 ref={titleWrapRef}

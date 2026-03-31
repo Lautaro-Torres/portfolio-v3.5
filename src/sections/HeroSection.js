@@ -214,28 +214,26 @@ export default function HeroSection() {
           trigger: heroRef.current,
           start: "top top",
           end: "bottom top",
-          scrub: 1,
+          // scrub: N (segundos) retrasa el parallax respecto al scroll → sensación “trabada”.
+          // true = 1:1 con el progreso del scroll; más fluido con ScrollSmoother en desktop.
+          scrub: true,
           invalidateOnRefresh: true,
+          fastScrollEnd: true,
         },
       });
 
-      // Solo traslación vertical en el mate — sin scale (evita “temblor” / sensación de zoom al scrollear).
+      const orbYEnd = isMobile ? 26 * heightFactor : 16;
+
+      // Un solo tween en yPercent: velocidad constante respecto al scroll (antes 0.72+0.28 rompía la derivada ~72%).
       parallaxTl.to(
         heroOrbWrapRef.current,
         {
-          yPercent: isMobile ? 10 * heightFactor : 6,
-          duration: 0.72,
+          yPercent: orbYEnd,
+          duration: 1,
           ease: "none",
+          force3D: true,
         },
         0
-      );
-      parallaxTl.to(
-        heroOrbWrapRef.current,
-        {
-          yPercent: isMobile ? 26 * heightFactor : 16,
-          duration: 0.28,
-          ease: "none",
-        }
       );
 
       parallaxTl.to(
@@ -325,7 +323,7 @@ export default function HeroSection() {
       {/* 3D hero band — canvas ocupa todo el hero; posición final se controla desde HeroOrb3D (offsets / amplitudes). */}
       <div
         ref={heroOrbWrapRef}
-        className="hero-home-layer-orb absolute inset-0 z-[50] pointer-events-none"
+        className="hero-home-layer-orb absolute inset-0 z-[50] pointer-events-none will-change-transform"
       >
         <MateHero ref={orbRef} />
       </div>

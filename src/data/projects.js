@@ -9,7 +9,6 @@ export const projectsData = [
     country: "Remote",
     industry: "Security & Intelligence",
     timeOfProject: "3 months",
-    imageUrl: "/assets/projects/aktek/aktek-cover-1.webp",
     videoUrl: "/assets/projects/aktek/opt-aktetk-card-p.mp4",
     logoUrl: "/assets/projects/aktek/logo-aktek-w.svg",
     tags: ["Web Design", "Web Development", "3D"],

@@ -65,15 +65,16 @@ export default function Projects() {
         const cards = sliderRef.current.querySelectorAll(".home-project-card");
 
         if (cards.length > 0) {
-          gsap.set(cards, { y: HOME_MOTION.revealY, opacity: 0 });
+          // Solo translate-Y: opacity 0 en el contenedor retrasa pintura/decodificación del <video>
+          // en mobile (Chrome y Safari) hasta un repaint posterior (p. ej. tras navegar o Swiper).
+          gsap.set(cards, { y: HOME_MOTION.revealY });
 
           gsap.to(cards, {
             y: 0,
-            opacity: 1,
             duration: HOME_MOTION.sectionCardDuration,
             stagger: 0.12,
             ease: HOME_MOTION.fadeEase,
-            clearProps: "opacity,transform",
+            clearProps: "transform",
             scrollTrigger: {
               trigger: sliderRef.current,
               start: "top 86%",
