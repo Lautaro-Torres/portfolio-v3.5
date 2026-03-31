@@ -32,7 +32,7 @@ export default function WorkCard({
   isFullWidthCard = false,
   ariaLabel,
   /**
-   * Índice /projects: sin sombra (evita halo tipo borde sobre #0a0a0a) y tags en varias líneas con todas las tags.
+   * Índice /projects: sin sombra (evita halo tipo borde sobre #0a0a0a); tags como en el resto (máx. 3).
    */
   projectsGrid = false,
 }) {
@@ -248,7 +248,7 @@ export default function WorkCard({
     }
   }, [useVideo, shouldLoadVideo, shouldPlayVideo, videoUrl]);
 
-  const tagList = projectsGrid ? tags : tags?.slice(0, 3);
+  const tagList = tags?.slice(0, 3);
   const tagRowClass = projectsGrid
     ? "flex flex-wrap gap-2 content-start"
     : "flex flex-nowrap gap-1 md:gap-2 overflow-hidden whitespace-nowrap max-w-full";

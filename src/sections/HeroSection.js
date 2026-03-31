@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { flushSync } from "react-dom";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ScrollSmoother } from "gsap/ScrollSmoother";
 import WordRotator from "../components/WordRotator";
 import MateHero from "../components/MateHero";
 import { useLoading } from "../contexts/LoadingContext";
@@ -14,16 +15,22 @@ if (typeof window !== "undefined") {
 export default function HeroSection() {
   const heroRef = useRef(null);
   const heroOrbWrapRef = useRef(null);
+  /** Solo translateY (px) en scroll — capa interna con altura extra para no depender de y% del canvas. */
+  const heroOrbParallaxRef = useRef(null);
   const heroContentRef = useRef(null);
   const heroMainTitlesRef = useRef(null);
   const heroSubtitleWrapRef = useRef(null);
   const heroDesktopTaglineRef = useRef(null);
   const heroTopTagRef = useRef(null);
   const heroFooterRef = useRef(null);
+  /** Fade del bloque "01" (About trigger): separado del footer outer para no mezclar 2 ScrollTriggers en el mismo nodo. */
+  const heroFooterInnerRef = useRef(null);
   const taglineRef = useRef(null);
   const subtitleRef = useRef(null);
   const orbRef = useRef(null);
   const introTlRef = useRef(null);
+  /** Evita doble commit y permite saltar intro por scroll sin depender solo de onComplete. */
+  const introFinishedRef = useRef(false);
   const [argentinaTime, setArgentinaTime] = useState("");
   /** Latched after intro timeline completes — unlocks CSS that hides layers pre-intro. */
   const [introComplete, setIntroComplete] = useState(false);
@@ -66,6 +73,7 @@ export default function HeroSection() {
     if (!isHeroReady) {
       introTlRef.current?.kill();
       introTlRef.current = null;
+      introFinishedRef.current = false;
       setIntroComplete(false);
       gsap.set(heroRef.current, { backgroundColor: "#000000" });
       gsap.set(allIntroEls, { autoAlpha: 0 });
@@ -80,6 +88,74 @@ export default function HeroSection() {
       };
     }
 
+    /* Strict Mode / remount: si la intro ya se commitió, no volver a ocultar capas ni pelear con ScrollTrigger. */
+    if (introFinishedRef.current) {
+      return () => {
+        introTlRef.current?.kill();
+        introTlRef.current = null;
+      };
+    }
+
+    const finishHeroIntro = () => {
+      if (introFinishedRef.current) return;
+      introFinishedRef.current = true;
+      introTlRef.current?.kill();
+      introTlRef.current = null;
+
+      const doneSupport = [
+        heroDesktopTaglineRef.current,
+        taglineRef.current,
+        heroSubtitleWrapRef.current,
+        heroFooterRef.current,
+      ].filter(Boolean);
+      const doneAllIntro = [
+        heroOrbWrapRef.current,
+        heroMainTitlesRef.current,
+        ...doneSupport,
+        navEl,
+        badgeEl,
+        glassPillEl,
+      ].filter(Boolean);
+
+      if (heroOrbWrapRef.current) gsap.set(heroOrbWrapRef.current, { autoAlpha: 1 });
+      if (heroMainTitlesRef.current) {
+        gsap.set(heroMainTitlesRef.current, { autoAlpha: 1, y: 0, force3D: true });
+      }
+      if (doneSupport.length) gsap.set(doneSupport, { autoAlpha: 1 });
+      gsap.set([navEl, badgeEl, glassPillEl].filter(Boolean), { autoAlpha: 1 });
+      gsap.set(heroRef.current, { backgroundColor: "#0a0a0a" });
+
+      document.body.classList.remove("home-hero-intro-pending");
+      flushSync(() => setIntroComplete(true));
+      gsap.set(doneAllIntro, { clearProps: "opacity,visibility" });
+      gsap.set(heroRef.current, { clearProps: "backgroundColor" });
+      ScrollTrigger.refresh();
+    };
+
+    const getScrollYForIntro = () => {
+      if (typeof window === "undefined") return 0;
+      try {
+        const smoother = ScrollSmoother.get();
+        if (smoother && typeof smoother.scrollTop === "function") {
+          return smoother.scrollTop();
+        }
+      } catch {
+        /* ScrollSmoother no registrado (mobile) */
+      }
+      return window.scrollY || document.documentElement.scrollTop || 0;
+    };
+
+    const tickIntroScroll = () => {
+      if (introFinishedRef.current) {
+        gsap.ticker.remove(tickIntroScroll);
+        return;
+      }
+      if (getScrollYForIntro() > 64) {
+        gsap.ticker.remove(tickIntroScroll);
+        finishHeroIntro();
+      }
+    };
+
     const ctx = gsap.context(() => {
       /* Deterministic prep: same frame as first paint with isHeroReady (set + to, no from() surprises). */
       gsap.set(heroRef.current, { backgroundColor: "#000000" });
@@ -91,14 +167,7 @@ export default function HeroSection() {
       gsap.set([navEl, badgeEl, glassPillEl].filter(Boolean), { autoAlpha: 0 });
 
       const tl = gsap.timeline({
-        onComplete: () => {
-          document.body.classList.remove("home-hero-intro-pending");
-          /* Commit .hero-home-intro-complete before clearProps so CSS prep rules never flash back. */
-          flushSync(() => setIntroComplete(true));
-          gsap.set(allIntroEls, { clearProps: "opacity,visibility" });
-          gsap.set(heroRef.current, { clearProps: "backgroundColor" });
-          ScrollTrigger.refresh();
-        },
+        onComplete: finishHeroIntro,
       });
 
       if (heroOrbWrapRef.current) {
@@ -166,7 +235,11 @@ export default function HeroSection() {
       introTlRef.current = tl;
     }, heroRef);
 
+    gsap.ticker.add(tickIntroScroll);
+    tickIntroScroll();
+
     return () => {
+      gsap.ticker.remove(tickIntroScroll);
       introTlRef.current?.kill();
       introTlRef.current = null;
       ctx.revert();
@@ -194,8 +267,16 @@ export default function HeroSection() {
   }, []);
 
   useLayoutEffect(() => {
+    if (!introComplete) return;
+
     const ctx = gsap.context(() => {
-      if (!heroRef.current || !heroContentRef.current || !heroOrbWrapRef.current) return;
+      if (
+        !heroRef.current ||
+        !heroContentRef.current ||
+        !heroOrbWrapRef.current ||
+        !heroOrbParallaxRef.current
+      )
+        return;
 
       const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
       const heightFactor =
@@ -214,21 +295,19 @@ export default function HeroSection() {
           trigger: heroRef.current,
           start: "top top",
           end: "bottom top",
-          // scrub: N (segundos) retrasa el parallax respecto al scroll → sensación “trabada”.
-          // true = 1:1 con el progreso del scroll; más fluido con ScrollSmoother en desktop.
           scrub: true,
           invalidateOnRefresh: true,
           fastScrollEnd: true,
         },
       });
 
-      const orbYEnd = isMobile ? 26 * heightFactor : 16;
-
-      // Un solo tween en yPercent: velocidad constante respecto al scroll (antes 0.72+0.28 rompía la derivada ~72%).
+      // Mate: solo translateY en px sobre capa con altura extra (patrón reutilizable, sin y% del contenedor canvas).
+      const orbParallaxMaxY = isMobile ? 88 : 52;
+      gsap.set(heroOrbParallaxRef.current, { y: 0, force3D: true });
       parallaxTl.to(
-        heroOrbWrapRef.current,
+        heroOrbParallaxRef.current,
         {
-          yPercent: orbYEnd,
+          y: orbParallaxMaxY,
           duration: 1,
           ease: "none",
           force3D: true,
@@ -236,10 +315,13 @@ export default function HeroSection() {
         0
       );
 
+      // Todas las capas con duration: 1 y ease none: mismo progreso 0→1 en todo el rango del hero.
+      // Si faltara duration, GSAP usa ~0.5 y cada tween “termina” a mitad de scroll mientras otras siguen → al subir se desarma la composición.
       parallaxTl.to(
         heroContentRef.current,
         {
           yPercent: -28,
+          duration: 1,
           ease: "none",
         },
         0
@@ -251,6 +333,7 @@ export default function HeroSection() {
           {
             yPercent: isMobile ? -52 * heightFactor : -36,
             opacity: 0.72,
+            duration: 1,
             ease: "none",
           },
           0
@@ -263,6 +346,7 @@ export default function HeroSection() {
           {
             yPercent: isMobile ? -56 * heightFactor : -40,
             opacity: 0.54,
+            duration: 1,
             ease: "none",
           },
           0
@@ -275,6 +359,7 @@ export default function HeroSection() {
           {
             yPercent: isMobile ? -40 * heightFactor : -28,
             opacity: 0.44,
+            duration: 1,
             ease: "none",
           },
           0
@@ -284,16 +369,16 @@ export default function HeroSection() {
       if (heroFooterRef.current) {
         parallaxTl.to(
           heroFooterRef.current,
-          { yPercent: 12, ease: "none" },
+          { yPercent: 12, duration: 1, ease: "none" },
           0
         );
       }
 
-      // Fade out 01 when scrolling to About (previous section's number disappears)
+      // Fade out 01 cuando About entra: solo el inner, nunca el mismo nodo que el parallax yPercent.
       const aboutEl = document.getElementById("about");
-      if (heroFooterRef.current && aboutEl) {
+      if (heroFooterInnerRef.current && aboutEl) {
         gsap.fromTo(
-          heroFooterRef.current,
+          heroFooterInnerRef.current,
           { opacity: 1 },
           {
             opacity: 0,
@@ -302,7 +387,7 @@ export default function HeroSection() {
               trigger: aboutEl,
               start: "top 90%",
               end: "top 55%",
-              scrub: 0.4,
+              scrub: true,
               invalidateOnRefresh: true,
             },
           }
@@ -311,7 +396,7 @@ export default function HeroSection() {
     }, heroRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [introComplete]);
 
   return (
     <section
@@ -323,9 +408,14 @@ export default function HeroSection() {
       {/* 3D hero band — canvas ocupa todo el hero; posición final se controla desde HeroOrb3D (offsets / amplitudes). */}
       <div
         ref={heroOrbWrapRef}
-        className="hero-home-layer-orb absolute inset-0 z-[50] pointer-events-none will-change-transform"
+        className="hero-home-layer-orb absolute inset-0 z-[50] pointer-events-none"
       >
-        <MateHero ref={orbRef} />
+        <div
+          ref={heroOrbParallaxRef}
+          className="pointer-events-none absolute left-0 right-0 top-[-15dvh] h-[calc(100%+30dvh)] w-full min-h-0 will-change-transform"
+        >
+          <MateHero ref={orbRef} />
+        </div>
       </div>
 
       <div
@@ -349,12 +439,17 @@ export default function HeroSection() {
       {/* Section number — matches 90% container margins */}
       <div
         ref={heroFooterRef}
-        className="hero-home-layer-support absolute bottom-[clamp(1.5rem,4vh,2.5rem)] left-[5%] right-[5%] z-40 flex items-center justify-between pointer-events-none"
+        className="hero-home-layer-support absolute bottom-[clamp(1.5rem,4vh,2.5rem)] left-[5%] right-[5%] z-40 pointer-events-none"
       >
-        <span className="text-white/25 text-[10px] uppercase tracking-[0.24em]">01</span>
-        <span className="hidden md:inline text-white/35 text-[9px] uppercase tracking-[0.2em]">
-          Scroll to explore
-        </span>
+        <div
+          ref={heroFooterInnerRef}
+          className="flex w-full items-center justify-between"
+        >
+          <span className="text-white/25 text-[10px] uppercase tracking-[0.24em]">01</span>
+          <span className="hidden md:inline text-white/35 text-[9px] uppercase tracking-[0.2em]">
+            Scroll to explore
+          </span>
+        </div>
       </div>
 
       <div

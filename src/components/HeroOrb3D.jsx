@@ -83,7 +83,7 @@ const IDLE_SPIN_SPEED = 0.16;
 const TRANSITION_SPIN_SPEED = 3;
 const SPIN_VELOCITY_DAMPING = 5.2;
 // Mobile: escala fija (antes se lerpeaba con innerHeight; al scroll/URL bar el ResizeObserver retocaba escala y aspect).
-const MOBILE_MODEL_SCALE_MULTIPLIER_FIXED = 1.2;
+const MOBILE_MODEL_SCALE_MULTIPLIER_FIXED = 0.9;
 // Mobile: bob idle (parallax vertical del grupo sigue en el loop; no toca scale).
 const MOBILE_IDLE_BOB_MULTIPLIER = 1.3;
 // Slightly lower on mobile so it crosses CREATIVE without hiding it.
