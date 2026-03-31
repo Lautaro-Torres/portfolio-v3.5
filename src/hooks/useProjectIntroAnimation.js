@@ -117,14 +117,15 @@ export function useProjectIntroAnimation(refs) {
         },
       });
 
-      // 1. Hero overlay animates from full screen to layout position
+      // 1. Hero overlay: brief hold at fullscreen so the video reads, then animates to layout
       tl.to(overlay, {
         top: rect.top,
         left: rect.left,
         width: rect.width,
         height: rect.height,
         borderRadius,
-        duration: 1.72,
+        duration: 1.88,
+        delay: 0.75,
         ease: "power3.inOut",
         overwrite: "auto",
       });

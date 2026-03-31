@@ -230,15 +230,23 @@ export default function AboutSection() {
           "--about-pad-bottom": "clamp(1.6rem,3.5vh,3.2rem)",
         }}
       >
-        {/* Mobile: 60% card / 40% texto sobre alto neto (100dvh − paddings). Desktop: grid 2 cols. */}
-        <div className="w-full h-[calc(100%-var(--about-pad-top)-var(--about-pad-bottom))] md:h-auto md:grid md:grid-cols-[0.82fr_1.18fr] md:gap-x-16 lg:gap-x-20 md:items-center md:justify-items-center min-h-0">
-          <div className="w-full h-[55%] min-h-0 md:h-auto flex items-stretch justify-center">
-            <div ref={cardParallaxRef} className="w-full h-full min-h-0">
-              <div ref={cardRef} className="w-full h-full min-h-0 flex items-stretch justify-center">
+        {/* Mobile: tarjeta alta (3:5, no cuadrada) + texto con el resto; desktop: grid 2 cols. */}
+        <div className="w-full h-[calc(100%-var(--about-pad-top)-var(--about-pad-bottom))] md:h-auto md:grid md:grid-cols-[0.82fr_1.18fr] md:gap-x-16 lg:gap-x-20 md:items-center md:justify-items-center min-h-0 flex flex-col md:block">
+          <div className="w-full shrink-0 flex justify-center items-start pt-1 pb-2 md:pb-0 md:h-auto md:items-center md:pt-0 md:shrink md:flex-initial min-h-0">
+            <div ref={cardParallaxRef} className="w-full flex justify-center items-center min-h-0 md:h-full md:min-h-[540px]">
+              <div
+                ref={cardRef}
+                className="
+                  relative mx-auto w-[min(78vw,280px)]
+                  aspect-[3/5] max-h-[min(54dvh,520px)]
+                  md:w-full md:max-w-none md:aspect-auto md:max-h-none
+                  md:flex md:items-center md:justify-center md:min-h-0 md:h-[min(540px,72vh)]
+                "
+              >
                 <AboutPortalCard
                   videoSrc={aboutRenderVideo}
                   name="Lautaro Torres"
-                  className="max-w-[min(92vw,320px)] w-full h-full max-h-full sm:max-w-[320px] md:max-w-[430px] md:h-[540px]"
+                  className="absolute inset-0 h-full w-full md:static md:h-[540px] md:w-full md:max-w-[430px]"
                 />
               </div>
             </div>
@@ -246,7 +254,7 @@ export default function AboutSection() {
 
           <div
             ref={textParallaxRef}
-            className="w-full h-[45%] min-h-0 md:h-auto md:self-center overflow-hidden flex flex-col justify-between gap-3 mt-10 md:mt-0"
+            className="w-full flex-1 min-h-0 md:flex-none md:h-auto md:self-center overflow-hidden flex flex-col justify-between gap-3 mt-4 md:mt-0"
           >
             <div className="grid grid-cols-12 gap-x-4 w-full min-h-0 pl-6 pr-4 md:pl-0 md:pr-0">
               <h2

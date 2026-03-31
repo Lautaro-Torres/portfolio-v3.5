@@ -119,6 +119,7 @@ export const projectsData = [
   timeOfProject: "2 weeks",
   imageUrl: "/assets/projects/cardamomo/cardamomo-cover-1.webp",
   videoUrl: "/assets/projects/cardamomo/opt-carda-card-p.mp4",
+  heroVideoUrl: "/assets/projects/cardamomo/web.opt-Cardamomo.raw.mp4",
   logoUrl: "/assets/projects/cardamomo/logo-cardamomo-w.svg",
   tags: ["3D", "Motion Design", "Creative Development"],
   summary:
@@ -137,12 +138,12 @@ export const projectsData = [
   ],
   siteLink: "https://www.instagram.com/p/DNBFXKgMZ8C/?img_index=1",
   gallery: [
-    { type: "video", src: "/assets/projects/cardamomo/gallery/carda-frente-HR.mp4", posterTime: 1, loopPreview: true, loopPreviewSeconds: 2.2, caption: "3D point cloud visualization" },
-    { type: "video", src: "/assets/projects/cardamomo/gallery/carda-esquina-HR.mp4", posterTime: 1, loopPreview: true, loopPreviewSeconds: 2.2, caption: "Audio reactive motion" },
-    { type: "video", src: "/assets/projects/cardamomo/gallery/carda-panaderia-HR.mp4", posterTime: 1, loopPreview: true, loopPreviewSeconds: 2.5, caption: "3D point cloud visualization" },
+    { type: "video", src: "/assets/projects/cardamomo/gallery/carda-frente-HR.mp4", posterTime: 1, loopPreview: true, loopPreviewSeconds: 2, caption: "3D point cloud visualization" },
+    { type: "video", src: "/assets/projects/cardamomo/gallery/carda-panaderia-HR.mp4", posterTime: 1, loopPreview: true, loopPreviewSeconds: 2, caption: "3D point cloud visualization" },
     { type: "video", src: "/assets/projects/cardamomo/gallery/carda-salon-HR.mp4", posterTime: 1, caption: "Audio reactive motion" },
+    { type: "video", src: "/assets/projects/cardamomo/gallery/carda-esquina-HR.mp4", posterTime: 1,caption: "Audio reactive motion" },
+    { type: "video", src: "/assets/projects/cardamomo/gallery/carda-joaco-madonna-HR.mp4", posterTime: 1, caption: "Audio reactive motion" },
     { type: "video", src: "/assets/projects/cardamomo/gallery/carda-patio-HR.mp4", posterTime: 1, caption: "3D point cloud visualization" },
-    { type: "video", src: "/assets/projects/cardamomo/gallery/carda-joaco-madonna-HR.mp4", posterTime: 1, loopPreview: true, loopPreviewSeconds: 2.2, caption: "Audio reactive motion" },
   ]
   },
 

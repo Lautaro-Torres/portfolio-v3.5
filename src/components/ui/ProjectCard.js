@@ -339,12 +339,15 @@ function ProjectCard({
       </div>
 
       {/* MOBILE BOTTOM-LEFT — logo/título justo arriba de las tags */}
-      <div className="pointer-events-none absolute left-3 right-3 bottom-16 z-30 md:hidden w-[min(42%,9rem)] max-w-[calc(100%-1.5rem)]">
+      <div className="pointer-events-none absolute left-3 right-3 bottom-16 z-[35] md:hidden w-[min(42%,9rem)] max-w-[calc(100%-1.5rem)] [transform:translateZ(0)]">
         {logoUrl?.trim() ? (
           <img
             src={logoUrl}
             alt={`${title || "Project"} logo`}
             className="block h-auto max-h-11 w-full object-contain object-left drop-shadow-lg"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
           />
         ) : (
           <span className="block text-left font-anton uppercase leading-[0.95] tracking-[0.02em] text-white text-[clamp(0.78rem,3.2vw,1rem)] drop-shadow-md [text-shadow:0_1px_12px_rgba(0,0,0,0.65)]">

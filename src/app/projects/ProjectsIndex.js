@@ -243,6 +243,7 @@ export default function ProjectsIndex() {
                         containerClassName="h-full"
                         isFullWidthCard={row.isFullWidth}
                         ariaLabel={`View details for ${project.title}`}
+                        projectsGrid
                       />
                     </div>
                   ))}
@@ -280,6 +281,7 @@ export default function ProjectsIndex() {
                         containerClassName="h-full"
                         isFullWidthCard={row.isFullWidth}
                         ariaLabel={`View details for ${project.title}`}
+                        projectsGrid
                       />
                     </div>
                   ))}

@@ -23,9 +23,6 @@ export function VideoPoster({
 }) {
   const containerRef = useRef(null);
   const previewVideoRef = useRef(null);
-  const reverseAnimRef = useRef(null);
-  const lastTimeRef = useRef(0);
-  const isReversingRef = useRef(false);
   const [frameDataUrl, setFrameDataUrl] = useState(null);
   const [isInView, setIsInView] = useState(false);
   const [hasExtracted, setHasExtracted] = useState(false);
@@ -56,11 +53,6 @@ export function VideoPoster({
       const playPromise = video.play();
       if (playPromise && typeof playPromise.catch === "function") playPromise.catch(() => {});
     } else {
-      if (reverseAnimRef.current) {
-        cancelAnimationFrame(reverseAnimRef.current);
-        reverseAnimRef.current = null;
-      }
-      isReversingRef.current = false;
       video.pause();
     }
   }, [isInView, shouldUseLoopPreview, shouldUseFullVideoLoop]);
@@ -128,54 +120,19 @@ export function VideoPoster({
     video.currentTime = safeStart;
   };
 
-  const startReversePlayback = useCallback((safeStart, safeEnd) => {
+  const handlePreviewTimeUpdate = useCallback(() => {
     const video = previewVideoRef.current;
-    if (!video || isReversingRef.current) return;
-    isReversingRef.current = true;
-    video.pause();
-
-    const animate = (timestamp) => {
-      if (!previewVideoRef.current) {
-        isReversingRef.current = false;
-        return;
-      }
-      const delta = lastTimeRef.current ? (timestamp - lastTimeRef.current) / 1000 : 0;
-      lastTimeRef.current = timestamp;
-      video.currentTime = Math.max(safeStart, video.currentTime - delta);
-      if (video.currentTime <= safeStart) {
-        video.currentTime = safeStart;
-        lastTimeRef.current = 0;
-        isReversingRef.current = false;
-        reverseAnimRef.current = null;
-        const playPromise = video.play();
-        if (playPromise && typeof playPromise.catch === "function") playPromise.catch(() => {});
-        return;
-      }
-      reverseAnimRef.current = requestAnimationFrame(animate);
-    };
-    lastTimeRef.current = performance.now();
-    reverseAnimRef.current = requestAnimationFrame(animate);
-  }, []);
-
-  const handlePreviewTimeUpdate = () => {
-    if (!previewVideoRef.current || isReversingRef.current) return;
-    const video = previewVideoRef.current;
-    const safeStart = Math.max(0, previewLoopStart);
+    if (!video) return;
+    const dur = video.duration;
+    if (!dur || Number.isNaN(dur)) return;
+    const safeStart = Math.max(0, Math.min(previewLoopStart, Math.max(0, dur - 0.2)));
     const safeEnd = safeStart + Math.max(0.8, previewLoopSeconds);
-    if (video.currentTime >= safeEnd || video.currentTime >= video.duration - 0.05) {
-      startReversePlayback(safeStart, safeEnd);
+    if (video.currentTime >= safeEnd || video.currentTime >= dur - 0.05) {
+      video.currentTime = safeStart;
+      const p = video.play();
+      if (p && typeof p.catch === "function") p.catch(() => {});
     }
-  };
-
-  // Cleanup reverse animation on unmount.
-  useEffect(() => {
-    if (!shouldUseLoopPreview) return;
-    return () => {
-      if (reverseAnimRef.current) {
-        cancelAnimationFrame(reverseAnimRef.current);
-      }
-    };
-  }, [shouldUseLoopPreview]);
+  }, [previewLoopStart, previewLoopSeconds]);
 
   const handleFullLoopTimeUpdate = useCallback(
     (e) => {

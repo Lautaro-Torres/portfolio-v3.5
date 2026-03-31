@@ -75,19 +75,19 @@ const IDLE_BOB_AMPLITUDE = 0.15;
 const IDLE_BOB_FREQUENCY = 1.2;
 const IDLE_ROT_X_AMPLITUDE = 0.02;
 const IDLE_ROT_X_FREQUENCY = 0.8;
-const IDLE_ROT_Y_AMPLITUDE = 0.012;
-const IDLE_ROT_Y_FREQUENCY = 0.55;
+const IDLE_ROT_Y_AMPLITUDE = 0.1;
+const IDLE_ROT_Y_FREQUENCY = 0.3;
 const IDLE_ROT_Z_AMPLITUDE = 0.026;
 const IDLE_ROT_Z_FREQUENCY = 0.45;
 const IDLE_SPIN_SPEED = 0.16;
-const TRANSITION_SPIN_SPEED = 2.7;
+const TRANSITION_SPIN_SPEED = 3;
 const SPIN_VELOCITY_DAMPING = 5.2;
-// Mobile: base multiplier que luego se ajusta levemente según el viewport.
-const MOBILE_MODEL_SCALE_MULTIPLIER_BASE = 1.2;
-// Mobile: a bit more pronounced so the hero breathes more in tall viewports.
-const MOBILE_IDLE_BOB_MULTIPLIER = 1.55;
+// Mobile: escala fija (antes se lerpeaba con innerHeight; al scroll/URL bar el ResizeObserver retocaba escala y aspect).
+const MOBILE_MODEL_SCALE_MULTIPLIER_FIXED = 1.2;
+// Mobile: bob idle (parallax vertical del grupo sigue en el loop; no toca scale).
+const MOBILE_IDLE_BOB_MULTIPLIER = 1.3;
 // Slightly lower on mobile so it crosses CREATIVE without hiding it.
-const MOBILE_MODEL_Y_OFFSET = 0.5;
+const MOBILE_MODEL_Y_OFFSET = 0.55;
 
 // Desktop / tablet landscape: mate scales with viewport width (like headline clamp vw) so it reaches the words;
 // clamped so ultrawide and very short heights do not blow up the composition.
@@ -96,12 +96,8 @@ const DESKTOP_MODEL_SCALE_MAX_MULT = 1.5;
 const DESKTOP_MODEL_WIDTH_LERP_START = 768;
 const DESKTOP_MODEL_WIDTH_LERP_END = 1400;
 
-function getMobileModelScaleMultiplier(viewportHeight) {
-  const vh = viewportHeight || 800;
-  let mult = MOBILE_MODEL_SCALE_MULTIPLIER_BASE;
-  const t = THREE.MathUtils.clamp((vh - 640) / (900 - 640), 0, 1);
-  mult *= THREE.MathUtils.lerp(0.95, 1.06, t);
-  return mult;
+function getMobileModelScaleMultiplier() {
+  return MOBILE_MODEL_SCALE_MULTIPLIER_FIXED;
 }
 
 function getDesktopModelScaleMultiplier(width, height) {
@@ -115,11 +111,11 @@ function getDesktopModelScaleMultiplier(width, height) {
   return mult;
 }
 
-/** Uses host/client dimensions so resize stays in sync with the hero canvas. */
+/** Desktop: escala según viewport. Mobile: constante (ver getMobileModelScaleMultiplier). */
 function getModelScaleMultiplier(clientWidth, clientHeight) {
   const w = clientWidth || (typeof window !== "undefined" ? window.innerWidth : 1024);
   const h = clientHeight || (typeof window !== "undefined" ? window.innerHeight : 800);
-  if (w <= 768) return getMobileModelScaleMultiplier(h);
+  if (w <= 768) return getMobileModelScaleMultiplier();
   return getDesktopModelScaleMultiplier(w, h);
 }
 
@@ -827,7 +823,11 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
     const modelGroup = new THREE.Group();
     modelGroup.position.set(0, BASE_POSITION_Y, 0);
 
-    // Escala responsiva; tilt Z según breakpoint; escritorio: rotación extra suave hacia el puntero.
+    // Escala: desktop sigue al viewport; mobile usa multiplicador fijo (no a innerHeight por resize al scroll).
+    // setSize() en mobile ignora micro-cambios de alto (barra de URL, sub-pixel) para no retocar aspect/canvas.
+    let mobileCanvasAppliedW = 0;
+    let mobileCanvasAppliedH = 0;
+
     const applyModelGroupLayout = () => {
       const w = host.clientWidth || window.innerWidth || 1024;
       const h = host.clientHeight || window.innerHeight || 800;
@@ -921,12 +921,55 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
     const setSize = () => {
       const w = host.clientWidth || 1;
       const h = host.clientHeight || 1;
+      if (w < 32 || h < 32) return;
+
+      const layoutMobile = (host.clientWidth || window.innerWidth || 0) <= 768;
+
+      if (!layoutMobile) {
+        mobileCanvasAppliedW = 0;
+        mobileCanvasAppliedH = 0;
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        applyModelGroupLayout();
+        return;
+      }
+
+      if (mobileCanvasAppliedW > 0 && mobileCanvasAppliedH > 0) {
+        const dw = Math.abs(w - mobileCanvasAppliedW);
+        const dh = Math.abs(h - mobileCanvasAppliedH);
+        const relW = dw / mobileCanvasAppliedW;
+        const relH = dh / mobileCanvasAppliedH;
+        const wasLandscape = mobileCanvasAppliedW > mobileCanvasAppliedH;
+        const nowLandscape = w > h;
+        const orientationFlip = wasLandscape !== nowLandscape;
+        const majorResize =
+          orientationFlip || dw >= 120 || dh >= 120 || relW >= 0.12 || relH >= 0.12;
+        const microResize =
+          !majorResize && dw < 72 && dh < 72 && relW < 0.09 && relH < 0.09;
+        if (microResize) return;
+      }
+
+      mobileCanvasAppliedW = w;
+      mobileCanvasAppliedH = h;
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       applyModelGroupLayout();
     };
     setSize();
+
+    let orientationSetSizeTimer = 0;
+    const onOrientationChange = () => {
+      mobileCanvasAppliedW = 0;
+      mobileCanvasAppliedH = 0;
+      window.clearTimeout(orientationSetSizeTimer);
+      orientationSetSizeTimer = window.setTimeout(() => {
+        orientationSetSizeTimer = 0;
+        if (!disposed) setSize();
+      }, 280);
+    };
+    window.addEventListener("orientationchange", onOrientationChange);
 
     const ro = new ResizeObserver(setSize);
     ro.observe(host);
@@ -946,7 +989,11 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
           frameRef.current = requestAnimationFrame(animate);
         }
       },
-      { root: null, rootMargin: "120px 0px 120px 0px", threshold: 0 }
+      {
+        root: null,
+        rootMargin: isMobile ? "280px 0px 400px 0px" : "120px 0px 120px 0px",
+        threshold: 0,
+      }
     );
     io.observe(host);
     intersectionObserverRef.current = io;
@@ -1052,12 +1099,14 @@ const HeroOrb3D = forwardRef(function HeroOrb3D(_props, ref) {
 
     return () => {
       disposed = true;
+      window.clearTimeout(orientationSetSizeTimer);
 
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
       if (pointerRafRef.current) cancelAnimationFrame(pointerRafRef.current);
       resizeObserverRef.current?.disconnect();
       intersectionObserverRef.current?.disconnect();
       spinTweenRef.current?.kill();
+      window.removeEventListener("orientationchange", onOrientationChange);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerleave", resetCursorRotationTargets);
       window.removeEventListener("blur", resetCursorRotationTargets);

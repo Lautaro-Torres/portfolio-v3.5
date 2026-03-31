@@ -14,6 +14,16 @@ export function getProjectCardVideoUrl(project) {
   return undefined;
 }
 
+/**
+ * Video URL for project detail: intro overlay, in-page hero, and hero modal.
+ * Use `heroVideoUrl` when the listing card should show a different (e.g. shorter) clip than the case-study hero.
+ */
+export function getProjectHeroVideoUrl(project) {
+  if (project?.heroVideoUrl && typeof project.heroVideoUrl === "string") return project.heroVideoUrl;
+  if (project?.videoUrl && typeof project.videoUrl === "string") return project.videoUrl;
+  return undefined;
+}
+
 export const getProjectUrl = (slug) => {
   return `/projects/${slug}`;
 };

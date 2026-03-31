@@ -60,12 +60,14 @@ export default function Projects() {
       }
 
       if (sliderRef.current) {
-        const slides = sliderRef.current.querySelectorAll(".swiper-slide");
+        // Animar la tarjeta, no el .swiper-slide: opacity 0 en el slide entero retrasa pintura/decodificación
+        // del logo en mobile hasta que Swiper repinta (p. ej. al deslizar).
+        const cards = sliderRef.current.querySelectorAll(".home-project-card");
 
-        if (slides.length > 0) {
-          gsap.set(slides, { y: HOME_MOTION.revealY, opacity: 0 });
+        if (cards.length > 0) {
+          gsap.set(cards, { y: HOME_MOTION.revealY, opacity: 0 });
 
-          gsap.to(slides, {
+          gsap.to(cards, {
             y: 0,
             opacity: 1,
             duration: HOME_MOTION.sectionCardDuration,

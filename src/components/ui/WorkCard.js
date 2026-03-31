@@ -30,6 +30,10 @@ export default function WorkCard({
   /** Fila de una sola columna (card ancha en mobile): logo más chico */
   isFullWidthCard = false,
   ariaLabel,
+  /**
+   * Índice /projects: sin sombra (evita halo tipo borde sobre #0a0a0a) y tags en varias líneas con todas las tags.
+   */
+  projectsGrid = false,
 }) {
   const useVideo = videoUrl && isVideoUrl(videoUrl);
   const { push, isTransitioning } = useTransitionRouter();
@@ -226,14 +230,24 @@ export default function WorkCard({
     }
   }, [useVideo, shouldLoadVideo, shouldPlayVideo]);
 
+  const tagList = projectsGrid ? tags : tags?.slice(0, 3);
+  const tagRowClass = projectsGrid
+    ? "flex flex-wrap gap-2 content-start"
+    : "flex flex-nowrap gap-1 md:gap-2 overflow-hidden whitespace-nowrap max-w-full";
+
   return (
     <button
       ref={cardRef}
       onClick={handleClick}
       className={`
-        group w-full h-full relative rounded-lg overflow-hidden shadow-lg bg-[#0a0a0a] flex flex-col border-0 appearance-none
+        group w-full h-full relative rounded-lg overflow-hidden bg-[#0a0a0a] flex flex-col border-0 appearance-none
         transition-all duration-300 focus:outline-none ${containerClassName}
-        ${isTransitioning ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:shadow-2xl"}
+        ${
+          projectsGrid
+            ? "shadow-none hover:shadow-none focus-visible:ring-0 focus-visible:shadow-none"
+            : "shadow-lg hover:shadow-2xl"
+        }
+        ${isTransitioning ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
       `}
       disabled={isTransitioning}
       tabIndex={0}
@@ -244,7 +258,11 @@ export default function WorkCard({
           src={posterUrl}
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          className={
+            projectsGrid
+              ? "absolute inset-[-1px] w-[calc(100%+2px)] h-[calc(100%+2px)] object-cover pointer-events-none"
+              : "absolute inset-0 w-full h-full object-cover pointer-events-none"
+          }
           loading="lazy"
           onError={() => setHasPosterError(true)}
         />
@@ -266,7 +284,11 @@ export default function WorkCard({
           onCanPlay={() => setIsVideoReady(true)}
           onPlaying={() => setIsVideoReady(true)}
           onError={() => setIsVideoReady(false)}
-          className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-all duration-400 ease-ui-standard group-hover:scale-[1.03] ${
+          className={`${
+            projectsGrid
+              ? "absolute inset-[-1px] w-[calc(100%+2px)] h-[calc(100%+2px)]"
+              : "absolute inset-0 w-full h-full"
+          } object-cover pointer-events-none transition-all duration-400 ease-ui-standard group-hover:scale-[1.03] ${
             isVideoReady ? "opacity-100" : "opacity-0"
           }`}
         />
@@ -301,6 +323,9 @@ export default function WorkCard({
             className={`block h-auto w-full object-contain object-left brightness-0 invert drop-shadow-lg ${
               isFullWidthCard ? "max-h-11" : "max-h-14"
             }`}
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
           />
         ) : (
           <span
@@ -317,8 +342,8 @@ export default function WorkCard({
 
       {/* MOBILE TAGS */}
       <div className="absolute bottom-3 left-3 right-3 z-20 md:hidden">
-        <div className="flex flex-nowrap gap-1 overflow-hidden whitespace-nowrap max-w-full">
-          {tags?.slice(0, 3).map((tag, idx) => (
+        <div className={tagRowClass}>
+          {tagList?.map((tag, idx) => (
             <span
               key={tag + idx}
               className="px-[clamp(0.45rem,2.4vw,0.65rem)] py-[clamp(0.22rem,1.2vw,0.3rem)] text-[clamp(9px,2.2vw,10px)] font-general font-light uppercase text-white bg-[#0a0a0a]/40 backdrop-blur-md border border-white/20 rounded-full tracking-[0.14em] shrink-0"
@@ -341,10 +366,14 @@ export default function WorkCard({
         </span>
       </div>
 
-      <div className="absolute bottom-7 left-7 z-20 hidden md:flex flex-col-reverse items-start gap-y-5">
+      <div
+        className={`absolute bottom-7 left-7 z-20 hidden md:flex flex-col-reverse items-start gap-y-5 ${
+          projectsGrid ? "right-7 w-auto" : ""
+        }`}
+      >
         {/* Tags arriba, logo/título abajo; gap-y separa logo y pills (antes quedaban muy pegados). */}
-        <div className="flex flex-nowrap gap-2 overflow-hidden whitespace-nowrap max-w-full">
-          {tags?.slice(0, 3).map((tag, idx) => (
+        <div className={projectsGrid ? "flex flex-wrap gap-2 content-start w-full max-w-full" : tagRowClass}>
+          {tagList?.map((tag, idx) => (
             <span
               key={tag + idx}
               className="px-[clamp(0.65rem,1.05vw,1rem)] py-[clamp(0.34rem,0.6vw,0.5rem)] text-[clamp(9px,0.85vw,12px)] font-general font-light uppercase text-white bg-[#0a0a0a]/40 backdrop-blur-md border border-white/20 rounded-full tracking-[0.14em] shrink-0"

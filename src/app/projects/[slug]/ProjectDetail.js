@@ -7,6 +7,7 @@ import { VideoPoster } from "../../../components/VideoPoster";
 import { ProjectFacts } from "../../../components/ProjectFacts";
 import TextCtaLink from "../../../components/ui/TextCtaLink";
 import { markRouteReady } from "../../../utils/routeReadyGate";
+import { getProjectHeroVideoUrl } from "../../../utils/projectUtils";
 
 if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
 
@@ -41,6 +42,8 @@ export default function ProjectPage({ project }) {
   const mediaPreloadCacheRef = useRef(new Set());
   const touchStartXRef = useRef(null);
   const touchStartYRef = useRef(null);
+
+  const heroVideoSrc = getProjectHeroVideoUrl(project);
 
   const descriptionContent = Array.isArray(project.description)
     ? project.description
@@ -98,7 +101,7 @@ export default function ProjectPage({ project }) {
   }, [project?.slug]);
 
   useEffect(() => {
-    if (!project?.videoUrl) return;
+    if (!heroVideoSrc) return;
     const heroVideo = heroVideoRef.current;
     if (!heroVideo) return;
 
@@ -173,7 +176,7 @@ export default function ProjectPage({ project }) {
       if (refineTimeoutId) window.clearTimeout(refineTimeoutId);
       heroVideo.removeEventListener("loadedmetadata", runSyncSequence);
     };
-  }, [hasHeroSettled, project?.slug, project?.videoUrl]);
+  }, [hasHeroSettled, project?.slug, heroVideoSrc]);
 
   useEffect(() => {
     if (!hasHeroSettled) return;
@@ -557,10 +560,10 @@ export default function ProjectPage({ project }) {
         aria-hidden="true"
       >
         <div className="absolute inset-0 w-full h-full">
-          {project.videoUrl ? (
+          {heroVideoSrc ? (
             <video
               ref={overlayVideoRef}
-              src={project.videoUrl}
+              src={heroVideoSrc}
               autoPlay
               muted
               loop
@@ -646,10 +649,10 @@ export default function ProjectPage({ project }) {
                 onClick={openVideoPlayer}
                 className="relative w-full h-full flex-1 min-h-[240px] overflow-hidden rounded-[clamp(0.5rem,1.5vw,1rem)] cursor-pointer group"
               >
-              {project.videoUrl ? (
+              {heroVideoSrc ? (
                 <video
                   ref={heroVideoRef}
-                  src={project.videoUrl}
+                  src={heroVideoSrc}
                   autoPlay={false}
                   muted
                   loop
@@ -836,7 +839,7 @@ export default function ProjectPage({ project }) {
             onClick={(e) => e.stopPropagation()}
           >
             <video
-              src={project.videoUrl}
+              src={heroVideoSrc}
               autoPlay
               controls
               preload="metadata"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   motion,
   useAnimationFrame,
@@ -8,6 +8,19 @@ import {
   useSpring,
   useTransform,
 } from "motion/react";
+
+function hasLayoutBox(el) {
+  if (!el) return false;
+  const r = el.getBoundingClientRect();
+  return r.width >= 4 && r.height >= 4;
+}
+
+function isNearViewport(el, marginPx) {
+  if (!hasLayoutBox(el)) return false;
+  const r = el.getBoundingClientRect();
+  const vh = typeof window !== "undefined" ? window.innerHeight : 0;
+  return r.top < vh + marginPx && r.bottom > -marginPx;
+}
 
 export default function AboutPortalCard({
   videoSrc,
@@ -39,10 +52,31 @@ export default function AboutPortalCard({
   const [isTouchActive, setIsTouchActive] = useState(false);
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
   const [shouldPlayVideo, setShouldPlayVideo] = useState(false);
+  const [isVideoReady, setIsVideoReady] = useState(false);
   const cardRef = useRef(null);
   const videoRef = useRef(null);
   const pauseMetaRef = useRef({ pausedAt: 0, pausedOnMs: 0, duration: 0 });
   const touchStartRef = useRef(null);
+  const activePointerIdRef = useRef(null);
+  const didMountVideoReadySkip = useRef(false);
+
+  const PRELOAD_MARGIN_PX = 2400;
+
+  useLayoutEffect(() => {
+    const card = cardRef.current;
+    if (!card || typeof window === "undefined") return;
+    if (isNearViewport(card, PRELOAD_MARGIN_PX)) {
+      setShouldLoadVideo(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!didMountVideoReadySkip.current) {
+      didMountVideoReadySkip.current = true;
+      return;
+    }
+    setIsVideoReady(false);
+  }, [videoSrc]);
 
   useEffect(() => {
     const card = cardRef.current;
@@ -52,9 +86,7 @@ export default function AboutPortalCard({
       return;
     }
 
-    const preloadAheadPx = 900;
-    const top = card.getBoundingClientRect().top;
-    if (top <= window.innerHeight + preloadAheadPx) {
+    if (isNearViewport(card, PRELOAD_MARGIN_PX)) {
       setShouldLoadVideo(true);
       return;
     }
@@ -72,8 +104,8 @@ export default function AboutPortalCard({
       },
       {
         root: null,
-        rootMargin: `${preloadAheadPx}px 0px`,
-        threshold: 0.01,
+        rootMargin: `${PRELOAD_MARGIN_PX}px 0px`,
+        threshold: 0,
       }
     );
 
@@ -82,9 +114,51 @@ export default function AboutPortalCard({
   }, []);
 
   useEffect(() => {
+    if (shouldLoadVideo) return;
+    const card = cardRef.current;
+    if (!card) return;
+
+    const tryPromote = () => {
+      if (isNearViewport(card, PRELOAD_MARGIN_PX)) {
+        setShouldLoadVideo(true);
+        return true;
+      }
+      return false;
+    };
+
+    const t0 = window.setTimeout(tryPromote, 0);
+    const t1 = window.setTimeout(tryPromote, 100);
+    const t2 = window.setTimeout(tryPromote, 400);
+    const onResize = () => tryPromote();
+    window.addEventListener("resize", onResize);
+
+    let frames = 0;
+    const MAX_FRAMES = 72;
+    let rafId = 0;
+    const rafLoop = () => {
+      if (tryPromote() || frames++ >= MAX_FRAMES) return;
+      rafId = requestAnimationFrame(rafLoop);
+    };
+    rafId = requestAnimationFrame(rafLoop);
+
+    return () => {
+      window.clearTimeout(t0);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.removeEventListener("resize", onResize);
+      cancelAnimationFrame(rafId);
+    };
+  }, [shouldLoadVideo]);
+
+  useEffect(() => {
     const card = cardRef.current;
     if (!card) return;
     if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
+      setShouldPlayVideo(true);
+      return;
+    }
+
+    if (!hasLayoutBox(card)) {
       setShouldPlayVideo(true);
       return;
     }
@@ -95,14 +169,37 @@ export default function AboutPortalCard({
       },
       {
         root: null,
-        rootMargin: "420px 0px",
-        threshold: 0.01,
+        rootMargin: "520px 0px",
+        threshold: 0,
       }
     );
 
     observer.observe(card);
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    if (!shouldLoadVideo) return;
+    const v = videoRef.current;
+    if (!v) return;
+    const bump = () => {
+      if (v.readyState >= 1) setIsVideoReady(true);
+    };
+    bump();
+    let n = 0;
+    let rafId = 0;
+    let cancelled = false;
+    const tick = () => {
+      if (cancelled) return;
+      bump();
+      if (n++ < 5) rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(rafId);
+    };
+  }, [shouldLoadVideo, videoSrc]);
 
   useEffect(() => {
     if (!shouldLoadVideo) return;
@@ -190,7 +287,21 @@ export default function AboutPortalCard({
   const resetTouchTilt = useCallback(() => {
     setIsTouchActive(false);
     touchStartRef.current = null;
+    activePointerIdRef.current = null;
   }, []);
+
+  const endPointerGesture = useCallback(
+    (target, pointerId) => {
+      if (activePointerIdRef.current !== pointerId) return;
+      try {
+        target.releasePointerCapture?.(pointerId);
+      } catch {
+        /* already released */
+      }
+      resetTouchTilt();
+    },
+    [resetTouchTilt]
+  );
 
   return (
     <div
@@ -199,33 +310,40 @@ export default function AboutPortalCard({
       style={{ touchAction: isInteractive ? "auto" : "none" }}
       onPointerDown={(e) => {
         if (isInteractive) return;
+        if (e.button !== undefined && e.button !== 0) return;
         setIsTouchActive(true);
+        activePointerIdRef.current = e.pointerId;
         touchStartRef.current = {
           clientX: e.clientX,
           clientY: e.clientY,
           baseX: pointerX.get(),
           baseY: pointerY.get(),
         };
-        e.currentTarget.setPointerCapture?.(e.pointerId);
+        try {
+          e.currentTarget.setPointerCapture(e.pointerId);
+        } catch {
+          /* capture not supported */
+        }
         updateTouchTilt(e.clientX, e.clientY);
       }}
       onPointerMove={(e) => {
         if (isInteractive || !isTouchActive) return;
+        if (activePointerIdRef.current !== e.pointerId) return;
         updateTouchTilt(e.clientX, e.clientY);
       }}
       onPointerUp={(e) => {
         if (isInteractive) return;
-        e.currentTarget.releasePointerCapture?.(e.pointerId);
-        resetTouchTilt();
+        endPointerGesture(e.currentTarget, e.pointerId);
       }}
       onPointerCancel={(e) => {
         if (isInteractive) return;
-        e.currentTarget.releasePointerCapture?.(e.pointerId);
-        resetTouchTilt();
+        endPointerGesture(e.currentTarget, e.pointerId);
       }}
-      onPointerLeave={() => {
-        if (isInteractive || !isTouchActive) return;
-        resetTouchTilt();
+      onLostPointerCapture={(e) => {
+        if (isInteractive) return;
+        if (activePointerIdRef.current === e.pointerId) {
+          resetTouchTilt();
+        }
       }}
     >
       <motion.div
@@ -244,14 +362,22 @@ export default function AboutPortalCard({
           className="absolute -inset-[14%] will-change-transform"
         >
           <video
+            key={videoSrc}
             ref={videoRef}
-            className="h-full w-full object-cover"
+            className={`h-full w-full object-cover transition-opacity duration-500 ease-out ${
+              isVideoReady ? "opacity-100" : "opacity-0"
+            }`}
             src={shouldLoadVideo ? videoSrc : undefined}
             autoPlay={false}
             muted
             loop
             playsInline
-            preload={shouldLoadVideo ? "metadata" : "none"}
+            preload={shouldLoadVideo ? "auto" : "none"}
+            onLoadedMetadata={() => setIsVideoReady(true)}
+            onLoadedData={() => setIsVideoReady(true)}
+            onCanPlay={() => setIsVideoReady(true)}
+            onPlaying={() => setIsVideoReady(true)}
+            onError={() => setIsVideoReady(false)}
           />
         </motion.div>
 
