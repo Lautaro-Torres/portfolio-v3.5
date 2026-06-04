@@ -1,13 +1,10 @@
 import "./globals.css";
-import CustomCursor from "../components/ui/CustomCursor";
-import Navigation from "../components/ui/Navigation";
-import Footer from "../components/ui/Footer";
-import DagobertoBadge from "../components/ui/DagobertoBadge";
+import { LoadingProvider } from "../contexts/LoadingContext";
+import { TransitionProvider } from "../contexts/TransitionContext";
 import ScrollOptimizer from "../components/ui/ScrollOptimizer";
 import PageReveal from "../components/ui/PageReveal";
 import LoadingScreen from "../components/ui/LoadingScreen";
-import { LoadingProvider } from "../contexts/LoadingContext";
-import { TransitionProvider } from "../contexts/TransitionContext";
+import PortfolioChrome from "./PortfolioChrome";
 import {
   DEFAULT_OG_IMAGE,
   SHARE_DESCRIPTION,
@@ -69,33 +66,11 @@ export const viewport = {
   themeColor: "#0a0a0a",
 };
 
-function LayoutContent({ children }) {
-  return (
-    <>
-      <Navigation />
-      <DagobertoBadge />
-      <CustomCursor />
-      <div id="smooth-wrapper" className="relative w-full">
-        <div id="smooth-content" className="relative w-full">
-          {/* Single transition target for all routes (loading.tsx has no <main>). Keep nav/badge outside. */}
-          <div id="page-transition-root" className="relative w-full">
-            {children}
-          </div>
-          <div id="contact">
-            <Footer />
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
-
 export default function RootLayout({ children }) {
   return (
     <html lang="es" className="dark">
       <head>
         <link rel="icon" type="image/svg+xml" href="/assets/images/logos/logo-lt-4327568.svg" />
-        {/* Preload critical 3D models */}
         {/* Preload solo assets críticos above-the-fold (mate = hero, fuente Anton) */}
         <link rel="preload" href="/fonts/General%20Sans/fonts/GeneralSans-Variable.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="preload" href="/fonts/anton/Anton-Regular.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
@@ -106,10 +81,11 @@ export default function RootLayout({ children }) {
           <TransitionProvider>
             <ScrollOptimizer />
             <PageReveal>
-              <LayoutContent>{children}</LayoutContent>
+              <PortfolioChrome>
+                {children}
+              </PortfolioChrome>
             </PageReveal>
           </TransitionProvider>
-          {/* After rest of UI in DOM so equal z-index stacks above nav/badge; must stay inside LoadingProvider */}
           <LoadingScreen />
         </LoadingProvider>
       </body>
