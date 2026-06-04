@@ -3,7 +3,7 @@ export const auditMeta = {
   platform: "WordPress",
   preparedBy: "Lautaro Torres",
   date: "June 4, 2026",
-  ctaUrl: "https://docs.google.com/document/d/1OfYQcq-g-hAdCD78AkQ6AtLEFNqNh-wulyYJAIE9KX8/edit?usp=sharing",
+  ctaUrl: "https://docs.google.com/document/d/1lW_qhqapnYdHIhMeAcahCq2RvYwv-Bq0RSwP5kghegc/edit?usp=sharing",
   issueCount: 1,
   thesis:
     "Kaizen does not need a different visual identity. It needs clearer B2B decision architecture: offer first, proof closer to CTAs, service and industry relevance throughout.",
