@@ -109,7 +109,7 @@ export default function Task2Overview() {
             </p>
             <p>
               Three questions to answer: detailed description of the process, what to do if the
-              model doesn't know the product natively, and the closed-source solution.
+              model doesn&apos;t know the product natively, and the closed-source solution.
             </p>
             <div className="mt-4 space-y-2">
               {[
@@ -205,7 +205,7 @@ export default function Task2Overview() {
           <div className="space-y-4 max-w-2xl">
             <p className="text-white/55 text-[14px] leading-relaxed">
               The constraints are intentional. The architecture guarantees product consistency
-              without depending on the operator's skill. A trained copywriter, a junior designer,
+              without depending on the operator&apos;s skill. A trained copywriter, a junior designer,
               or an automated system can use the same pipeline and get the same product fidelity.
             </p>
             <p className="text-white/55 text-[14px] leading-relaxed">

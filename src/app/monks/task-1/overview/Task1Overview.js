@@ -242,7 +242,7 @@ export default function Task1Overview() {
           <p className="text-[10px] uppercase tracking-[0.14em] text-[#d7ff6a] mb-2">Key insight</p>
           <p className="text-white/65 text-[13px] leading-relaxed">
             Using the flat label artwork (not 3D product photos) as the reference was the
-            architectural unlock. A 2D design sheet cannot be "pasted" as a can — the model is
+            architectural unlock. A 2D design sheet cannot be &quot;pasted&quot; as a can — the model is
             forced to read the design and render a new 3D object that integrates with the scene.
           </p>
         </div>

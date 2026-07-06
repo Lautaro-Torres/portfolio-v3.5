@@ -118,7 +118,7 @@ export default function Task3Overview() {
               movement, and a music track.
             </p>
             <p>
-              The brief required a systematic approach — not just "make it look like BMW," but extract
+              The brief required a systematic approach — not just &quot;make it look like BMW,&quot; but extract
               the specific visual logic, encode it as a structured data object, and make that object
               the single source of truth for every generator.
             </p>
@@ -211,7 +211,7 @@ export default function Task3Overview() {
       {/* ── How We'd Approach Each Output ───────────────────────────────── */}
       <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
         <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-10">
-          How We'd Approach Each Output
+          How We&apos;d Approach Each Output
         </p>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {OUTPUT_CARDS.map((card) => {
@@ -283,7 +283,7 @@ export default function Task3Overview() {
       {/* ── What's Next ─────────────────────────────────────────────────── */}
       <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
         <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-10">
-          What's Next
+          What&apos;s Next
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {NEXT_STEPS.map((step, i) => (
