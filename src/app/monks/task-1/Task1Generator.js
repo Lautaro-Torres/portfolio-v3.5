@@ -16,6 +16,7 @@ import {
 import BackButton from "@/components/ui/BackButton";
 import { productList } from "@/config/task1-products";
 import { useSimpleRouteReady } from "@/hooks/useSimpleRouteReady";
+import { useTransitionRouter } from "@/hooks/useTransitionRouter";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const ACCENT = "text-[#d7ff6a]";
@@ -31,7 +32,7 @@ const FORMATS = {
     aspectClass: "aspect-[9/16]",
   },
   "4:5": {
-    label: "Feed Instagram",
+    label: "Instagram Feed",
     dims: "1080×1350",
     icon: Instagram,
     aspectClass: "aspect-[4/5]",
@@ -48,11 +49,11 @@ const FORMATS = {
 const RESOLUTIONS = {
   "2K": {
     label: "2K",
-    description: "Buena calidad, ideal para redes sociales. Generación más rápida.",
+    description: "Good quality, ideal for social media. Faster generation.",
   },
   "4K": {
     label: "4K",
-    description: "Máxima resolución, ideal para impresión o pantallas grandes. Puede tardar más.",
+    description: "Maximum resolution, ideal for print or large displays. May take longer.",
   },
 };
 
@@ -82,7 +83,7 @@ function QaBadge({ qa }) {
     return (
       <div className="flex items-center gap-2 px-3 py-2 rounded border border-red-400/20 bg-red-400/[0.06] text-red-400 text-[11px]">
         <AlertTriangle size={13} className="shrink-0" />
-        <span>Error al verificar: {qa.error}</span>
+        <span>Verification error: {qa.error}</span>
       </div>
     );
   }
@@ -109,7 +110,7 @@ function QaBadge({ qa }) {
               isConsistent ? "text-[#d7ff6a]" : "text-amber-400"
             }`}
           >
-            {isConsistent ? "Consistente" : "Diferencias detectadas"}
+            {isConsistent ? "Consistent" : "Differences detected"}
           </span>
         </div>
         {qa.score != null && (
@@ -128,7 +129,7 @@ function QaBadge({ qa }) {
       )}
       <p className="mt-2 text-white/20 flex items-center gap-1">
         <Info size={10} className="shrink-0" />
-        Imagen con marca de agua SynthID invisible
+        Image includes invisible SynthID watermark
       </p>
     </div>
   );
@@ -207,9 +208,9 @@ function ResultImage({ image, loading, error, aspectClass }) {
     return (
       <div className={`relative w-full ${aspectClass} rounded-sm border border-white/[0.08] bg-white/[0.025] flex flex-col items-center justify-center gap-3`}>
         <Loader2 size={28} className="text-[#d7ff6a] animate-spin" />
-        <p className="text-white/48 text-[12px] uppercase tracking-[0.12em]">Generando…</p>
+        <p className="text-white/48 text-[12px] uppercase tracking-[0.12em]">Generating…</p>
         <p className="text-white/28 text-[11px] text-center px-6">
-          Expandiendo prompt y generando imagen — puede tardar 15–35 segundos
+          Expanding prompt and generating image — may take 15–35 seconds
         </p>
       </div>
     );
@@ -223,7 +224,7 @@ function ResultImage({ image, loading, error, aspectClass }) {
         <AlertTriangle size={24} className="text-red-400/70" />
         {isBilling ? (
           <p className="text-white/40 text-[11px] leading-relaxed max-w-xs">
-            Cuota de API agotada. Verificá el billing en Google Cloud.
+            API quota exhausted. Check billing in Google Cloud.
           </p>
         ) : (
           <p className="text-red-400/80 text-[13px]">{error}</p>
@@ -236,7 +237,7 @@ function ResultImage({ image, loading, error, aspectClass }) {
 
   return (
     <div className={`relative w-full ${aspectClass} rounded-sm overflow-hidden border border-white/[0.08]`}>
-      <img src={image} alt="Imagen lifestyle generada" className="w-full h-full object-cover" />
+      <img src={image} alt="Generated lifestyle image" className="w-full h-full object-cover" />
     </div>
   );
 }
@@ -245,6 +246,7 @@ function ResultImage({ image, loading, error, aspectClass }) {
 
 export default function Task1Generator() {
   useSimpleRouteReady();
+  const { push } = useTransitionRouter();
 
   const [screen, setScreen] = useState("product"); // "product" | "config" | "result"
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -275,7 +277,7 @@ export default function Task1Generator() {
         body: JSON.stringify({ productId: selectedProduct.id, situacion, format, imageSize }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error generando imagen");
+      if (!res.ok) throw new Error(data.error ?? "Error generating image");
       setVariants(data.variants ?? []);
     } catch (e) {
       setError(e.message);
@@ -296,7 +298,7 @@ export default function Task1Generator() {
               Task 1 · Campo Alegre
             </p>
             <h1 className="font-anton text-display text-white leading-none">
-              Elegí tu cerveza
+              Choose your beer
             </h1>
           </div>
 
@@ -311,26 +313,34 @@ export default function Task1Generator() {
                 }}
                 className="group flex flex-col rounded-sm border border-white/[0.08] bg-white/[0.02] hover:border-[#d7ff6a]/30 hover:bg-white/[0.035] transition-all duration-200 overflow-hidden text-left min-h-0"
               >
-                <div className="relative flex-1 min-h-0 bg-white/[0.025]">
+                <div className="relative flex-1 min-h-[200px] flex items-center justify-center overflow-hidden bg-[#0a0a0a]">
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.07)_0%,transparent_72%)]" />
                   <img
                     src={product.heroImage}
                     alt={product.displayName}
-                    className="absolute inset-0 w-full h-full object-contain"
+                    className="relative z-10 h-[82%] w-auto max-w-[68%] object-contain mix-blend-screen drop-shadow-[0_12px_32px_rgba(0,0,0,0.45)] transition-transform duration-300 group-hover:scale-[1.03]"
                   />
                 </div>
-                <div className="p-4 shrink-0">
+                <div className="p-4 shrink-0 border-t border-white/[0.06]">
                   <h2 className="text-white text-[15px] font-medium mb-0.5">
                     {product.displayName}
                   </h2>
                   <p className="text-white/40 text-[11px] mb-2">{product.heroDescriptor}</p>
                   <div className="flex items-center gap-1 text-[#d7ff6a] text-[10px] uppercase tracking-[0.14em] opacity-0 group-hover:opacity-100 transition-opacity">
-                    Elegir
+                    Select
                     <ChevronRight size={11} />
                   </div>
                 </div>
               </button>
             ))}
           </div>
+
+          <button
+            onClick={() => push("/monks/task-1/overview")}
+            className="mt-4 shrink-0 text-white/35 text-[10px] uppercase tracking-[0.14em] hover:text-white/60 transition-colors text-center"
+          >
+            See how we built this →
+          </button>
         </div>
       </main>
     );
@@ -345,7 +355,7 @@ export default function Task1Generator() {
             onClick={() => setScreen("product")}
             className="flex items-center gap-1.5 text-white/40 text-[11px] uppercase tracking-[0.14em] hover:text-white/70 transition-colors mb-8"
           >
-            ← Cerveza
+            ← Beer
           </button>
 
           <div className="mb-8">
@@ -353,44 +363,44 @@ export default function Task1Generator() {
               {selectedProduct.displayName}
             </p>
             <h1 className="font-anton text-headline text-white leading-none">
-              Configurá tu imagen
+              Configure your image
             </h1>
           </div>
 
           <div className="flex flex-col gap-10 max-w-3xl">
-            {/* Situación */}
+            {/* Scene */}
             <div>
               <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-3">
-                Situación
+                Scene
               </p>
               <p className="text-white/30 text-[10px] mb-2 flex items-center gap-1.5">
                 <Info size={10} />
-                El producto se mantiene siempre — describí la escena que quieras
+                The product stays locked — describe any scene you want
               </p>
               <textarea
                 value={situacion}
                 onChange={(e) => setSituacion(e.target.value)}
-                placeholder="Ej: una persona tomando la cerveza en la playa al atardecer"
+                placeholder="e.g. a person drinking the beer on the beach at sunset"
                 rows={5}
                 className="w-full bg-white/[0.03] border border-white/[0.08] rounded-sm px-3 py-3 text-white/70 text-[13px] leading-relaxed placeholder:text-white/25 focus:outline-none focus:border-[#d7ff6a]/30 resize-none"
               />
               <p className="text-white/25 text-[10px] mt-2">
-                Frases cortas y simples dan mejores resultados que descripciones muy detalladas.
+                Short, simple phrases work better than overly detailed descriptions.
               </p>
             </div>
 
             {/* Formato */}
             <div>
               <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-3">
-                Formato / canal
+                Format / channel
               </p>
               <FormatSelector format={format} onChange={setFormat} />
             </div>
 
-            {/* Resolución */}
+            {/* Resolution */}
             <div>
               <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-3">
-                Resolución
+                Resolution
               </p>
               <div className="flex gap-3 mb-4">
                 {Object.entries(RESOLUTIONS).map(([key, r]) => (
@@ -411,9 +421,9 @@ export default function Task1Generator() {
                 ))}
               </div>
               <p className="text-white/25 text-[10px] leading-relaxed border-l border-white/[0.08] pl-3">
-                El texto pequeño de la etiqueta (specs, ingredientes) puede variar levemente entre
-                generaciones — es una limitación conocida del modelo de IA. El logo y diseño
-                principal se mantienen fieles.
+                Small label text (specs, ingredients) may vary slightly between
+                generations — a known AI model limitation. The logo and main design
+                stay faithful.
               </p>
             </div>
 
@@ -423,7 +433,7 @@ export default function Task1Generator() {
                 disabled={!situacion.trim()}
                 className={`inline-flex items-center gap-2 ${ACCENT_BG} text-black text-[11px] uppercase tracking-[0.16em] font-medium px-6 py-3 rounded-sm hover:opacity-90 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed`}
               >
-                Generar imagen
+                Generate image
                 <ChevronRight size={13} />
               </button>
             </div>
@@ -441,7 +451,7 @@ export default function Task1Generator() {
           onClick={() => setScreen("config")}
           className="flex items-center gap-1.5 text-white/40 text-[11px] uppercase tracking-[0.14em] hover:text-white/70 transition-colors mb-6 shrink-0"
         >
-          ← Configuración
+          ← Configuration
         </button>
 
         {/* Header */}
@@ -460,8 +470,8 @@ export default function Task1Generator() {
             {!loading && variants.length > 0 && (
               <p className="text-white/25 text-[10px] mt-1">
                 {selectedIdx !== null
-                  ? "Variante seleccionada — descargala o regenerá"
-                  : "Seleccioná la mejor variante"}
+                  ? "Variant selected — download or regenerate"
+                  : "Select the best variant"}
               </p>
             )}
           </div>
@@ -474,7 +484,7 @@ export default function Task1Generator() {
                   className="inline-flex items-center gap-2 text-black text-[11px] uppercase tracking-[0.14em] font-medium bg-[#d7ff6a] px-4 py-2 rounded-sm hover:opacity-90 transition-opacity"
                 >
                   <Download size={12} />
-                  Descargar
+                  Download
                 </button>
               )}
               <button
@@ -482,7 +492,7 @@ export default function Task1Generator() {
                 className="inline-flex items-center gap-2 text-white/55 text-[11px] uppercase tracking-[0.14em] border border-white/[0.08] px-4 py-2 rounded-sm hover:border-white/20 hover:text-white/75 transition-all"
               >
                 <RefreshCw size={12} />
-                Regenerar 3
+                Regenerate 3
               </button>
             </div>
           )}
@@ -493,9 +503,9 @@ export default function Task1Generator() {
           <div className="flex-1 flex items-center justify-center">
             <div className="flex flex-col items-center gap-3">
               <Loader2 size={28} className="text-[#d7ff6a] animate-spin" />
-              <p className="text-white/48 text-[12px] uppercase tracking-[0.12em]">Generando…</p>
+              <p className="text-white/48 text-[12px] uppercase tracking-[0.12em]">Generating…</p>
               <p className="text-white/28 text-[11px] text-center max-w-[220px]">
-                Escena + 3 variantes en paralelo — ~90–120 seg
+                Scene + 3 variants in parallel — ~90–120 sec
               </p>
             </div>
           </div>
@@ -532,7 +542,7 @@ export default function Task1Generator() {
                   <div className="relative flex-1 min-h-0 bg-white/[0.02]">
                     <img
                       src={v.image}
-                      alt={`Variante ${i + 1}`}
+                      alt={`Variant ${i + 1}`}
                       className="absolute inset-0 w-full h-full object-cover"
                     />
                     {isSelected && (
@@ -565,7 +575,7 @@ export default function Task1Generator() {
                           : "border-white/[0.1] text-white/40 hover:border-white/25 hover:text-white/65"
                       }`}
                     >
-                      {isSelected ? "Seleccionada" : "Seleccionar"}
+                      {isSelected ? "Selected" : "Select"}
                     </button>
                   </div>
                 </div>

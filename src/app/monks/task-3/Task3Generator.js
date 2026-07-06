@@ -18,9 +18,9 @@ import { useTransitionRouter } from "@/hooks/useTransitionRouter";
 const ACCENT = "text-[#d7ff6a]";
 const ACCENT_BG = "bg-[#d7ff6a]";
 
-// ─── Style profile (BMW Neue Klasse moodboard) ────────────────────────────────
+// ─── Style profile (BMW moodboard) ────────────────────────────────────────────
 const STYLE_PROFILE = {
-  brand_cue: "BMW Neue Klasse — warm, human, cinematic",
+  brand_cue: "BMW — warm, human, cinematic",
   mood: ["warm", "aspirational", "filmic", "sun-drenched"],
   color: {
     grade: "film-like, warm highlights, teal shadows",
@@ -33,7 +33,7 @@ const STYLE_PROFILE = {
     signature: "shooting through glass",
     subject_logic: "human + product in same frame",
   },
-  texture: ["cognac leather", "chrome/metal", "film grain"],
+  texture: ["vermouth leather", "chrome/metal", "film grain"],
 };
 
 // Flat list of chips to show during loading
@@ -146,7 +146,7 @@ export default function Task3Generator() {
     })
       .then(async (res) => {
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "Error generando imagen");
+        if (!res.ok) throw new Error(data.error ?? "Error generating image");
         setGeneratedImage(data.image);
         setScreen("result");
       })
@@ -202,7 +202,7 @@ export default function Task3Generator() {
                     }}
                     className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white/60 text-[10px] uppercase tracking-[0.12em] px-2.5 py-1 rounded-sm border border-white/[0.1] hover:text-white transition-colors"
                   >
-                    Cambiar
+                    Change
                   </button>
                 </div>
               ) : (
@@ -211,7 +211,7 @@ export default function Task3Generator() {
                     <ImageIcon size={20} className="text-white/30" />
                   </div>
                   <p className="text-white/40 text-[13px] text-center">
-                    Arrastrá una imagen o hacé click para subir
+                    Drag an image here or click to upload
                   </p>
                   <p className="text-white/20 text-[10px] uppercase tracking-[0.12em]">
                     JPG · PNG · WebP
@@ -234,7 +234,7 @@ export default function Task3Generator() {
                   Style Profile
                 </p>
                 <p className={`text-[11px] font-medium mb-3 ${ACCENT}`}>
-                  BMW Neue Klasse
+                  BMW
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {STYLE_CHIPS.map((chip) => (
@@ -274,14 +274,14 @@ export default function Task3Generator() {
 
           <div className="text-center">
             <p className="text-white text-[13px] font-medium mb-1">
-              Applying Neue Handschrift style...
+              Applying BMW style...
             </p>
-            <p className="text-white/35 text-[11px]">~30–60 segundos</p>
+            <p className="text-white/35 text-[11px]">~30–60 seconds</p>
           </div>
 
           <div className="w-full">
             <p className="text-[9px] uppercase tracking-[0.16em] text-white/25 mb-3 text-center">
-              Style profile activo
+              Active style profile
             </p>
             <div className="flex flex-wrap justify-center gap-1.5">
               {STYLE_CHIPS.map((chip, i) => (
@@ -333,7 +333,7 @@ export default function Task3Generator() {
           <div className="flex items-center gap-3">
             {generatedImage && (
               <button
-                onClick={() => downloadDataUrl(generatedImage, "neue-handschrift.png")}
+                onClick={() => downloadDataUrl(generatedImage, "bmw-styled.png")}
                 className={`inline-flex items-center gap-2 ${ACCENT_BG} text-black text-[11px] uppercase tracking-[0.14em] font-medium px-4 py-2 rounded-sm hover:opacity-90 transition-opacity`}
               >
                 <Download size={12} />
@@ -376,7 +376,7 @@ export default function Task3Generator() {
               />
               <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm px-2 py-0.5 rounded-sm">
                 <span className={`text-[9px] uppercase tracking-[0.14em] ${ACCENT}`}>
-                  Neue Handschrift
+                  BMW
                 </span>
               </div>
             </div>

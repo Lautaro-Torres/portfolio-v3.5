@@ -3,7 +3,7 @@ import { SITE_URL } from "@/config/site";
 export const metadata = {
   title: "Task 1 — Campo Alegre",
   description:
-    "Generador de imágenes lifestyle multi-producto para Campo Alegre, con dual-model chain de Gemini.",
+    "Multi-product lifestyle image generator for Campo Alegre, powered by a Gemini dual-model chain.",
   alternates: {
     canonical: `${SITE_URL}/monks/task-1`,
   },

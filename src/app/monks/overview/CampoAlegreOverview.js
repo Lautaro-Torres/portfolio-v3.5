@@ -43,7 +43,7 @@ const TIMELINE = [
     date: "Thu Jul 3",
     title: "Task 3 — Style Transfer",
     events: [
-      "BMW Neue Klasse moodboard analyzed with vision model",
+      "BMW moodboard analyzed with vision model",
       "Style JSON extracted: color, lighting, composition, texture, music mapping",
       "Image-to-image style transfer implemented with Gemini",
       "Task 3 functional: upload → apply style → download",
@@ -96,13 +96,25 @@ const TASKS = [
 
 const STACK = [
   "Next.js 15 App Router",
+  "Tailwind CSS",
+  "GSAP",
+  "Vercel Pro",
   "Gemini API",
   "gemini-3.1-flash-image",
   "gemini-2.5-flash",
-  "Vercel Pro",
-  "Tailwind CSS",
-  "GSAP",
-  "Cursor",
+  "ComfyUI",
+  "Blender",
+  "Stable Diffusion 1.5",
+  "epiCRealism",
+  "Flux",
+  "IPAdapter",
+  "Midjourney",
+  "Wan VACE",
+  "Veo 3.1",
+  "Kling",
+  "Suno",
+  "Udio",
+  "Adobe Premiere",
 ];
 
 export default function MonksOverview() {

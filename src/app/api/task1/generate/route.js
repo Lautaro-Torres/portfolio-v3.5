@@ -152,7 +152,7 @@ export async function POST(request) {
 
     const product = products[productId];
     if (!product) return NextResponse.json({ error: "Producto no encontrado" }, { status: 400 });
-    if (!situacion?.trim()) return NextResponse.json({ error: "Describí la situación para continuar" }, { status: 400 });
+    if (!situacion?.trim()) return NextResponse.json({ error: "Describe the scene to continue" }, { status: 400 });
 
     const ai = getAI();
 

@@ -19,7 +19,7 @@ export const products = {
   belgian: {
     id: "belgian",
     displayName: "Belgian Golden Strong Ale",
-    heroDescriptor: "Aventura en las yungas",
+    heroDescriptor: "Adventure in the Yungas",
     heroImage: "/datasets/belgian/belgian_00.jpg",
     briefEN: `a Campo Alegre Belgian Golden Strong Ale can — lush tropical jungle label with illustrated turquoise-green canopy and a large tree, bold white CAMPO ALEGRE logotype, BELGIAN GOLDEN STRONG ALE subtitle, metallic silver top and bottom`,
     referencePack: buildReferencePack("belgian"),
@@ -27,7 +27,7 @@ export const products = {
   porter: {
     id: "porter",
     displayName: "Porter",
-    heroDescriptor: "Noches en la Puna",
+    heroDescriptor: "Nights in the Puna",
     heroImage: "/datasets/porter/porter_00.jpg",
     briefEN: `a Campo Alegre Porter can — deep navy-to-burgundy gradient label with white constellation line-art and a dark mountain silhouette at the base, bold white CAMPO ALEGRE logotype, PORTER subtitle`,
     referencePack: buildReferencePack("porter"),
@@ -35,7 +35,7 @@ export const products = {
   pale: {
     id: "pale",
     displayName: "Pale Ale",
-    heroDescriptor: "Tardes en el dique",
+    heroDescriptor: "Afternoons at the dam",
     heroImage: "/datasets/pale/pale_00.jpg",
     briefEN: `a Campo Alegre Pale Ale can — terracotta orange label with an illustrated mountain reservoir, blue-and-orange peaks, green vegetation and birds in flight, bold white CAMPO ALEGRE logotype, PALE ALE subtitle, metallic silver top and bottom`,
     referencePack: buildReferencePack("pale"),

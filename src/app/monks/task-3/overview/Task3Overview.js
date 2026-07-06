@@ -1,32 +1,78 @@
 "use client";
 
-import { ArrowRight, Music, Video, ImageIcon, Zap } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, Music, Video, ImageIcon, Copy, Download, ChevronDown, ChevronUp, Check } from "lucide-react";
 import { useTransitionRouter } from "@/hooks/useTransitionRouter";
 import { useSimpleRouteReady } from "@/hooks/useSimpleRouteReady";
 import BackButton from "@/components/ui/BackButton";
+import BeforeAfterSlider from "@/components/ui/BeforeAfterSlider";
+import { styleConfig } from "@/config/lifestyle-style";
 
 const ACCENT = "text-[#d7ff6a]";
 const ACCENT_BG = "bg-[#d7ff6a]";
 
-const STYLE_JSON = `{
-  "brand_cue": "BMW Neue Klasse — warm, human, cinematic",
-  "mood": ["warm", "aspirational", "filmic", "sun-drenched"],
-  "color": {
-    "grade": "film-like, warm highlights, teal shadows",
-    "base_palette": ["#D3A878", "#EAC9A0", "#E08A3C", "#E8B93C"],
-    "accent_palette": ["#22B4D6", "#9BC4A0"],
-    "pop_color": "#E8481C"
-  },
-  "lighting": {
-    "primary": "golden hour",
-    "direction": "low lateral / backlit"
-  },
-  "composition": {
-    "signature": "shooting through glass",
-    "subject_logic": "human + product in same frame"
-  },
-  "texture": ["cognac leather", "chrome/metal", "film grain"]
-}`;
+const STYLE_JSON = JSON.stringify(styleConfig, null, 2);
+
+function StyleJsonBlock({ json }) {
+  const [expanded, setExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(json);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard unavailable
+    }
+  }
+
+  function handleDownload() {
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "bmw-moodboard-style.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <div className="min-w-0">
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] text-white/45 border border-white/[0.1] px-3 py-1.5 rounded-sm hover:border-white/25 hover:text-white/70 transition-colors"
+        >
+          {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+          {expanded ? "Collapse JSON" : "View full JSON"}
+        </button>
+        <button
+          onClick={handleCopy}
+          className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] text-white/45 border border-white/[0.1] px-3 py-1.5 rounded-sm hover:border-white/25 hover:text-white/70 transition-colors"
+        >
+          {copied ? <Check size={12} className="text-[#d7ff6a]" /> : <Copy size={12} />}
+          {copied ? "Copied" : "Copy"}
+        </button>
+        <button
+          onClick={handleDownload}
+          className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] text-white/45 border border-white/[0.1] px-3 py-1.5 rounded-sm hover:border-white/25 hover:text-white/70 transition-colors"
+        >
+          <Download size={12} />
+          Download
+        </button>
+      </div>
+
+      <pre
+        className={`bg-white/[0.03] border border-white/[0.08] rounded-sm p-5 text-[11px] text-white/70 leading-relaxed overflow-x-auto font-mono transition-all ${
+          expanded ? "max-h-[min(70vh,640px)] overflow-y-auto" : "max-h-48 overflow-y-auto"
+        }`}
+      >
+        <code>{json}</code>
+      </pre>
+    </div>
+  );
+}
 
 const OUTPUT_CARDS = [
   {
@@ -42,8 +88,8 @@ const OUTPUT_CARDS = [
     icon: Video,
     title: "Camera Movement",
     subtitle: "Image → video with motion",
-    body: "The generated image becomes the first frame. An image-to-video model adds camera movement: push-in, orbit, crane up. The style is preserved through motion.",
-    tools: ["Higgsfield", "Veo 3.1 (~$0.15–0.40 / 8s)", "Kling"],
+    body: "Block the shot in Blender with a clay render (geometry only, no materials) to lock camera movement, lens choice and timing — this is previs, the same technique used across the film industry before committing to a full shot. Export depth and outline control passes from the animated scene. Feed those passes into a video generation model (Wan VACE, Kling, Veo) so the AI-generated footage follows the exact camera motion and composition from the previs, not a random reinterpretation. Final color and edit in Premiere — AI generation replaces the expensive full-CG render, not the edit.",
+    tools: ["Wan VACE", "Veo 3.1 (~$0.15–0.40 / 8s)", "Kling"],
     tag: "Planned",
     tagStyle: "bg-white/[0.06] text-white/40",
   },
@@ -51,7 +97,7 @@ const OUTPUT_CARDS = [
     icon: Music,
     title: "Music",
     subtitle: "Style JSON → audio brief",
-    body: "The music_mapping block defines genre, BPM and instrumentation. Organic electronic / cinematic downtempo, 85–100 BPM, warm analog synths, organic percussion.",
+    body: "The music_mapping block is inferred from the visual style system — genre, BPM, instrumentation and energy translated into an audio brief. Organic electronic / cinematic downtempo at 85–100 BPM for hero moments; 70–85 BPM for romantic and reflective passages. Warm analog synths, organic live percussion, round bass — with light acoustic guitar or tape-warmed piano for the archival black & white moments. Avoid aggressive, cold or overtly electronic sounds that contradict the warm-human brand cue.",
     tools: ["Suno", "Udio", "Stable Audio"],
     tag: "Planned",
     tagStyle: "bg-white/[0.06] text-white/40",
@@ -113,7 +159,7 @@ export default function Task3Overview() {
           </div>
           <div className="space-y-4 text-white/55 text-[14px] leading-relaxed max-w-2xl">
             <p>
-              Analyze the BMW Neue Klasse visual moodboard and translate its style into generation
+              Analyze the BMW visual moodboard and translate its style into generation
               workflows for three distinct outputs: a photorealistic still image, a shot with camera
               movement, and a music track.
             </p>
@@ -136,33 +182,33 @@ export default function Task3Overview() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
             {
-              label: "Brand Cue",
-              value: "Warm, human, cinematic, effortless luxury — not cold studio luxury.",
+              label: "Vehicle Reference",
+              value: "Three distinct eras, not one silhouette: the concept car (silver-white, minimalist cabin, smooth uninterrupted body lines) as the hero; a current-gen SUV in rain and wet asphalt; a vintage red coupé E30/M3-era in a cream boucle showroom. The style system must hold across all three.",
               color: "#D3A878",
             },
             {
-              label: "Color",
-              value: "Warm base (golden hour, cognac leather, sand) + cold accents (turquoise, slate). Film grade: warm highlights, teal shadows, soft contrast.",
+              label: "Color & Film Grade",
+              value: "Warm base with cool accent punctuation. Highlights: amber/honey (#D3A878, #EAC9A0). Shadows: teal-leaning (#22B4D6). Accents: pool blue (#2FA5C9), muted green (#9BC4A0), one pop of warm red-orange (#E8481C). Soft contrast — never crushed blacks. A portion of the moodboard is full black & white, grainy archival/candid style — a deliberate treatment for friendship and nostalgia moments, not a lighting failure.",
               color: "#22B4D6",
             },
             {
               label: "Lighting",
-              value: "Golden hour. Low and lateral, backlit with occasional lens flares. Long, soft shadows.",
+              value: "Golden hour preferred — low lateral or backlit, warm rim light, occasional direct sun flares, long soft shadows. Secondary: flat diffuse blue-hour for rain and interior shots. The monochrome archival passages use harder contrast and grain.",
               color: "#E08A3C",
             },
             {
-              label: "Composition",
-              value: "Shooting through glass as a recurring device. Human + product always in the same frame — never a solo product shot.",
+              label: "Composition & Architecture",
+              value: "Shooting through glass/windshield is the signature device — car and human always visible together through a reflective surface. Modern glass-walled houses with the car visible inside or just outside is a recurring architectural motif, blurring architecture and showroom. Never a solo product shot.",
               color: "#9BC4A0",
             },
             {
-              label: "Texture",
-              value: "Cognac leather, chrome/metal reflecting warm ambient light, subtle film grain overlay.",
+              label: "Human Narrative",
+              value: "Five narrative archetypes: friendship (golden-hour picnic, palm trees, casual laughter); romance (couple in a desert landscape, handwritten note); celebration (cocktails on the hood, poolside caps and swimwear); solitude/reflection (single figure at a coastal landscape, laptop and coffee); archival/candid (black & white, grainy, friends laughing, analog memory).",
               color: "#E8B93C",
             },
             {
-              label: "Music Mapping",
-              value: "Organic electronic / cinematic downtempo. 85–100 BPM. Warm analog synths, organic percussion, cinematic swells.",
+              label: "Texture & Materiality",
+              value: "Vermouth leather, chrome and metal catching warm ambient light, clean glass with soft reflections, sand and desert tones, cream boucle upholstery in heritage shots, snake-print textile as a recurring accessory motif, pool water surface. Subtle film grain across color imagery; harder grain in the monochrome archival passages.",
               color: "#E8481C",
             },
           ].map((item) => (
@@ -185,6 +231,28 @@ export default function Task3Overview() {
 
       <div className="border-t border-white/[0.06]" />
 
+      {/* ── Before / After ──────────────────────────────────────────────── */}
+      <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
+        <div className="grid lg:grid-cols-[260px_1fr] gap-10 items-start">
+          <div className="shrink-0">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-2">Style Transfer</p>
+            <h2 className="font-anton text-headline text-white leading-none mb-4">
+              Before &amp;<br />after
+            </h2>
+            <p className="text-white/45 text-[12px] leading-relaxed">
+              Drag the divider to compare the original photograph against the BMW
+              style profile applied by the generator.
+            </p>
+          </div>
+          <BeforeAfterSlider
+            beforeSrc="/assets/task3-showcase/bmw-m4_18.jpg"
+            afterSrc="/assets/task3-showcase/bmw-styled.png"
+          />
+        </div>
+      </section>
+
+      <div className="border-t border-white/[0.06]" />
+
       {/* ── Style JSON ──────────────────────────────────────────────────── */}
       <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
         <div className="grid lg:grid-cols-[260px_1fr] gap-10 items-start">
@@ -198,11 +266,7 @@ export default function Task3Overview() {
               and feeds every generator in the pipeline.
             </p>
           </div>
-          <div className="min-w-0">
-            <pre className="bg-white/[0.03] border border-white/[0.08] rounded-sm p-5 text-[11px] text-white/70 leading-relaxed overflow-x-auto font-mono">
-              <code>{STYLE_JSON}</code>
-            </pre>
-          </div>
+          <StyleJsonBlock json={STYLE_JSON} />
         </div>
       </section>
 
@@ -263,7 +327,7 @@ export default function Task3Overview() {
           <div className="space-y-3 text-white/55 text-[14px] leading-relaxed max-w-2xl">
             <p>
               A working image-to-image style transfer tool where users upload any photograph and
-              the system applies the BMW Neue Klasse style profile via Gemini.
+              the system applies the BMW style profile via Gemini.
             </p>
             <p>
               The style JSON is transparent — visible to the user before generation. The same
@@ -310,7 +374,7 @@ export default function Task3Overview() {
               Apply the style to your image
             </h2>
             <p className="text-white/45 text-[12px]">
-              Upload any photograph. The BMW Neue Klasse style profile is applied in ~30–60 seconds.
+              Upload any photograph. The BMW style profile is applied in ~30–60 seconds.
             </p>
           </div>
           <button

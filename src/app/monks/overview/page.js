@@ -3,7 +3,7 @@ import CampoAlegreOverview from "./CampoAlegreOverview";
 export const metadata = {
   title: "Campo Alegre · Overview",
   description:
-    "Sistema de generación de imágenes lifestyle fotorrealistas para Campo Alegre Cerveza, construido sobre la API de Gemini.",
+    "Photorealistic lifestyle image generation for Campo Alegre, built on the Gemini API.",
 };
 
 export default function OverviewPage() {

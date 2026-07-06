@@ -19,6 +19,8 @@ import Button from "@/components/ui/Button";
 import BackButton from "@/components/ui/BackButton";
 import { scenes } from "@/config/lifestyle-scenes";
 import { product } from "@/config/lifestyle-product";
+import { useSimpleRouteReady } from "@/hooks/useSimpleRouteReady";
+import { useTransitionRouter } from "@/hooks/useTransitionRouter";
 
 // ─── Design tokens (matches existing audit pages) ────────────────────────────
 const ACCENT = "text-[#d7ff6a]";
@@ -33,10 +35,10 @@ const MODES = {
     modelId: "gemini-2.5-flash-image",
     costUsd: 0.039,
     costLabel: "~$0.04",
-    speedLabel: "~10 seg",
-    qualityLabel: "Alta",
-    description: "Exploración rápida de escenas. Calidad comercial.",
-    tag: "Recomendado",
+    speedLabel: "~10 sec",
+    qualityLabel: "High",
+    description: "Fast scene exploration. Commercial-grade quality.",
+    tag: "Recommended",
     tagStyle: `${ACCENT_BG} text-black`,
   },
   final: {
@@ -45,9 +47,9 @@ const MODES = {
     modelId: "gemini-3-pro-image-preview",
     costUsd: 0.12,
     costLabel: "~$0.12",
-    speedLabel: "~25 seg",
-    qualityLabel: "Máxima",
-    description: "Máxima fidelidad y detalle. Para entregables finales.",
+    speedLabel: "~25 sec",
+    qualityLabel: "Maximum",
+    description: "Maximum fidelity and detail. For final deliverables.",
     tag: "Pro",
     tagStyle: "bg-white/[0.08] text-white/60",
   },
@@ -79,7 +81,7 @@ function QaBadge({ qa }) {
     return (
       <div className="flex items-center gap-2 px-3 py-2 rounded border border-red-400/20 bg-red-400/[0.06] text-red-400 text-[11px]">
         <AlertTriangle size={13} className="shrink-0" />
-        <span>Error al verificar: {qa.error}</span>
+        <span>Verification error: {qa.error}</span>
       </div>
     );
   }
@@ -106,7 +108,7 @@ function QaBadge({ qa }) {
               isConsistent ? "text-[#d7ff6a]" : "text-amber-400"
             }`}
           >
-            {isConsistent ? "Consistente" : "Diferencias detectadas"}
+            {isConsistent ? "Consistent" : "Differences detected"}
           </span>
         </div>
         {qa.score != null && (
@@ -125,7 +127,7 @@ function QaBadge({ qa }) {
       )}
       <p className="mt-2 text-white/30 flex items-center gap-1">
         <Info size={10} className="shrink-0" />
-        Imagen con marca de agua SynthID invisible
+        Image includes invisible SynthID watermark
       </p>
     </div>
   );
@@ -136,7 +138,7 @@ function ModeSelector({ mode, onChange, compact = false }) {
     return (
       <div className="flex flex-col gap-2">
         <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-1">
-          Modo de generación
+          Generation mode
         </p>
         {Object.entries(MODES).map(([key, m]) => (
           <button
@@ -156,12 +158,12 @@ function ModeSelector({ mode, onChange, compact = false }) {
                 <span className="text-white/25 text-[9px]">·</span>
                 <span className="text-white/35 text-[9px]">{m.modelName}</span>
               </div>
-              <p className="text-white/30 text-[10px]">{m.speedLabel} · {m.qualityLabel} calidad</p>
+              <p className="text-white/30 text-[10px]">{m.speedLabel} · {m.qualityLabel} quality</p>
             </div>
             <span className="text-[11px] font-medium text-white/55 shrink-0">{m.costLabel}</span>
           </button>
         ))}
-        <p className="text-white/20 text-[10px]">por imagen generada</p>
+        <p className="text-white/20 text-[10px]">per generated image</p>
       </div>
     );
   }
@@ -196,15 +198,15 @@ function ModeSelector({ mode, onChange, compact = false }) {
               <p className={`text-[18px] font-medium leading-none ${mode === key ? ACCENT : "text-white/60"}`}>
                 {m.costLabel}
               </p>
-              <p className="text-white/30 text-[9px] mt-0.5">por imagen</p>
+              <p className="text-white/30 text-[9px] mt-0.5">per image</p>
             </div>
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-2 gap-2 mb-3">
             {[
-              { label: "Velocidad", value: m.speedLabel },
-              { label: "Calidad", value: m.qualityLabel },
+              { label: "Speed", value: m.speedLabel },
+              { label: "Quality", value: m.qualityLabel },
             ].map(({ label, value }) => (
               <div key={label} className="bg-white/[0.03] rounded-sm px-2 py-1.5">
                 <p className="text-white/30 text-[9px] uppercase tracking-[0.1em] mb-0.5">{label}</p>
@@ -232,14 +234,14 @@ function SceneCard({ scene, onSelect, loading }) {
     >
       <div className="flex items-center gap-1.5 mb-1">
         <ImageIcon size={11} className="text-white/30" />
-        <span className="text-[10px] uppercase tracking-[0.14em] text-white/30">Escena</span>
+        <span className="text-[10px] uppercase tracking-[0.14em] text-white/30">Scene</span>
       </div>
       <p className="text-white/85 text-[13px] font-medium leading-snug">{scene.title}</p>
       <p className="mt-1 text-white/35 text-[11px] leading-relaxed line-clamp-2">
         {scene.environmentPrompt}
       </p>
       <div className="mt-3 flex items-center gap-1 text-[#d7ff6a] text-[10px] uppercase tracking-[0.14em] opacity-0 group-hover:opacity-100 transition-opacity">
-        Generar
+        Generate
         <ChevronRight size={11} />
       </div>
     </button>
@@ -251,8 +253,8 @@ function ResultImage({ image, loading, error }) {
     return (
       <div className="relative w-full aspect-[4/3] rounded-sm border border-white/[0.08] bg-white/[0.025] flex flex-col items-center justify-center gap-3">
         <Loader2 size={28} className="text-[#d7ff6a] animate-spin" />
-        <p className="text-white/48 text-[12px] uppercase tracking-[0.12em]">Generando…</p>
-        <p className="text-white/28 text-[11px]">Esto puede tardar 10–30 segundos</p>
+        <p className="text-white/48 text-[12px] uppercase tracking-[0.12em]">Generating…</p>
+        <p className="text-white/28 text-[11px]">This may take 10–30 seconds</p>
       </div>
     );
   }
@@ -269,11 +271,11 @@ function ResultImage({ image, loading, error }) {
         {isBilling ? (
           <>
             <p className="text-red-400/80 text-[13px] font-medium">
-              Cuota de API agotada
+              API quota exhausted
             </p>
             <p className="text-white/40 text-[11px] leading-relaxed max-w-xs">
-              Los modelos de imagen requieren billing activado en Google Cloud.
-              Activalo en{" "}
+              Image models require active billing on Google Cloud.
+              Enable it at{" "}
               <a
                 href="https://console.cloud.google.com/billing"
                 target="_blank"
@@ -282,7 +284,7 @@ function ResultImage({ image, loading, error }) {
               >
                 console.cloud.google.com/billing
               </a>{" "}
-              y vinculá una tarjeta al proyecto.
+              and link a card to the project.
             </p>
           </>
         ) : (
@@ -298,7 +300,7 @@ function ResultImage({ image, loading, error }) {
     <div className="relative w-full aspect-[4/3] rounded-sm overflow-hidden border border-white/[0.08]">
       <img
         src={image}
-        alt="Imagen lifestyle generada"
+        alt="Generated lifestyle image"
         className="w-full h-full object-cover"
       />
     </div>
@@ -312,11 +314,11 @@ function BatchGallery({ results, loading, progress }) {
     <div className="mt-8">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-white/85 text-[13px] uppercase tracking-[0.14em]">
-          Galería batch
+          Batch gallery
         </h3>
         {loading && (
           <span className="text-white/40 text-[11px]">
-            {progress.current} / {progress.total} escenas
+            {progress.current} / {progress.total} scenes
           </span>
         )}
       </div>
@@ -346,7 +348,7 @@ function BatchGallery({ results, loading, progress }) {
                 <button
                   onClick={() => downloadDataUrl(image, `${scene.id}.png`)}
                   className="absolute bottom-2 right-2 p-1.5 rounded-sm bg-black/50 text-white/70 hover:text-white hover:bg-black/70 transition-colors"
-                  title="Descargar"
+                  title="Download"
                 >
                   <Download size={12} />
                 </button>
@@ -381,6 +383,9 @@ function BatchGallery({ results, loading, progress }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function LifestyleGenerator() {
+  useSimpleRouteReady();
+  const { push } = useTransitionRouter();
+
   const [step, setStep] = useState("product"); // "product" | "scenes" | "result"
   const [selectedScene, setSelectedScene] = useState(null);
   const [mode, setMode] = useState("draft");
@@ -414,7 +419,7 @@ export default function LifestyleGenerator() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error generando imagen");
+      if (!res.ok) throw new Error(data.error ?? "Error generating image");
 
       setGeneratedImage(data.image);
 
@@ -485,7 +490,7 @@ export default function LifestyleGenerator() {
     return (
       <main className="min-h-screen bg-[#0a0a0a] pt-20 pb-16">
         <div className="max-w-[1900px] mx-auto px-[5%]">
-          <BackButton />
+          <BackButton href="/monks" />
 
           <div className="mt-10 mb-6 flex items-center gap-2">
             <span className="text-[10px] uppercase tracking-[0.18em] text-white/30">
@@ -499,13 +504,13 @@ export default function LifestyleGenerator() {
               <div className="flex items-center gap-2 mb-4">
                 <Lock size={12} className="text-white/30" />
                 <span className="text-[10px] uppercase tracking-[0.16em] text-white/30">
-                  Producto bloqueado
+                  Product locked
                 </span>
               </div>
 
               <div className="mb-4">
                 <p className="text-[10px] uppercase tracking-[0.18em] text-white/35 mb-1">
-                  {product.subtitle ?? "Vehículo"}
+                  {product.subtitle ?? "Vehicle"}
                 </p>
                 <h1 className="font-anton text-display text-white leading-none">
                   {product.displayName}
@@ -513,27 +518,27 @@ export default function LifestyleGenerator() {
               </div>
 
               <p className="text-white/55 text-[13px] leading-relaxed mb-6 max-w-sm">
-                Tu producto se mantiene idéntico en cada imagen generada. La
-                consistencia visual no depende de cómo escribás el prompt — la
-                garantiza la arquitectura.
+                Your product stays identical in every generated image. Visual
+                consistency does not depend on how you write the prompt — the
+                architecture guarantees it.
               </p>
 
               <div className="flex flex-col gap-2 mb-8 text-[11px] text-white/40 border border-white/[0.06] rounded-sm p-4 bg-white/[0.015]">
                 <div className="flex items-center gap-2">
                   <Check size={11} className={ACCENT} />
-                  Color de carrocería bloqueado
+                  Body color locked
                 </div>
                 <div className="flex items-center gap-2">
                   <Check size={11} className={ACCENT} />
-                  Grilla, llantas y badges idénticos
+                  Grille, wheels and badges identical
                 </div>
                 <div className="flex items-center gap-2">
                   <Check size={11} className={ACCENT} />
-                  Proporciones y líneas de carrocería preservadas
+                  Body proportions and lines preserved
                 </div>
                 <div className="flex items-center gap-2">
                   <Check size={11} className={ACCENT} />
-                  Verificación QA automática por imagen
+                  Automatic QA verification per image
                 </div>
               </div>
 
@@ -541,8 +546,15 @@ export default function LifestyleGenerator() {
                 onClick={() => setStep("scenes")}
                 className={`inline-flex items-center gap-2 ${ACCENT_BG} text-black text-[11px] uppercase tracking-[0.16em] font-medium px-5 py-2.5 rounded-sm hover:opacity-90 transition-opacity`}
               >
-                Elegir escena
+                Choose scene
                 <ChevronRight size={13} />
+              </button>
+
+              <button
+                onClick={() => push("/monks/task-2/overview")}
+                className="mt-4 block text-white/35 text-[10px] uppercase tracking-[0.14em] hover:text-white/60 transition-colors"
+              >
+                See how we built this →
               </button>
             </div>
 
@@ -560,7 +572,7 @@ export default function LifestyleGenerator() {
               <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-2.5 py-1.5 rounded-sm border border-white/[0.08]">
                 <Lock size={10} className="text-white/40" />
                 <span className="text-[9px] uppercase tracking-[0.14em] text-white/40">
-                  Producto fijo
+                  Fixed product
                 </span>
               </div>
             </div>
@@ -579,15 +591,15 @@ export default function LifestyleGenerator() {
             onClick={() => setStep("product")}
             className="flex items-center gap-1.5 text-white/40 text-[11px] uppercase tracking-[0.14em] hover:text-white/70 transition-colors mb-10"
           >
-            ← Producto
+            ← Product
           </button>
 
           <div className="mb-8">
             <p className="text-[10px] uppercase tracking-[0.18em] text-white/30 mb-2">
-              Paso 2 de 3
+              Step 2 of 3
             </p>
             <h1 className="font-anton text-headline text-white leading-none mb-6">
-              Elegí una escena
+              Choose a scene
             </h1>
             <ModeSelector mode={mode} onChange={setMode} />
           </div>
@@ -614,18 +626,18 @@ export default function LifestyleGenerator() {
                 size={13}
                 className={`transition-transform ${advancedOpen ? "rotate-180" : ""}`}
               />
-              Modo avanzado
+              Advanced mode
             </button>
 
             {advancedOpen && (
               <div className="mt-4 max-w-xl">
                 <label className="block text-[10px] uppercase tracking-[0.14em] text-white/40 mb-2">
-                  Escena libre (reemplaza la capa 3)
+                  Custom scene (replaces layer 3)
                 </label>
                 <textarea
                   value={customScene}
                   onChange={(e) => setCustomScene(e.target.value)}
-                  placeholder="Ej: en una playa privada al amanecer, una persona meditando sobre el capó…"
+                  placeholder="e.g. on a private beach at sunrise, a person meditating on the hood…"
                   rows={3}
                   className="w-full bg-white/[0.03] border border-white/[0.08] rounded-sm px-3 py-2.5 text-white/70 text-[12px] placeholder:text-white/25 focus:outline-none focus:border-[#d7ff6a]/30 resize-none"
                 />
@@ -633,13 +645,13 @@ export default function LifestyleGenerator() {
                   <button
                     onClick={() =>
                       generate(
-                        { id: "__custom__", title: "Escena personalizada" },
+                        { id: "__custom__", title: "Custom scene" },
                         mode
                       )
                     }
                     className={`mt-3 inline-flex items-center gap-2 ${ACCENT_BG} text-black text-[11px] uppercase tracking-[0.16em] font-medium px-4 py-2 rounded-sm hover:opacity-90 transition-opacity`}
                   >
-                    Generar escena libre
+                    Generate custom scene
                     <ChevronRight size={12} />
                   </button>
                 )}
@@ -662,7 +674,7 @@ export default function LifestyleGenerator() {
           }}
           className="flex items-center gap-1.5 text-white/40 text-[11px] uppercase tracking-[0.14em] hover:text-white/70 transition-colors mb-10"
         >
-          ← Escenas
+          ← Scenes
         </button>
 
         <div className="grid md:grid-cols-[1fr_320px] gap-8 items-start">
@@ -705,7 +717,7 @@ export default function LifestyleGenerator() {
                   className="inline-flex items-center gap-2 text-white/55 text-[11px] uppercase tracking-[0.14em] border border-white/[0.08] px-4 py-2 rounded-sm hover:border-white/20 hover:text-white/75 transition-all"
                 >
                   <RefreshCw size={12} />
-                  Regenerar
+                  Regenerate
                 </button>
                 <button
                   onClick={() =>
@@ -717,7 +729,7 @@ export default function LifestyleGenerator() {
                   className="inline-flex items-center gap-2 text-white/55 text-[11px] uppercase tracking-[0.14em] border border-white/[0.08] px-4 py-2 rounded-sm hover:border-white/20 hover:text-white/75 transition-all"
                 >
                   <Download size={12} />
-                  Descargar
+                  Download
                 </button>
                 <button
                   onClick={generateAll}
@@ -731,12 +743,12 @@ export default function LifestyleGenerator() {
                   {batchLoading ? (
                     <>
                       <Loader2 size={12} className="animate-spin" />
-                      Generando {batchProgress.current}/{batchProgress.total}…
+                      Generating {batchProgress.current}/{batchProgress.total}…
                     </>
                   ) : (
                     <>
                       <Layers size={12} />
-                      Generar todas las escenas
+                      Generate all scenes
                     </>
                   )}
                 </button>
@@ -755,12 +767,12 @@ export default function LifestyleGenerator() {
           <div className="flex flex-col gap-4">
             <div>
               <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-3">
-                Verificación QA
+                QA verification
               </p>
               {loading ? (
                 <div className="flex items-center gap-2 text-white/35 text-[11px]">
                   <Loader2 size={13} className="animate-spin" />
-                  Generando y verificando…
+                  Generating and verifying…
                 </div>
               ) : (
                 <QaBadge qa={qaResult} />
@@ -771,16 +783,16 @@ export default function LifestyleGenerator() {
             {selectedScene && selectedScene.id !== "__custom__" && (
               <div className="border border-white/[0.06] rounded-sm p-4 bg-white/[0.015] text-[11px] space-y-3">
                 <p className="text-[10px] uppercase tracking-[0.16em] text-white/30">
-                  Escena
+                  Scene
                 </p>
                 <div>
-                  <p className="text-white/30 mb-0.5">Entorno</p>
+                  <p className="text-white/30 mb-0.5">Environment</p>
                   <p className="text-white/55 leading-relaxed">
                     {selectedScene.environmentPrompt}
                   </p>
                 </div>
                 <div>
-                  <p className="text-white/30 mb-0.5">Interacción</p>
+                  <p className="text-white/30 mb-0.5">Interaction</p>
                   <p className="text-white/55 leading-relaxed">
                     {selectedScene.interactionPrompt}
                   </p>

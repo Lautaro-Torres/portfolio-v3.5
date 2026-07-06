@@ -3,7 +3,7 @@ import { SITE_URL } from "@/config/site";
 export const metadata = {
   title: "Lifestyle Generator",
   description:
-    "Generá imágenes lifestyle fotorrealistas con producto consistente usando Gemini AI.",
+    "Generate photorealistic lifestyle images with consistent product identity using Gemini AI.",
   alternates: {
     canonical: `${SITE_URL}/lifestyle-generator`,
   },

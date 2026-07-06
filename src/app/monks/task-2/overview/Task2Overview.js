@@ -4,9 +4,21 @@ import { ArrowRight, Layers, Lock, Eye } from "lucide-react";
 import { useTransitionRouter } from "@/hooks/useTransitionRouter";
 import { useSimpleRouteReady } from "@/hooks/useSimpleRouteReady";
 import BackButton from "@/components/ui/BackButton";
+import ShowcaseGallery, { showcaseSrc } from "@/components/ui/ShowcaseGallery";
 
 const ACCENT = "text-[#d7ff6a]";
 const ACCENT_BG = "bg-[#d7ff6a]";
+
+const TASK2_SHOWCASE = [
+  {
+    src: showcaseSrc("task2-showcase", "urban-night (1).png"),
+    label: "Urban street at night · Wet asphalt, neon reflections",
+  },
+  {
+    src: showcaseSrc("task2-showcase", "urban-night (2).png"),
+    label: "Coastal road · Golden hour, human in frame",
+  },
+];
 
 const LAYERS = [
   {
@@ -29,7 +41,7 @@ const LAYERS = [
     icon: Eye,
     color: "#22B4D6",
     items: [
-      "BMW Neue Klasse moodboard — same creative direction as Task 3",
+      "BMW moodboard — same creative direction as Task 3",
       "Golden hour, warm film grade, human + product in frame",
       "Not cold studio luxury — warm, cinematic, effortless",
       "Shared universe: Task 2 and Task 3 draw from the same visual language",
@@ -114,7 +126,7 @@ export default function Task2Overview() {
             <div className="mt-4 space-y-2">
               {[
                 "26 multi-angle reference photos → product identity layer",
-                "BMW Neue Klasse moodboard → style layer (shared with Task 3)",
+                "BMW moodboard → style layer (shared with Task 3)",
                 "Free user input → scene layer (the only variable)",
                 "gemini-2.5-flash QA loop → automatic consistency verification",
               ].map((item) => (
@@ -178,6 +190,35 @@ export default function Task2Overview() {
 
       <div className="border-t border-white/[0.06]" />
 
+      {/* ── What if the model doesn't know the product ──────────────────────── */}
+      <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
+        <div className="grid lg:grid-cols-[260px_1fr] gap-10">
+          <div className="shrink-0">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-2">Q&amp;A</p>
+            <h2 className="font-anton text-headline text-white leading-none">
+              If the model<br />doesn&apos;t know<br />the product
+            </h2>
+          </div>
+          <div className="max-w-2xl">
+            <div className="rounded-sm border border-white/[0.08] bg-white/[0.02] p-6">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-white/30 mb-3">
+                Brief question: what do you do if the tool doesn&apos;t natively understand the product?
+              </p>
+              <p className="text-white/65 text-[14px] leading-relaxed">
+                BMW&apos;s M4 Competition isn&apos;t something the model has memorized with brand accuracy
+                out of the box. That&apos;s exactly what Layer 1 (Product Identity) solves: 26
+                multi-angle reference photos ground the model in the real vehicle before any scene
+                generation happens. If drift still occurs on a specific element, the fallback is
+                close-up references of distinctive features (kidney grille, M badge) fed as a
+                separate, higher-weight emphasis block.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="border-t border-white/[0.06]" />
+
       {/* ── Key Decisions ───────────────────────────────────────────────── */}
       <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
         <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-10">Key Decisions</p>
@@ -226,6 +267,27 @@ export default function Task2Overview() {
           </div>
         </div>
       </section>
+
+      <div className="border-t border-white/[0.06]" />
+
+      {/* ── Showcase ────────────────────────────────────────────────────── */}
+      <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
+        <div className="grid lg:grid-cols-[260px_1fr] gap-10 items-start mb-10">
+          <div className="shrink-0">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-2">Showcase</p>
+            <h2 className="font-anton text-headline text-white leading-none mb-4">
+              Generated<br />outputs
+            </h2>
+            <p className="text-white/45 text-[12px] leading-relaxed">
+              BMW M4 Competition lifestyle generations — product identity locked via 26
+              reference photos, style layer from the BMW moodboard, scene as the only variable.
+            </p>
+          </div>
+        </div>
+        <ShowcaseGallery items={TASK2_SHOWCASE} columns="grid-cols-1 lg:grid-cols-2" />
+      </section>
+
+      <div className="border-t border-white/[0.06]" />
 
       {/* ── CTA ─────────────────────────────────────────────────────────── */}
       <section className="py-16 px-[5%] max-w-[1900px] mx-auto">

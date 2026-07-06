@@ -5,16 +5,20 @@ export const maxDuration = 120;
 
 const MODEL = "gemini-3.1-flash-image";
 
-// BMW Neue Klasse style profile — source of truth for the style transfer prompt
+// BMW style profile (from moodboard) — source of truth for the style transfer prompt
 const STYLE_PROMPT = `Apply the following cinematic style to this photograph while preserving its subject, composition and narrative exactly:
 
-LIGHTING: Golden hour, low-angle lateral or backlit illumination. Warm directional light hitting subjects from the side or behind, creating rim light separation and occasional lens flares. Shadows are long and soft.
+BRAND FEELING: BMW — warm, human, cinematic, effortless luxury. Not cold showroom luxury; the brand lives in lived moments, not static product shots.
 
-COLOR GRADE: Film-like warm highlights (amber/honey tones, approx #D3A878 and #EAC9A0) with opposing teal-leaning shadows (#22B4D6 tone in shadow areas). Warm base palette with terracotta and golden accents (#E08A3C, #E08A3C, #E8B93C). One controlled pop of warm red-orange (#E8481C) where the scene allows. Soft contrast — never crushed blacks or blown highlights.
+LIGHTING: Golden hour preferred; low-angle lateral or backlit illumination. Warm directional light hitting subjects from the side or behind, creating rim light separation and occasional soft sun flares. Shadows are long and soft. For overcast/rain scenes: flat diffuse blue-hour light with medium-low contrast.
 
-ATMOSPHERE: Subtle film grain texture overlay. Shallow depth of field with creamy background separation. Slight warm haze or atmospheric glow. Brand feeling: warm, human, cinematic, effortless — not cold studio luxury.
+COLOR GRADE: Film-like warm highlights (#D3A878, #EAC9A0 — amber/honey tones) with opposing teal-leaning shadows (#22B4D6 tone in shadow areas). Warm base palette: terracotta (#E08A3C), golden (#E8B93C), desert sand (#C4A576). Cool accent punctuation: pool blue (#2FA5C9), muted green (#9BC4A0). One controlled pop of warm red-orange (#E8481C) where the scene allows. Soft contrast — never crushed blacks or blown highlights.
 
-COMPOSITION: Preserve the original subject and framing exactly. Enhance materiality: if there is leather, make it cognac-warm; if there is metal or chrome, make it reflect the warm ambient light. The result must look like a single editorial photograph taken on location, not a composite.
+ATMOSPHERE: Subtle film grain texture overlay. Shallow depth of field on portraits and interior details; deep on landscapes. Slight warm haze or atmospheric glow on golden-hour shots. Brand mood: warm, aspirational, filmic, sun-drenched, nostalgic, candid.
+
+MATERIALITY: Enhance physical textures to match the brand system — vermouth leather (warm), chrome/metal (reflecting warm ambient light), glass (clean with soft reflections), sand/desert tones, cream boucle upholstery where present.
+
+COMPOSITION: Preserve the original subject and framing exactly. Human and vehicle in the same frame whenever both are present. The car is a companion in a life being lived, not a showroom object.
 
 Output: photorealistic, 2K editorial quality, no artificial sharpening, no over-saturation.`;
 

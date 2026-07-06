@@ -4,9 +4,53 @@ import { ArrowRight } from "lucide-react";
 import { useTransitionRouter } from "@/hooks/useTransitionRouter";
 import { useSimpleRouteReady } from "@/hooks/useSimpleRouteReady";
 import BackButton from "@/components/ui/BackButton";
+import ShowcaseGallery, { showcaseSrc } from "@/components/ui/ShowcaseGallery";
 
 const ACCENT = "text-[#d7ff6a]";
 const ACCENT_BG = "bg-[#d7ff6a]";
+
+const TASK1_SHOWCASE = [
+  {
+    src: showcaseSrc("task1-showcase", "pale-113216.png"),
+    product: "Pale Ale",
+    label: "Mountain reservoir · POV hold",
+    aspect: "aspect-[9/16]",
+  },
+  {
+    src: showcaseSrc("task1-showcase", "pale-246854.png"),
+    product: "Pale Ale",
+    label: "Hiking · Senderismo en montaña",
+  },
+  {
+    src: showcaseSrc("task1-showcase", "pale-216811.png"),
+    product: "Pale Ale",
+    label: "Dock at sunset · Golden hour",
+    aspect: "aspect-[9/16]",
+  },
+  {
+    src: showcaseSrc("task1-showcase", "pale-778411.png"),
+    product: "Pale Ale",
+    label: "Bar rooftop · Friends & toast",
+    aspect: "aspect-[9/16]",
+  },
+  {
+    src: showcaseSrc("task1-showcase", "belgian (3).png"),
+    product: "Belgian Golden Strong Ale",
+    label: "Lakeside picnic · Golden hour",
+    aspect: "aspect-[9/16]",
+  },
+  {
+    src: showcaseSrc("task1-showcase", "belgian-165478.png"),
+    product: "Belgian Golden Strong Ale",
+    label: "Living room at night · Warm lamp light",
+  },
+  {
+    src: showcaseSrc("task1-showcase", "porter-16516.png"),
+    product: "Porter",
+    label: "Campfire · Night edge case",
+    aspect: "aspect-[9/16]",
+  },
+];
 
 const JOURNEY = [
   {
@@ -120,6 +164,14 @@ export default function Task1Overview() {
               Generate photorealistic lifestyle images of Campo Alegre craft beer cans with
               exact label fidelity across multiple scene types — open-source first, then
               closed-source if needed.
+            </p>
+            <p>
+              Campo Alegre is a real craft beer client from a previous engagement — not a
+              synthetic case built for this test. They provided the actual label artwork and
+              product photography used as the grounding reference throughout this pipeline. The
+              architecture documented here was built to solve their real production need:
+              generating consistent lifestyle imagery without a photo shoot for every new scene
+              or seasonal campaign.
             </p>
             <p>
               The core problem: when you give an image generation model a product photo plus a
@@ -246,6 +298,36 @@ export default function Task1Overview() {
             forced to read the design and render a new 3D object that integrates with the scene.
           </p>
         </div>
+
+        <div className="rounded-sm border border-white/[0.08] bg-white/[0.02] p-5 max-w-2xl mt-4">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-white/30 mb-2">Dataset provenance</p>
+          <p className="text-white/50 text-[13px] leading-relaxed">
+            The product dataset — angle renders every 45° plus the flat label artwork — was
+            modeled in Blender from the client&apos;s real label files and product photos, rather than
+            generated via an AI tool like Meshy. Meshy-generated meshes typically have dense,
+            non-animation-ready topology; a clean manual model was needed to guarantee consistent
+            geometry across all 8 reference angles.
+          </p>
+        </div>
+      </section>
+
+      <div className="border-t border-white/[0.06]" />
+
+      {/* ── Showcase ────────────────────────────────────────────────────── */}
+      <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
+        <div className="grid lg:grid-cols-[260px_1fr] gap-10 items-start mb-10">
+          <div className="shrink-0">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-2">Showcase</p>
+            <h2 className="font-anton text-headline text-white leading-none mb-4">
+              Generated<br />outputs
+            </h2>
+            <p className="text-white/45 text-[12px] leading-relaxed">
+              Real generations across three Campo Alegre products and multiple scene types —
+              outdoor daylight, golden hour, interior, bar and campfire edge case.
+            </p>
+          </div>
+        </div>
+        <ShowcaseGallery items={TASK1_SHOWCASE} />
       </section>
 
       <div className="border-t border-white/[0.06]" />
