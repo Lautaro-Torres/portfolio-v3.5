@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useRef, useState } from "react";
 import { ExternalLink, ArrowRight } from "lucide-react";
 import { useSimpleRouteReady } from "../../../hooks/useSimpleRouteReady";
+import { useAuditPageAnimations } from "../../../hooks/useAuditPageAnimations";
 import {
   auditMeta,
   businessUnderstanding,
@@ -20,10 +19,6 @@ import {
   validationInputs,
   measurementNote,
 } from "./auditData";
-
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
 
 // ─── Editorial design tokens ─────────────────────────────────────────────────
 
@@ -67,7 +62,7 @@ const CATEGORY = {
 function Card({ children, className = "" }) {
   return (
     <div
-      className={`group/card overflow-hidden rounded-[1.35rem] border border-white/[0.075] bg-[linear-gradient(135deg,rgba(255,255,255,0.055),rgba(255,255,255,0.018)_42%,rgba(255,255,255,0.035))] shadow-[0_24px_80px_rgba(0,0,0,0.24)] transition-[border-color,transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-white/[0.14] hover:shadow-[0_30px_90px_rgba(0,0,0,0.32)] ${className}`}
+      className={`group/card overflow-hidden rounded-2xl border border-white/[0.075] bg-[linear-gradient(135deg,rgba(255,255,255,0.055),rgba(255,255,255,0.018)_42%,rgba(255,255,255,0.035))] shadow-[0_24px_80px_rgba(0,0,0,0.24)] transition-[border-color,transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-white/[0.14] hover:shadow-[0_30px_90px_rgba(0,0,0,0.32)] md:rounded-[1.35rem] ${className}`}
     >
       {children}
     </div>
@@ -129,7 +124,7 @@ function CatBadge({ category }) {
 
 function BusinessCard() {
   return (
-    <Card className="flex flex-col gap-7 p-7 md:p-9">
+    <Card className="flex flex-col gap-7 p-4 sm:p-6 md:p-9">
       <div className="flex items-start justify-between gap-6">
         <div className="flex flex-col gap-1.5">
           <Label>01 — Business Understanding</Label>
@@ -152,7 +147,7 @@ function BusinessCard() {
         {businessUnderstanding.blocks.map((block) => (
           <div
             key={block.label}
-            className="bg-[#121212] p-5"
+            className="bg-[#121212] p-3.5 sm:p-5"
           >
             <p className="mb-2 font-general text-[11px] uppercase tracking-[0.16em] text-white/32">
               {block.label}
@@ -178,7 +173,7 @@ function BusinessCard() {
 
 function BenchmarkCard() {
   return (
-    <Card className="flex flex-col gap-6 p-7 md:p-9">
+    <Card className="flex flex-col gap-6 p-4 sm:p-6 md:p-9">
       <div className="flex flex-col gap-1.5">
         <Label>02 — Benchmark Patterns Used</Label>
         <CardHeading className="text-[clamp(1.45rem,2.5vw,2.1rem)]">
@@ -289,7 +284,7 @@ function AuditRow({ row, index, defaultOpen = false }) {
 
 function AuditRowsCard({ label, title, rows }) {
   return (
-    <Card className="flex flex-col gap-6 p-7 md:p-9">
+    <Card className="flex flex-col gap-6 p-4 sm:p-6 md:p-9">
       <div className="flex flex-col gap-1.5 md:flex-row md:items-end md:justify-between">
         <div>
           <Label>{label}</Label>
@@ -323,7 +318,7 @@ function ImpactCard() {
   const p1Count = expectedImpactMatrix.filter((i) => i.priority === "P1").length;
 
   return (
-    <Card className="flex flex-col gap-6 p-7 md:p-9">
+    <Card className="flex flex-col gap-6 p-4 sm:p-6 md:p-9">
       <div className="flex flex-col gap-1.5">
         <Label>08 — Expected Impact Matrix</Label>
         <CardHeading className="text-[clamp(1.45rem,2.4vw,2rem)]">
@@ -428,7 +423,7 @@ function FindingsCard() {
   const p1 = keyFindings.filter((f) => f.priority === "P1").length;
 
   return (
-    <Card className="flex flex-col gap-6 p-7 md:p-9">
+    <Card className="flex flex-col gap-6 p-4 sm:p-6 md:p-9">
       {/* Header — number and title intentionally separated */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex flex-col gap-1.5">
@@ -532,7 +527,7 @@ function FlowCard() {
   const intentWords = ["Understand", "Clarify", "Compare", "Trust", "Choose", "Buy", "Retain"];
 
   return (
-    <Card className="relative flex flex-col gap-8 p-7 md:p-10">
+    <Card className="relative flex flex-col gap-8 p-4 sm:p-6 md:p-10">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(215,255,106,0.055),transparent_34%)]" />
       <div className="relative flex flex-col gap-1.5">
         <Label>06 — Conversion Flow</Label>
@@ -610,7 +605,7 @@ function FlowCard() {
 
 function RoadmapCard() {
   return (
-    <Card className="flex flex-col gap-7 p-7 md:p-10">
+    <Card className="flex flex-col gap-7 p-4 sm:p-6 md:p-10">
       <div className="flex flex-col gap-1.5 md:flex-row md:items-end md:justify-between">
         <div className="flex flex-col gap-1.5">
           <Label>07 — Prioritized Roadmap</Label>
@@ -703,7 +698,7 @@ const ICON_PATHS = {
 
 function ValidationCard() {
   return (
-    <Card className="flex flex-col gap-5 p-7 md:p-8">
+    <Card className="flex flex-col gap-5 p-4 sm:p-6 md:p-8">
       <div className="flex flex-col gap-1.5">
         <Label>09 — Data to Request</Label>
         <CardHeading className="text-[clamp(1.3rem,2.4vw,1.85rem)]">
@@ -753,92 +748,20 @@ export default function KaizenAudit() {
   const heroRef = useRef(null);
   const gridRef = useRef(null);
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Hero reveal
-      if (heroRef.current) {
-        const els = Array.from(heroRef.current.children);
-        gsap.set(els, { y: 22, opacity: 0 });
-        gsap.to(els, {
-          y: 0, opacity: 1, duration: 0.7,
-          stagger: 0.08, ease: "power2.out", delay: 0.1,
-        });
-      }
-
-      // Above-fold cards
-      const aboveFold = gridRef.current?.querySelectorAll(".bento-above");
-      if (aboveFold?.length) {
-        gsap.set(aboveFold, { y: 22, opacity: 0 });
-        gsap.to(aboveFold, {
-          y: 0, opacity: 1, duration: 0.7,
-          stagger: 0.1, ease: "power2.out", delay: 0.3,
-        });
-      }
-
-      // Scroll-triggered cards
-      gridRef.current?.querySelectorAll(".bento-scroll").forEach((el) => {
-        gsap.set(el, { y: 20, opacity: 0 });
-        gsap.to(el, {
-          y: 0, opacity: 1, duration: 0.65, ease: "power2.out",
-          scrollTrigger: { trigger: el, start: "top 90%", toggleActions: "play none none none", once: true },
-        });
-      });
-
-      // Count-up animations
-      pageRef.current?.querySelectorAll(".count-up").forEach((el) => {
-        const target = parseInt(el.dataset.target, 10);
-        if (isNaN(target)) return;
-        const obj = { value: 0 };
-        el.textContent = "0";
-        gsap.to(obj, {
-          value: target, duration: 1, ease: "power2.out", delay: 0.5,
-          onUpdate: () => { el.textContent = Math.round(obj.value); },
-        });
-      });
-
-      // Bar width animations
-      pageRef.current?.querySelectorAll(".anim-bar").forEach((el) => {
-        const targetWidth = el.dataset.width ?? "0%";
-        gsap.set(el, { width: 0 });
-        gsap.to(el, {
-          width: targetWidth, duration: 0.9, ease: "power2.out",
-          scrollTrigger: { trigger: el, start: "top 92%", toggleActions: "play none none none", once: true },
-        });
-      });
-
-      pageRef.current?.querySelectorAll(".anim-timeline").forEach((el, index) => {
-        const targetWidth = el.dataset.width ?? "100%";
-        gsap.set(el, { width: 0 });
-        gsap.to(el, {
-          width: targetWidth,
-          duration: 0.85,
-          delay: index * 0.12,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: el,
-            start: "top 92%",
-            toggleActions: "play none none none",
-            once: true,
-          },
-        });
-      });
-    }, pageRef);
-
-    return () => ctx.revert();
-  }, []);
+  useAuditPageAnimations(pageRef, heroRef, gridRef);
 
   return (
     <div
       ref={pageRef}
-      className="min-h-screen bg-[#0a0a0a] text-white"
+      className="audit-page min-h-screen bg-[#0a0a0a] text-white"
     >
-      <main className="w-full bg-[radial-gradient(circle_at_50%_-10%,rgba(255,255,255,0.08),transparent_30%),linear-gradient(180deg,#0a0a0a_0%,#0d0d0d_48%,#0a0a0a_100%)] pb-10 pt-6 md:pb-12 md:pt-10">
-        <div className="mx-auto w-full max-w-[1720px] px-[5%]">
+      <main className="w-full bg-[radial-gradient(circle_at_50%_-10%,rgba(255,255,255,0.08),transparent_30%),linear-gradient(180deg,#0a0a0a_0%,#0d0d0d_48%,#0a0a0a_100%)] pb-8 pt-4 md:pb-12 md:pt-10">
+        <div className="mx-auto w-full max-w-[1720px] px-3 sm:px-4 md:px-[5%]">
 
           {/* ── Hero ──────────────────────────────────────────────────── */}
           <div
             ref={heroRef}
-            className="grid gap-6 border-b border-white/[0.07] pb-7 pt-8 md:grid-cols-[1fr_360px] md:items-end md:pb-8 md:pt-12"
+            className="grid gap-4 border-b border-white/[0.07] pb-5 pt-4 md:gap-6 md:pb-8 md:pt-12 md:grid-cols-[1fr_360px] md:items-end"
           >
             <div>
               <span className="font-general text-[11px] uppercase tracking-[0.22em] text-white/26">
@@ -866,7 +789,7 @@ export default function KaizenAudit() {
           </div>
 
           {/* ── Bento grid ────────────────────────────────────────────── */}
-          <div ref={gridRef} className="flex flex-col gap-4 pt-4 md:gap-5 md:pt-5">
+          <div ref={gridRef} className="flex flex-col gap-3 pt-3 md:gap-5 md:pt-5">
 
             <div className="bento-above"><BusinessCard /></div>
             <div className="bento-scroll"><BenchmarkCard /></div>
@@ -893,7 +816,7 @@ export default function KaizenAudit() {
           </div>
 
           {/* ── Intentional close ─────────────────────────────────────── */}
-          <div className="mt-5 rounded-[1.35rem] border border-white/[0.07] bg-white/[0.025] p-6 md:p-8">
+          <div className="mt-3 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 md:mt-5 md:rounded-[1.35rem] md:p-8">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <Label>10 — Measurement Note</Label>

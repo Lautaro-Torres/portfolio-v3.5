@@ -88,6 +88,13 @@ html.smooth-scroll-active body {
   }
 }
 
+/* Audit reports: never allow GSAP to leave sections invisible on first paint */
+.audit-page .bento-above,
+.audit-page .bento-scroll {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
 /* Honest indeterminate bar (route transition — not a fake %) */
 .route-loader-track {
   position: relative;
