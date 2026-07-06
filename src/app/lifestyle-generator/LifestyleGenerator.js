@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import BackButton from "@/components/ui/BackButton";
+import { useImageLightbox, ImageLightbox, LightboxTrigger } from "@/components/ui/ImageLightbox";
 import { scenes } from "@/config/lifestyle-scenes";
 import { product } from "@/config/lifestyle-product";
 import { useSimpleRouteReady } from "@/hooks/useSimpleRouteReady";
@@ -248,7 +249,7 @@ function SceneCard({ scene, onSelect, loading }) {
   );
 }
 
-function ResultImage({ image, loading, error }) {
+function ResultImage({ image, loading, error, onOpenLightbox, lightboxLabel }) {
   if (loading) {
     return (
       <div className="relative w-full aspect-[4/3] rounded-sm border border-white/[0.08] bg-white/[0.025] flex flex-col items-center justify-center gap-3">
@@ -296,18 +297,33 @@ function ResultImage({ image, loading, error }) {
 
   if (!image) return null;
 
+  const img = (
+    <img
+      src={image}
+      alt="Generated lifestyle image"
+      className="h-full w-full object-cover"
+      draggable={false}
+    />
+  );
+
   return (
-    <div className="relative w-full aspect-[4/3] rounded-sm overflow-hidden border border-white/[0.08]">
-      <img
-        src={image}
-        alt="Generated lifestyle image"
-        className="w-full h-full object-cover"
-      />
+    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-sm border border-white/[0.08]">
+      {onOpenLightbox ? (
+        <LightboxTrigger
+          items={[{ src: image, alt: lightboxLabel || "Generated lifestyle image", label: lightboxLabel }]}
+          onOpen={onOpenLightbox}
+          className="h-full w-full"
+        >
+          {img}
+        </LightboxTrigger>
+      ) : (
+        img
+      )}
     </div>
   );
 }
 
-function BatchGallery({ results, loading, progress }) {
+function BatchGallery({ results, loading, progress, onOpenLightbox }) {
   if (!loading && results.length === 0) return null;
 
   return (
@@ -323,31 +339,51 @@ function BatchGallery({ results, loading, progress }) {
         )}
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        {results.map(({ scene, image, qa, error: err }) => (
+        {results.map(({ scene, image, qa, error: err }, index) => {
+          const batchLightboxItems = results
+            .filter((r) => r.image)
+            .map((r) => ({
+              src: r.image,
+              alt: r.scene.title,
+              label: r.scene.title,
+            }));
+          const lightboxIndex = batchLightboxItems.findIndex((item) => item.src === image);
+          return (
           <div key={scene.id} className="flex flex-col gap-1.5">
             {image ? (
-              <div className="relative aspect-[4/3] rounded-sm overflow-hidden border border-white/[0.08]">
-                <img
-                  src={image}
-                  alt={scene.title}
-                  className="w-full h-full object-cover"
-                />
+              <div className="relative aspect-[4/3] overflow-hidden rounded-sm border border-white/[0.08]">
+                <LightboxTrigger
+                  items={batchLightboxItems}
+                  index={lightboxIndex >= 0 ? lightboxIndex : 0}
+                  onOpen={onOpenLightbox}
+                  className="h-full w-full"
+                >
+                  <img
+                    src={image}
+                    alt={scene.title}
+                    className="h-full w-full object-cover"
+                    draggable={false}
+                  />
+                </LightboxTrigger>
                 {qa && (
-                  <div className="absolute top-2 right-2">
+                  <div className="pointer-events-none absolute top-2 right-2">
                     {qa.consistent && qa.score >= 70 ? (
-                      <span className="flex items-center gap-1 bg-[#d7ff6a]/90 text-black text-[9px] uppercase tracking-[0.1em] px-1.5 py-0.5 rounded-sm font-medium">
+                      <span className="flex items-center gap-1 rounded-sm bg-[#d7ff6a]/90 px-1.5 py-0.5 font-medium text-[9px] uppercase tracking-[0.1em] text-black">
                         <Check size={9} /> OK
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 bg-amber-400/90 text-black text-[9px] uppercase tracking-[0.1em] px-1.5 py-0.5 rounded-sm font-medium">
+                      <span className="flex items-center gap-1 rounded-sm bg-amber-400/90 px-1.5 py-0.5 font-medium text-[9px] uppercase tracking-[0.1em] text-black">
                         <AlertTriangle size={9} /> Rev
                       </span>
                     )}
                   </div>
                 )}
                 <button
-                  onClick={() => downloadDataUrl(image, `${scene.id}.png`)}
-                  className="absolute bottom-2 right-2 p-1.5 rounded-sm bg-black/50 text-white/70 hover:text-white hover:bg-black/70 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    downloadDataUrl(image, `${scene.id}.png`);
+                  }}
+                  className="absolute bottom-2 right-2 rounded-sm bg-black/50 p-1.5 text-white/70 transition-colors hover:bg-black/70 hover:text-white"
                   title="Download"
                 >
                   <Download size={12} />
@@ -364,7 +400,8 @@ function BatchGallery({ results, loading, progress }) {
             )}
             <p className="text-white/48 text-[10px] truncate">{scene.title}</p>
           </div>
-        ))}
+          );
+        })}
         {/* Pending slots during batch */}
         {loading &&
           Array.from({ length: scenes.length - results.length }).map((_, i) => (
@@ -385,6 +422,7 @@ function BatchGallery({ results, loading, progress }) {
 export default function LifestyleGenerator() {
   useSimpleRouteReady();
   const { push } = useTransitionRouter();
+  const lightbox = useImageLightbox();
 
   const [step, setStep] = useState("product"); // "product" | "scenes" | "result"
   const [selectedScene, setSelectedScene] = useState(null);
@@ -707,6 +745,8 @@ export default function LifestyleGenerator() {
               image={generatedImage}
               loading={loading}
               error={error}
+              onOpenLightbox={lightbox.open}
+              lightboxLabel={selectedScene?.title}
             />
 
             {/* Action buttons */}
@@ -760,6 +800,7 @@ export default function LifestyleGenerator() {
               results={batchResults}
               loading={batchLoading}
               progress={batchProgress}
+              onOpenLightbox={lightbox.open}
             />
           </div>
 
@@ -811,6 +852,13 @@ export default function LifestyleGenerator() {
           </div>
         </div>
       </div>
+
+      <ImageLightbox
+        items={lightbox.items}
+        index={lightbox.index}
+        onClose={lightbox.close}
+        onNavigate={lightbox.go}
+      />
     </main>
   );
 }

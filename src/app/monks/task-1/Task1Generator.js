@@ -14,6 +14,7 @@ import {
   Instagram,
 } from "lucide-react";
 import BackButton from "@/components/ui/BackButton";
+import { useImageLightbox, ImageLightbox, LightboxTrigger } from "@/components/ui/ImageLightbox";
 import { productList } from "@/config/task1-products";
 import { useSimpleRouteReady } from "@/hooks/useSimpleRouteReady";
 import { useTransitionRouter } from "@/hooks/useTransitionRouter";
@@ -203,7 +204,7 @@ function ModeSelector({ mode, onChange }) {
   );
 }
 
-function ResultImage({ image, loading, error, aspectClass }) {
+function ResultImage({ image, loading, error, aspectClass, onOpenLightbox }) {
   if (loading) {
     return (
       <div className={`relative w-full ${aspectClass} rounded-sm border border-white/[0.08] bg-white/[0.025] flex flex-col items-center justify-center gap-3`}>
@@ -235,9 +236,23 @@ function ResultImage({ image, loading, error, aspectClass }) {
 
   if (!image) return null;
 
+  const content = (
+    <img src={image} alt="Generated lifestyle image" className="h-full w-full object-cover" draggable={false} />
+  );
+
   return (
-    <div className={`relative w-full ${aspectClass} rounded-sm overflow-hidden border border-white/[0.08]`}>
-      <img src={image} alt="Generated lifestyle image" className="w-full h-full object-cover" />
+    <div className={`relative w-full ${aspectClass} overflow-hidden rounded-sm border border-white/[0.08]`}>
+      {onOpenLightbox ? (
+        <LightboxTrigger
+          items={[{ src: image, alt: "Generated lifestyle image" }]}
+          onOpen={onOpenLightbox}
+          className="h-full w-full"
+        >
+          {content}
+        </LightboxTrigger>
+      ) : (
+        content
+      )}
     </div>
   );
 }
@@ -247,6 +262,7 @@ function ResultImage({ image, loading, error, aspectClass }) {
 export default function Task1Generator() {
   useSimpleRouteReady();
   const { push } = useTransitionRouter();
+  const lightbox = useImageLightbox();
 
   const [screen, setScreen] = useState("product"); // "product" | "config" | "result"
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -444,6 +460,12 @@ export default function Task1Generator() {
   }
 
   // ─── SCREEN: Result ────────────────────────────────────────────────────────
+  const variantLightboxItems = variants.map((variant, idx) => ({
+    src: variant.image,
+    alt: `Variant ${idx + 1}`,
+    label: `Variant ${idx + 1}`,
+  }));
+
   return (
     <main className="h-dvh flex flex-col bg-[#0a0a0a] pt-16 pb-4 overflow-y-auto">
       <div className="max-w-[1900px] mx-auto px-[5%] w-full flex flex-col flex-1 min-h-0">
@@ -538,20 +560,27 @@ export default function Task1Generator() {
                   }`}
                   onClick={() => setSelectedIdx(i)}
                 >
-                  {/* Image — fills all available height */}
                   <div className="relative flex-1 min-h-0 bg-white/[0.02]">
-                    <img
-                      src={v.image}
-                      alt={`Variant ${i + 1}`}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
+                    <LightboxTrigger
+                      items={variantLightboxItems}
+                      index={i}
+                      onOpen={lightbox.open}
+                      className="absolute inset-0 h-full w-full"
+                    >
+                      <img
+                        src={v.image}
+                        alt={`Variant ${i + 1}`}
+                        className="absolute inset-0 h-full w-full object-cover"
+                        draggable={false}
+                      />
+                    </LightboxTrigger>
                     {isSelected && (
-                      <div className="absolute top-3 right-3 bg-[#d7ff6a] rounded-full p-1">
+                      <div className="pointer-events-none absolute top-3 right-3 rounded-full bg-[#d7ff6a] p-1">
                         <Check size={12} className="text-black" />
                       </div>
                     )}
-                    <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm rounded-sm px-2 py-0.5">
-                      <span className="text-white/70 text-[9px] uppercase tracking-[0.14em]">
+                    <div className="pointer-events-none absolute top-3 left-3 rounded-sm bg-black/50 px-2 py-0.5 backdrop-blur-sm">
+                      <span className="text-[9px] uppercase tracking-[0.14em] text-white/70">
                         #{i + 1}
                       </span>
                     </div>
@@ -584,6 +613,13 @@ export default function Task1Generator() {
           </div>
         )}
       </div>
+
+      <ImageLightbox
+        items={lightbox.items}
+        index={lightbox.index}
+        onClose={lightbox.close}
+        onNavigate={lightbox.go}
+      />
     </main>
   );
 }

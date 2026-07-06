@@ -1,12 +1,19 @@
 "use client";
 
-import { ArrowRight, Layers, Lock, Eye } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useTransitionRouter } from "@/hooks/useTransitionRouter";
 import { useSimpleRouteReady } from "@/hooks/useSimpleRouteReady";
 import BackButton from "@/components/ui/BackButton";
 import ShowcaseGallery, { showcaseSrc } from "@/components/ui/ShowcaseGallery";
+import {
+  OverviewShell,
+  OverviewHero,
+  OverviewSection,
+  OverviewSplitSection,
+  OverviewCta,
+  StoryTimeline,
+} from "@/components/ui/OverviewStory";
 
-const ACCENT = "text-[#d7ff6a]";
 const ACCENT_BG = "bg-[#d7ff6a]";
 
 const TASK2_SHOWCASE = [
@@ -20,297 +27,117 @@ const TASK2_SHOWCASE = [
   },
 ];
 
-const LAYERS = [
-  {
-    n: "Layer 1",
-    title: "Product Identity",
-    badge: "Locked",
-    icon: Lock,
-    color: "#d7ff6a",
-    items: [
-      "26 multi-angle reference photos of the BMW M4 Competition",
-      "gemini-3.1-flash-image — supports 10+ reference objects (Pro only supports 6)",
-      "References cover: front, 3/4, side, rear, interior, wheel, badge close-ups",
-      "Close-up shots of distinctive elements (kidney grille, M badge) as a drift fallback",
-    ],
-  },
-  {
-    n: "Layer 2",
-    title: "Style Direction",
-    badge: "Locked",
-    icon: Eye,
-    color: "#22B4D6",
-    items: [
-      "BMW moodboard — same creative direction as Task 3",
-      "Golden hour, warm film grade, human + product in frame",
-      "Not cold studio luxury — warm, cinematic, effortless",
-      "Shared universe: Task 2 and Task 3 draw from the same visual language",
-    ],
-  },
-  {
-    n: "Layer 3",
-    title: "Scene",
-    badge: "Variable",
-    icon: Layers,
-    color: "#E08A3C",
-    items: [
-      "Free text input from the user",
-      "Any location, lighting condition, human presence",
-      "The only variable in the pipeline — everything else is locked",
-    ],
-  },
-];
-
-const DECISIONS = [
-  {
-    title: "No LoRA for Task 2",
-    body: "LoRA / ComfyUI was documented in Task 1 as the 'precise path' for truly locked product identity. Task 2 deliberately stays fully closed-source to show what's achievable without local training.",
-  },
-  {
-    title: "Flash, not Pro, for 10+ references",
-    body: "gemini-3.1-flash-image supports more than 10 reference objects; Pro is limited to 6. For 26 reference images, Flash was not a compromise — it was the correct choice.",
-  },
-  {
-    title: "Drift fallback: close-up elements",
-    body: "When the model drifts on the main body shape, close-up references of distinctive elements (kidney grille, M Competition badge) are added as a separate emphasis block with higher weight.",
-  },
-  {
-    title: "Shared creative direction with Task 3",
-    body: "The BMW moodboard analysis done in Task 3 feeds directly into Task 2's style layer. The same visual language governs both tasks — a unified BMW creative system.",
-  },
-];
-
 export default function Task2Overview() {
   useSimpleRouteReady();
   const { push } = useTransitionRouter();
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white">
+    <OverviewShell>
+      <OverviewHero
+        backHref={<BackButton href="/monks" />}
+        label="Task 2 · BMW M4 Competition"
+        title={<>Product<br />Consistency</>}
+        subtitle="How to architect trust into a closed-source black box — without local training, without LoRA, without depending on prompt skill."
+      />
 
-      {/* ── Hero ────────────────────────────────────────────────────────── */}
-      <section className="pt-20 pb-16 px-[5%] max-w-[1900px] mx-auto">
-        <BackButton href="/monks" />
-        <div className="mt-10 max-w-2xl">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-white/30 mb-3">
-            Task 2 · BMW M4 Competition
-          </p>
-          <h1 className="font-anton text-display text-white leading-none mb-4">
-            Product<br />Consistency
-          </h1>
-          <p className="text-white/50 text-[16px] leading-relaxed">
-            A 3-layer controlled pipeline for automotive lifestyle generation
-          </p>
-        </div>
-      </section>
-
-      <div className="border-t border-white/[0.06]" />
-
-      {/* ── The Brief ───────────────────────────────────────────────────── */}
-      <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
-        <div className="grid lg:grid-cols-[260px_1fr] gap-10">
-          <div className="shrink-0">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-2">The Brief</p>
-            <h2 className="font-anton text-headline text-white leading-none">
-              Closed-source<br />only
-            </h2>
-          </div>
-          <div className="space-y-4 text-white/55 text-[14px] leading-relaxed max-w-2xl">
-            <p>
-              Keep the BMW M4 Competition visually consistent across lifestyle images with humans
-              in varied environments. Fully closed-source. No local training, no ComfyUI, no LoRA.
-            </p>
-            <p>
-              Three questions to answer: detailed description of the process, what to do if the
-              model doesn&apos;t know the product natively, and the closed-source solution.
-            </p>
-            <div className="mt-4 space-y-2">
-              {[
-                "26 multi-angle reference photos → product identity layer",
-                "BMW moodboard → style layer (shared with Task 3)",
-                "Free user input → scene layer (the only variable)",
-                "gemini-2.5-flash QA loop → automatic consistency verification",
-              ].map((item) => (
-                <div key={item} className="flex items-start gap-2 text-[12px] text-[#d7ff6a]/80">
-                  <span className="mt-0.5 shrink-0">→</span>
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="border-t border-white/[0.06]" />
-
-      {/* ── Architecture ────────────────────────────────────────────────── */}
-      <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
-        <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-10">
-          The Architecture — 3-Layer Controlled Pipeline
-        </p>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {LAYERS.map((layer) => {
-            const Icon = layer.icon;
-            return (
-              <div
-                key={layer.n}
-                className="rounded-sm border border-white/[0.08] bg-white/[0.02] p-6 flex flex-col"
-                style={{ borderTopColor: layer.color, borderTopWidth: "2px" }}
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <p className="font-anton text-[1.4rem] leading-none mb-1" style={{ color: layer.color }}>
-                      {layer.n}
-                    </p>
-                    <p className="text-white text-[14px] font-medium">{layer.title}</p>
-                  </div>
-                  <span
-                    className="text-[9px] uppercase tracking-[0.12em] px-2 py-0.5 rounded-sm font-medium"
-                    style={{
-                      backgroundColor: `${layer.color}15`,
-                      color: layer.color,
-                    }}
-                  >
-                    {layer.badge}
-                  </span>
-                </div>
-                <ul className="flex-1 space-y-2">
-                  {layer.items.map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-[11px] text-white/50">
-                      <span className="mt-1 shrink-0 w-1 h-1 rounded-full bg-white/20" />
-                      {item}
-                    </li>
+      <OverviewSection
+        label="How we built it"
+        title="Three layers"
+        intro="Task 2 required a fully closed-source solution. The question wasn't which tool to fight with — it was how to build a system where consistency doesn't depend on how well someone writes a prompt that day. Task 1 already explored the trainable local path; Task 2 needed to prove what's possible with zero local infrastructure."
+      >
+        <StoryTimeline
+          steps={[
+            {
+              step: 1,
+              title: "Split the problem into layers — each with exactly one job",
+              narrative:
+                "A black-box model will drift if you ask it to hold product identity, brand style, and scene composition in a single prompt. I split it into three layers: product identity locked, style locked, scene variable. That's the only way to guarantee consistency without a human prompt engineer in the loop.",
+              decision:
+                "Fewer degrees of freedom for the operator means their skill level matters less to the result. Same principle as Task 1 — architecture holds fidelity, not wording.",
+              outcome:
+                "A reusable pattern: swap the reference dataset (Layer 1), swap the moodboard (Layer 2), scene always free (Layer 3).",
+              children: (
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {[
+                    { n: "Layer 1", title: "Product identity", badge: "Locked", color: "#d7ff6a", body: "26 multi-angle reference photos. BMW M4 Competition grounded before any scene generation." },
+                    { n: "Layer 2", title: "Style direction", badge: "Locked", color: "#22B4D6", body: "BMW moodboard from Task 3 — one creative universe, not two disconnected directions." },
+                    { n: "Layer 3", title: "Scene", badge: "Variable", color: "#E08A3C", body: "Free user input. The only thing that changes per generation." },
+                  ].map((l) => (
+                    <div
+                      key={l.n}
+                      className="rounded-xl border border-white/[0.08] bg-black/15 p-4"
+                      style={{ borderTopColor: l.color, borderTopWidth: "2px" }}
+                    >
+                      <p className="font-anton text-[1.2rem] leading-none mb-1" style={{ color: l.color }}>{l.n}</p>
+                      <p className="font-general text-[0.82rem] font-medium text-white">{l.title}</p>
+                      <span
+                        className="mt-1 mb-2 inline-block rounded-full px-2 py-0.5 font-general text-[8px] uppercase tracking-[0.12em]"
+                        style={{ color: l.color, backgroundColor: `${l.color}15` }}
+                      >
+                        {l.badge}
+                      </span>
+                      <p className="font-general text-[0.78rem] leading-relaxed text-white/40">{l.body}</p>
+                    </div>
                   ))}
-                </ul>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+                </div>
+              ),
+            },
+            {
+              step: 2,
+              title: "Layer 1 — 26 references, and Flash over Pro for a real reason",
+              narrative:
+                "The BMW M4 Competition isn't something the model knows with brand accuracy out of the box. Twenty-six multi-angle photos ground it before generation. gemini-3.1-flash-image over Pro because Pro caps at 6 reference objects and Flash supports 10+. With 26 images, Flash wasn't a quality compromise — it was the only model that could use the full dataset.",
+              decision:
+                "Close-up shots of the kidney grille and M Competition badge as a separate, higher-weight fallback — those are the two things a viewer notices first if something drifts.",
+              outcome:
+                "Product identity held across scene types. QA loop (gemini-2.5-flash) scores each output automatically.",
+            },
+            {
+              step: 3,
+              title: "Deliberately no LoRA — that's Task 1's path, not this one",
+              narrative:
+                "I'd already gone down the ComfyUI / LoRA / local training route in Task 1. Task 2's brief was explicit: fully closed-source, no local infrastructure. Keeping Task 1 as the trainable path and Task 2 as the closed path lets the assessment show two different valid architectures.",
+              decision:
+                "Don't force one tool to prove both cases. Task 2 answers: \"what can you build on someone else's API alone?\"",
+              outcome:
+                "LifestyleGenerator at /lifestyle-generator — scene picker, QA scores, batch generation. No GPU required.",
+            },
+            {
+              step: 4,
+              title: "Answer the brief's hard question — what if the model doesn't know the product?",
+              narrative:
+                "That's exactly what Layer 1 solves. References ground the model in the real vehicle before any scene prompt runs. If drift still happens on a specific element, the fallback is close-up references of distinctive features fed as a separate emphasis block — not a better paragraph of prompt text.",
+              decision:
+                "Treat \"the model doesn't know the product\" as an architecture problem, not a prompting problem. The brief asked for this answer explicitly.",
+              outcome:
+                "A system a junior operator can run. Product-agnostic: swap the 26-photo dataset and the three-layer structure holds for any vehicle.",
+            },
+          ]}
+        />
+      </OverviewSection>
 
-      <div className="border-t border-white/[0.06]" />
-
-      {/* ── What if the model doesn't know the product ──────────────────────── */}
-      <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
-        <div className="grid lg:grid-cols-[260px_1fr] gap-10">
-          <div className="shrink-0">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-2">Q&amp;A</p>
-            <h2 className="font-anton text-headline text-white leading-none">
-              If the model<br />doesn&apos;t know<br />the product
-            </h2>
-          </div>
-          <div className="max-w-2xl">
-            <div className="rounded-sm border border-white/[0.08] bg-white/[0.02] p-6">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-white/30 mb-3">
-                Brief question: what do you do if the tool doesn&apos;t natively understand the product?
-              </p>
-              <p className="text-white/65 text-[14px] leading-relaxed">
-                BMW&apos;s M4 Competition isn&apos;t something the model has memorized with brand accuracy
-                out of the box. That&apos;s exactly what Layer 1 (Product Identity) solves: 26
-                multi-angle reference photos ground the model in the real vehicle before any scene
-                generation happens. If drift still occurs on a specific element, the fallback is
-                close-up references of distinctive features (kidney grille, M badge) fed as a
-                separate, higher-weight emphasis block.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="border-t border-white/[0.06]" />
-
-      {/* ── Key Decisions ───────────────────────────────────────────────── */}
-      <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
-        <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-10">Key Decisions</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl">
-          {DECISIONS.map((d) => (
-            <div key={d.title} className="rounded-sm border border-white/[0.08] bg-white/[0.02] p-5">
-              <h3 className="text-white text-[13px] font-medium mb-2">{d.title}</h3>
-              <p className="text-white/45 text-[11px] leading-relaxed">{d.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <div className="border-t border-white/[0.06]" />
-
-      {/* ── Core Principle ──────────────────────────────────────────────── */}
-      <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
-        <div className="grid lg:grid-cols-[260px_1fr] gap-10">
-          <div className="shrink-0">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-2">Core Principle</p>
-            <h2 className="font-anton text-headline text-white leading-none">
-              Controlled<br />pipeline
-            </h2>
-          </div>
-          <div className="space-y-4 max-w-2xl">
-            <p className="text-white/55 text-[14px] leading-relaxed">
-              The constraints are intentional. The architecture guarantees product consistency
-              without depending on the operator&apos;s skill. A trained copywriter, a junior designer,
-              or an automated system can use the same pipeline and get the same product fidelity.
-            </p>
-            <p className="text-white/55 text-[14px] leading-relaxed">
-              The system is product-agnostic. Swap the reference dataset and it works for any
-              vehicle, any product. The three-layer structure (identity locked, style locked,
-              scene variable) is a reusable pattern for any brand with a visual identity to protect.
-            </p>
-            <div className="mt-4 rounded-sm border border-[#d7ff6a]/20 bg-[#d7ff6a]/[0.03] p-4">
-              <p className={`text-[10px] uppercase tracking-[0.14em] ${ACCENT} mb-2`}>
-                Product-agnostic
-              </p>
-              <p className="text-white/55 text-[12px] leading-relaxed">
-                Layer 1 (references) → swap dataset for any product.
-                Layer 2 (style) → swap moodboard for any brand.
-                Layer 3 (scene) → always free. The pattern holds.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="border-t border-white/[0.06]" />
-
-      {/* ── Showcase ────────────────────────────────────────────────────── */}
-      <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
-        <div className="grid lg:grid-cols-[260px_1fr] gap-10 items-start mb-10">
-          <div className="shrink-0">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-2">Showcase</p>
-            <h2 className="font-anton text-headline text-white leading-none mb-4">
-              Generated<br />outputs
-            </h2>
-            <p className="text-white/45 text-[12px] leading-relaxed">
-              BMW M4 Competition lifestyle generations — product identity locked via 26
-              reference photos, style layer from the BMW moodboard, scene as the only variable.
-            </p>
-          </div>
-        </div>
+      <OverviewSplitSection
+        label="The result"
+        title="Generated outputs"
+        description="Product identity from 26 refs, style from the shared BMW moodboard, scene as the only variable the user controls."
+      >
         <ShowcaseGallery items={TASK2_SHOWCASE} columns="grid-cols-1 lg:grid-cols-2" />
-      </section>
+      </OverviewSplitSection>
 
-      <div className="border-t border-white/[0.06]" />
-
-      {/* ── CTA ─────────────────────────────────────────────────────────── */}
-      <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
-        <div className="rounded-sm border border-[#d7ff6a]/20 bg-[#d7ff6a]/[0.04] p-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-2">Try it</p>
-            <h2 className="font-anton text-[1.8rem] text-white leading-none mb-2">
-              Generate a BMW lifestyle shot
-            </h2>
-            <p className="text-white/45 text-[12px]">
-              Select a scene, choose your mode, and generate a product-consistent lifestyle image.
-            </p>
-          </div>
+      <OverviewCta
+        label="Try it"
+        title="Generate a BMW lifestyle shot"
+        description="Select a scene — product and style are already locked."
+        button={
           <button
             onClick={() => push("/lifestyle-generator")}
-            className={`shrink-0 inline-flex items-center gap-2 ${ACCENT_BG} text-black text-[11px] uppercase tracking-[0.16em] font-medium px-6 py-3 rounded-sm hover:opacity-90 transition-opacity`}
+            className={`shrink-0 inline-flex items-center gap-2 ${ACCENT_BG} text-black font-general text-[11px] uppercase tracking-[0.16em] font-medium px-6 py-3 rounded-full hover:opacity-90 transition-opacity`}
           >
             Try the generator
             <ArrowRight size={13} />
           </button>
-        </div>
-      </section>
-
-    </main>
+        }
+      />
+    </OverviewShell>
   );
 }

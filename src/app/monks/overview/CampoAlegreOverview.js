@@ -4,6 +4,13 @@ import { ArrowRight } from "lucide-react";
 import { useTransitionRouter } from "@/hooks/useTransitionRouter";
 import { useSimpleRouteReady } from "@/hooks/useSimpleRouteReady";
 import BackButton from "@/components/ui/BackButton";
+import {
+  OverviewShell,
+  OverviewHero,
+  OverviewSection,
+  OverviewCard,
+  OverviewLabel,
+} from "@/components/ui/OverviewStory";
 
 const ACCENT = "text-[#d7ff6a]";
 const ACCENT_BG = "bg-[#d7ff6a]";
@@ -122,189 +129,160 @@ export default function MonksOverview() {
   const { push } = useTransitionRouter();
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white">
+    <OverviewShell>
+      <OverviewHero
+        backHref={<BackButton href="/monks" />}
+        label="Monks · Assessment"
+        title={<>Monks<br />Assessment</>}
+        subtitle="A 5-day sprint to build three AI generation systems from scratch — and prove the architecture, not just the images."
+      />
 
-      {/* ── Hero ────────────────────────────────────────────────────────── */}
-      <section className="pt-20 pb-16 px-[5%] max-w-[1900px] mx-auto">
-        <BackButton href="/monks" />
-        <div className="mt-10 max-w-2xl">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-white/30 mb-3">
-            Monks · Assessment
-          </p>
-          <h1 className="font-anton text-display text-white leading-none mb-4">
-            Monks<br />Assessment
-          </h1>
-          <p className="text-white/50 text-[16px] leading-relaxed">
-            A 5-day sprint to build three AI generation systems from scratch
-          </p>
-        </div>
-      </section>
-
-      <div className="border-t border-white/[0.06]" />
-
-      {/* ── The Brief ───────────────────────────────────────────────────── */}
-      <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
-        <div className="grid lg:grid-cols-[260px_1fr] gap-10">
-          <div className="shrink-0">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-2">The Brief</p>
-            <h2 className="font-anton text-headline text-white leading-none">
-              Three tasks,<br />five days
-            </h2>
-          </div>
-          <div className="space-y-3 max-w-2xl">
-            {TASKS.map((task) => (
-              <div
-                key={task.id}
-                className="flex items-start gap-4 p-4 rounded-sm border border-white/[0.07] bg-white/[0.02]"
-              >
-                <span
-                  className="text-[10px] uppercase tracking-[0.14em] font-medium shrink-0 mt-0.5"
-                  style={{ color: task.color }}
-                >
-                  {task.label}
-                </span>
-                <p className="text-white/55 text-[13px] leading-relaxed">
-                  <span className="text-white font-medium">{task.title}</span>
-                  {" — "}
-                  {task.one_liner}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <div className="border-t border-white/[0.06]" />
-
-      {/* ── Timeline ────────────────────────────────────────────────────── */}
-      <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
-        <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-10">The Timeline</p>
-        <div className="relative max-w-3xl">
-          {/* Vertical line */}
-          <div className="absolute left-[72px] top-0 bottom-0 w-px bg-white/[0.07]" />
-
-          <div className="space-y-8">
-            {TIMELINE.map((day, i) => (
-              <div key={day.date} className="flex gap-6">
-                {/* Date label */}
-                <div className="w-[72px] shrink-0 pt-1 text-right pr-5">
-                  <p className="text-white/25 text-[9px] uppercase tracking-[0.10em] leading-tight">
-                    {day.date.split(" ")[0]}
-                  </p>
-                  <p className="text-white/40 text-[9px]">{day.date.split(" ").slice(1).join(" ")}</p>
-                </div>
-
-                {/* Dot */}
-                <div className="relative shrink-0 mt-1.5">
-                  <div className={`w-2 h-2 rounded-full ${i === TIMELINE.length - 1 ? "bg-[#d7ff6a]" : "bg-white/25"}`} />
-                </div>
-
-                {/* Content */}
-                <div className="pb-2">
-                  <p className="text-white text-[13px] font-medium mb-2">{day.title}</p>
-                  <ul className="space-y-1.5">
-                    {day.events.map((ev) => (
-                      <li key={ev} className="text-white/40 text-[11px] leading-relaxed">
-                        {ev}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <div className="border-t border-white/[0.06]" />
-
-      {/* ── Stack ───────────────────────────────────────────────────────── */}
-      <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
-        <div className="grid lg:grid-cols-[260px_1fr] gap-10 items-start">
-          <div className="shrink-0">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-2">The Stack</p>
-            <h2 className="font-anton text-headline text-white leading-none">Built with</h2>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {STACK.map((item) => (
-              <span
-                key={item}
-                className="px-3 py-1.5 rounded-sm border border-white/[0.08] bg-white/[0.02] text-white/60 text-[11px] uppercase tracking-[0.12em]"
-              >
-                {item}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <div className="border-t border-white/[0.06]" />
-
-      {/* ── Core Principle ──────────────────────────────────────────────── */}
-      <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
-        <div className="max-w-2xl">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-4">Core Principle</p>
-          <h2 className="font-anton text-headline text-white leading-none mb-6">
-            Controlled creative pipeline
-          </h2>
-          <p className="text-white/55 text-[15px] leading-relaxed">
-            The constraints are intentional. Every system in this assessment is built around the
-            same principle: product identity and style are locked by architecture — not by prompt
-            complexity. The user controls one variable: the scene.
-          </p>
-          <p className="text-white/40 text-[14px] leading-relaxed mt-4">
-            The result is a pipeline that produces consistent, on-brand outputs regardless of who
-            operates it or how they phrase their input. The system is product-agnostic — swap the
-            reference dataset and it works for any product with a visual identity to protect.
-          </p>
-        </div>
-      </section>
-
-      <div className="border-t border-white/[0.06]" />
-
-      {/* ── Task cards ──────────────────────────────────────────────────── */}
-      <section className="py-16 px-[5%] max-w-[1900px] mx-auto">
-        <p className="text-[10px] uppercase tracking-[0.16em] text-white/30 mb-10">The Tasks</p>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <OverviewSection
+        label="The brief"
+        title="Three tasks, five days"
+      >
+        <div className="grid gap-3 md:grid-cols-3 md:gap-4">
           {TASKS.map((task) => (
-            <div
+            <OverviewCard
               key={task.id}
-              className="rounded-sm border border-white/[0.08] bg-white/[0.02] p-6 flex flex-col"
+              className="p-5 md:p-6"
               style={{ borderTopColor: task.color, borderTopWidth: "2px" }}
             >
               <p
-                className="text-[10px] uppercase tracking-[0.14em] font-medium mb-2"
+                className="mb-2 font-general text-[10px] font-medium uppercase tracking-[0.14em]"
                 style={{ color: task.color }}
               >
                 {task.label}
               </p>
-              <h3 className="text-white text-[18px] font-medium mb-2">{task.title}</h3>
-              <p className="text-white/45 text-[12px] leading-relaxed flex-1 mb-4">
+              <h3 className="mb-2 font-general text-[16px] font-medium text-white">{task.title}</h3>
+              <p className="font-general text-[0.82rem] leading-relaxed text-white/50">{task.one_liner}</p>
+            </OverviewCard>
+          ))}
+        </div>
+      </OverviewSection>
+
+      <div className="grid gap-3 py-4 md:grid-cols-12 md:gap-5 md:py-6">
+        <OverviewCard className="md:col-span-7 p-5 md:p-8">
+          <OverviewLabel>The timeline</OverviewLabel>
+          <h2 className="mt-2 font-anton text-[clamp(1.4rem,2.5vw,2rem)] font-normal uppercase leading-none text-white">
+            Five-day sprint
+          </h2>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            {TIMELINE.map((day, i) => (
+              <div
+                key={day.date}
+                className="rounded-xl border border-white/[0.07] bg-black/15 p-4"
+              >
+                <div className="mb-2 flex items-center gap-3">
+                  <span
+                    className={`h-2 w-2 shrink-0 rounded-full ${
+                      i === TIMELINE.length - 1 ? "bg-[#d7ff6a]" : "bg-white/25"
+                    }`}
+                  />
+                  <div>
+                    <p className="font-general text-[9px] uppercase tracking-[0.1em] text-white/30">
+                      {day.date}
+                    </p>
+                    <p className="font-general text-[13px] font-medium text-white">{day.title}</p>
+                  </div>
+                </div>
+                <ul className="space-y-1.5 pl-5">
+                  {day.events.map((ev) => (
+                    <li key={ev} className="font-general text-[0.75rem] leading-relaxed text-white/40">
+                      {ev}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </OverviewCard>
+
+        <OverviewCard className="md:col-span-5 p-5 md:p-8">
+          <OverviewLabel>Core principle</OverviewLabel>
+          <h2 className="mt-2 font-anton text-[clamp(1.4rem,2.5vw,2rem)] font-normal uppercase leading-none text-white">
+            Why build an app at all?
+          </h2>
+          <div className="mt-5 space-y-4">
+            <p className="font-general text-[0.88rem] leading-[1.65] text-white/55">
+              Every one of these three tasks could&apos;ve been solved by opening Gemini&apos;s web UI
+              and typing prompts until something looked right. That&apos;s actually how this started.
+              It worked, eventually, for a single image — but every new scene broke a different way.
+            </p>
+            <p className="font-general text-[0.84rem] leading-[1.6] text-white/42">
+              A brand doesn&apos;t need one perfect image — it needs hundreds of consistent ones,
+              made by whoever&apos;s on the team that week. If output quality depends on how well
+              someone prompts on a given day, nothing&apos;s actually been solved.
+            </p>
+            <div className="rounded-xl border border-[#d7ff6a]/20 bg-[#d7ff6a]/[0.04] p-4">
+              <p className={`mb-2 font-general text-[10px] uppercase tracking-[0.14em] ${ACCENT}`}>
+                What we locked in architecture
+              </p>
+              <p className="font-general text-[0.82rem] leading-relaxed text-white/55">
+                What this product looks like from every angle. What &quot;on-brand&quot; means in
+                structured terms. What counts as a correct result. Once those are locked, the only
+                thing left variable is the scene. The deliverable isn&apos;t three sets of images —
+                it&apos;s a pattern for turning a one-off creative request into a repeatable
+                production line.
+              </p>
+            </div>
+          </div>
+        </OverviewCard>
+      </div>
+
+      <OverviewSection label="The stack" title="Built with">
+        <div className="flex flex-wrap gap-2">
+          {STACK.map((item) => (
+            <span
+              key={item}
+              className="rounded-full border border-white/[0.08] bg-black/15 px-3 py-1.5 font-general text-[11px] uppercase tracking-[0.12em] text-white/55"
+            >
+              {item}
+            </span>
+          ))}
+        </div>
+      </OverviewSection>
+
+      <OverviewSection label="The tasks" title="Try or read">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3 md:gap-4">
+          {TASKS.map((task) => (
+            <OverviewCard
+              key={task.id}
+              className="flex flex-col p-6"
+              style={{ borderTopColor: task.color, borderTopWidth: "2px" }}
+            >
+              <p
+                className="mb-2 font-general text-[10px] font-medium uppercase tracking-[0.14em]"
+                style={{ color: task.color }}
+              >
+                {task.label}
+              </p>
+              <h3 className="mb-2 font-general text-[18px] font-medium text-white">{task.title}</h3>
+              <p className="mb-4 flex-1 font-general text-[0.82rem] leading-relaxed text-white/45">
                 {task.one_liner}
               </p>
-              <p className="text-white/25 text-[10px] uppercase tracking-[0.10em] mb-4 pb-4 border-b border-white/[0.06]">
+              <p className="mb-4 border-b border-white/[0.06] pb-4 font-general text-[10px] uppercase tracking-[0.1em] text-white/25">
                 {task.meta}
               </p>
               <div className="flex items-center justify-between">
                 <button
                   onClick={() => push(task.overviewHref)}
-                  className="text-white/40 text-[10px] uppercase tracking-[0.14em] hover:text-white/70 transition-colors"
+                  className="font-general text-[10px] uppercase tracking-[0.14em] text-white/40 transition-colors hover:text-white/70"
                 >
                   How we built this →
                 </button>
                 <button
                   onClick={() => push(task.href)}
-                  className={`inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] font-medium px-3 py-1.5 rounded-sm ${ACCENT_BG} text-black hover:opacity-90 transition-opacity`}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-general text-[10px] font-medium uppercase tracking-[0.14em] ${ACCENT_BG} text-black transition-opacity hover:opacity-90`}
                 >
                   Try it
                   <ArrowRight size={10} />
                 </button>
               </div>
-            </div>
+            </OverviewCard>
           ))}
         </div>
-      </section>
-
-    </main>
+      </OverviewSection>
+    </OverviewShell>
   );
 }

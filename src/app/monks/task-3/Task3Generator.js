@@ -11,6 +11,7 @@ import {
   ImageIcon,
 } from "lucide-react";
 import BackButton from "@/components/ui/BackButton";
+import { useImageLightbox, ImageLightbox, LightboxTrigger } from "@/components/ui/ImageLightbox";
 import { useSimpleRouteReady } from "@/hooks/useSimpleRouteReady";
 import { useTransitionRouter } from "@/hooks/useTransitionRouter";
 
@@ -88,6 +89,7 @@ function StyleChip({ label, color }) {
 export default function Task3Generator() {
   useSimpleRouteReady();
   const { push } = useTransitionRouter();
+  const lightbox = useImageLightbox();
 
   const [screen, setScreen] = useState("upload"); // "upload" | "loading" | "result"
   const [uploadedFile, setUploadedFile] = useState(null); // { previewUrl, dataURL, name }
@@ -367,38 +369,67 @@ export default function Task3Generator() {
 
         {generatedImage && (
           <div className="flex-1 min-h-0 flex gap-4">
-            {/* Generated image */}
-            <div className="flex-1 min-h-0 relative rounded-sm overflow-hidden border border-white/[0.08]">
-              <img
-                src={generatedImage}
-                alt="Style transfer result"
-                className="absolute inset-0 w-full h-full object-contain bg-black"
-              />
-              <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm px-2 py-0.5 rounded-sm">
+            <div className="relative min-h-0 flex-1 overflow-hidden rounded-sm border border-white/[0.08]">
+              <LightboxTrigger
+                items={[
+                  ...(uploadedFile
+                    ? [{ src: uploadedFile.previewUrl, alt: "Original", label: "Original" }]
+                    : []),
+                  { src: generatedImage, alt: "Style transfer result", label: "BMW styled" },
+                ]}
+                index={uploadedFile ? 1 : 0}
+                onOpen={lightbox.open}
+                className="absolute inset-0 h-full w-full"
+              >
+                <img
+                  src={generatedImage}
+                  alt="Style transfer result"
+                  className="absolute inset-0 h-full w-full bg-black object-contain"
+                  draggable={false}
+                />
+              </LightboxTrigger>
+              <div className="pointer-events-none absolute top-3 left-3 rounded-sm bg-black/50 px-2 py-0.5 backdrop-blur-sm">
                 <span className={`text-[9px] uppercase tracking-[0.14em] ${ACCENT}`}>
                   BMW
                 </span>
               </div>
             </div>
 
-            {/* Original for comparison */}
             {uploadedFile && (
-              <div className="hidden lg:flex lg:flex-col lg:w-56 shrink-0 gap-2">
-                <p className="text-[9px] uppercase tracking-[0.14em] text-white/25 shrink-0">
+              <div className="hidden shrink-0 gap-2 lg:flex lg:w-56 lg:flex-col">
+                <p className="shrink-0 text-[9px] uppercase tracking-[0.14em] text-white/25">
                   Original
                 </p>
-                <div className="flex-1 min-h-0 relative rounded-sm overflow-hidden border border-white/[0.06]">
-                  <img
-                    src={uploadedFile.previewUrl}
-                    alt="Original"
-                    className="absolute inset-0 w-full h-full object-contain bg-black/50"
-                  />
+                <div className="relative min-h-0 flex-1 overflow-hidden rounded-sm border border-white/[0.06]">
+                  <LightboxTrigger
+                    items={[
+                      { src: uploadedFile.previewUrl, alt: "Original", label: "Original" },
+                      { src: generatedImage, alt: "Style transfer result", label: "BMW styled" },
+                    ]}
+                    index={0}
+                    onOpen={lightbox.open}
+                    className="absolute inset-0 h-full w-full"
+                  >
+                    <img
+                      src={uploadedFile.previewUrl}
+                      alt="Original"
+                      className="absolute inset-0 h-full w-full bg-black/50 object-contain"
+                      draggable={false}
+                    />
+                  </LightboxTrigger>
                 </div>
               </div>
             )}
           </div>
         )}
       </div>
+
+      <ImageLightbox
+        items={lightbox.items}
+        index={lightbox.index}
+        onClose={lightbox.close}
+        onNavigate={lightbox.go}
+      />
     </main>
   );
 }

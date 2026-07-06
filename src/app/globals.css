@@ -95,6 +95,11 @@ html.smooth-scroll-active body {
   visibility: visible !important;
 }
 
+.overview-page {
+  opacity: 1;
+  visibility: visible;
+}
+
 /* Honest indeterminate bar (route transition — not a fake %) */
 .route-loader-track {
   position: relative;
